@@ -72,13 +72,13 @@ jobs:
 
       - name: Save Docker image as artifact
         run: |
-          docker save model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG -o ollama-server-$MODEL_NAME_$MODEL_TAG.tar
+          docker save model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG -o ollama-server-image.tar
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ollama-server-$MODEL_NAME_$MODEL_TAG
-          path: ollama-server-$MODEL_NAME_$MODEL_TAG.tar
+          name: ollama-server-image-${{ env.MODEL_NAME }}-${{ env.MODEL_TAG }}
+          path: ollama-server-${{ env.MODEL_NAME }}_${{ env.MODEL_TAG }}.tar
 
   test:
     needs: build
@@ -87,7 +87,7 @@ jobs:
       - name: Download image artifact
         uses: actions/download-artifact@v3
         with:
-          name: ollama-server-image
+          name: ollama-server-image-${{ env.MODEL_NAME }}-${{ env.MODEL_TAG }}
 
       - name: Load Docker image
         run: |
@@ -110,7 +110,7 @@ jobs:
       - name: Download image artifact
         uses: actions/download-artifact@v3
         with:
-          name: ollama-server-image
+          name: ollama-server-image-${{ env.MODEL_NAME }}-${{ env.MODEL_TAG }}
 
       - name: Load Docker image
         run: |

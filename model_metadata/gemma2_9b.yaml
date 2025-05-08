@@ -1,0 +1,8 @@
+name: gemma2
+tag: 9b
+memory:
+  model_size: 5.4GiB
+  min: 12GiB
+  recommended: 16GiB
+license: Gemma Terms of Use
+

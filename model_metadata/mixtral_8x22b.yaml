@@ -1,0 +1,7 @@
+name: mixtral
+tag: 8x22b
+memory:
+  model_size: 80GiB
+  min: 52GiB
+  recommended: 64GiB
+license: Apache License Version 2.0, January 2004

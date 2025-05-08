@@ -1,0 +1,111 @@
+name: Build, Push and Test Ollama Model Image
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          model_file: [
+            "gemma2_2b.yaml",
+            "deepseek-r1_7b.yaml"
+          ]  # Add more as needed
+
+    env:
+      AWS_REGION: ca-central-1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install yq
+        run: sudo snap install yq
+
+      - name: Read model metadata
+        id: model
+        run: |
+          MODEL_FILE="model_metadata/${{ matrix.model_file }}"
+          MODEL_NAME=$(yq '.name' "$MODEL_FILE")
+          MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
+          MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
+          MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
+          MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
+          LICENSE=$(yq '.license' "$MODEL_FILE")
+          echo "MODEL_NAME=$MODEL_NAME" >> $GITHUB_ENV
+          echo "MODEL_TAG=$MODEL_TAG" >> $GITHUB_ENV
+          echo "MEMORY_REQ=$MEMORY_REQ" >> $GITHUB_ENV
+          echo "LICENSE=$LICENSE" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg MODEL_NAME=$MODEL_NAME \
+            --build-arg MODEL_TAG=$MODEL_TAG \
+            --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
+            --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
+            --label org.opencontainers.image.version="$MODEL_TAG" \
+            --label org.opencontainers.image.authors="Sinan Ozel" \
+            --label org.opencontainers.image.licenses="$LICENSE" \
+            --label org.opencontainers.image.vendor="your-org" \
+            --label org.opencontainers.image.memory.size="$MODEL_SIZE" \
+            --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
+            --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED"\
+            -t model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG \
+            -f ./ollama/Dockerfile ./ollama
+
+      - name: Tag Docker image for Docker Hub
+        run: |
+          docker tag model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG ${{ secrets.DOCKER_USERNAME }}/model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Push to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG
+
+      - name: Get AWS Account ID
+        id: aws
+        run: echo "account_id=$(aws sts get-caller-identity --query Account --output text)" >> $GITHUB_OUTPUT
+
+      - name: Tag Docker image for ECR
+        run: |
+          ECR_URI="${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG"
+          docker tag model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG $ECR_URI
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+      - name: Create repository if it doesn't exist
+        run: |
+          aws ecr describe-repositories --repository-names model-servers/ollama-server-$MODEL_NAME --region $AWS_REGION || \
+          aws ecr create-repository --repository-name model-servers/ollama-server-$MODEL_NAME --region $AWS_REGION
+
+      - name: Push to AWS ECR
+        run: |
+          docker push ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG
+
+      - name: Test model file
+        run: |
+          docker run --rm model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG sh -c 'ls /root/.ollama/models/blobs/sha256* | grep . || (echo "Model not found" && exit 1)'
+
+
+    #   - name: Test model preload
+    #     run: |
+    #       docker run --rm model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG curl -s http://localhost:11434/api/generate -d '{"model": "'"$MODEL_NAME""}',"prompt":"2 + 2 ="}' || (echo "Model not loaded" && exit 1)

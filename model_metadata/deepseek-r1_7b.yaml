@@ -1,0 +1,7 @@
+name: deepseek-r1
+tag: 7b
+license: MIT License
+memory:
+  model_size: 4.7GiB
+  min: 6GiB
+  recommended: 8GiB

@@ -1,0 +1,7 @@
+name: gemma2
+tag: 27b
+memory:
+  model_size: 16GiB
+  min: 32GiB
+  recommended: 40GiB
+license: Gemma Terms of Use

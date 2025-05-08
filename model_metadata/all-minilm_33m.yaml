@@ -1,0 +1,7 @@
+name: all-minilm
+tag: 33m
+license: MIT License
+memory:
+  model_size: 67MB
+  min: 512MiB
+  recommended: 1GiB

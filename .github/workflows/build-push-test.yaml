@@ -92,10 +92,14 @@ jobs:
         run: |
           docker load -i ollama-server.tar
 
+      - name: List Docker image
+        run: |
+          docker ps
+
 
       - name: Test model file
         run: |
-          docker run --rm model-servers/ollama-server/${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }} sh -c 'ls /root/.ollama/models/blobs/sha256/ | grep . || (echo "Model not found" && exit 1)'
+          docker run --rm model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }} sh -c 'ls /root/.ollama/models/blobs/sha256/ | grep . || (echo "Model not found" && exit 1)'
       # - name: Test model preload
       #   run: |
       #     docker run --rm model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG curl -s http://localhost:11434/api/generate -d '{"model": "'"$MODEL_NAME""}',"prompt":"2 + 2 ="}' || (echo "Model not loaded" && exit 1)

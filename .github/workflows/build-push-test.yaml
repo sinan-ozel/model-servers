@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ollama-server-image-${{ env.MODEL_NAME }}-${{ env.MODEL_TAG }}
-          path: ollama-server-${{ env.MODEL_NAME }}_${{ env.MODEL_TAG }}.tar
+          path: ollama-server-${{ env.MODEL_NAME }}-${{ env.MODEL_TAG }}.tar
 
   test:
     needs: build

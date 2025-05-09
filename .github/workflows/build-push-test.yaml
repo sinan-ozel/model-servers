@@ -97,9 +97,19 @@ jobs:
           docker ps
 
 
-      - name: Test model file
+      - name: Test model file (inspect only)
         run: |
-          docker run --rm model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }} sh -c 'ls /root/.ollama/models/blobs/sha256/ | grep . || (echo "Model not found" && exit 1)'
+          IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+          CONTAINER_ID=$(docker create "$IMAGE_NAME")
+          docker cp "$CONTAINER_ID:/root/.ollama/models/blobs/sha256" ./model-blobs
+          docker rm "$CONTAINER_ID"
+          if [ -z "$(ls -A ./model-blobs)" ]; then
+            echo "Model not found in image"
+            exit 1
+          else
+            echo "Model files found:"
+            ls ./model-blobs
+          fi
       # - name: Test model preload
       #   run: |
       #     docker run --rm model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG curl -s http://localhost:11434/api/generate -d '{"model": "'"$MODEL_NAME""}',"prompt":"2 + 2 ="}' || (echo "Model not loaded" && exit 1)

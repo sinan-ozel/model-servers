@@ -104,7 +104,7 @@ jobs:
 
       - name: List Docker image
         run: |
-          docker ps
+          docker image list
 
 
       # - name: Install jq
@@ -116,7 +116,20 @@ jobs:
           CONTAINER_ID=$(docker create "$IMAGE_NAME")
           docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
           docker rm "$CONTAINER_ID"
+
+          echo "📄 Contents of library.json:"
           cat ./library.json
+
+          echo "🔍 Checking if model '${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}' exists..."
+          MODEL_ENTRY=$(jq -r --arg name "${{ needs.build.outputs.model_name }}" --arg tag "${{ needs.build.outputs.model_tag }}" '.models[] | select(.name == $name and .tag == $tag)' ./library.json)
+
+          if [ -z "$MODEL_ENTRY" ]; then
+            echo "❌ Model entry not found in library.json"
+            exit 1
+          else
+            echo "✅ Model entry found:"
+            echo "$MODEL_ENTRY"
+          fi
 
 
       # docker cp "$CONTAINER_ID:/root/.ollama/models/blobs/sha256" ./model-blobs

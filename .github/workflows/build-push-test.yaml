@@ -59,7 +59,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/ollama-cache:/root/.ollama \
             -e OLLAMA_ORCHESTRATOR=standalone \
-            ollama/ollama:0.6.5 pull $MODEL_NAME:$MODEL_TAG"
+            ollama/ollama:0.6.5 pull "$MODEL_NAME:$MODEL_TAG"
 
       - name: Build Docker image
         run: |

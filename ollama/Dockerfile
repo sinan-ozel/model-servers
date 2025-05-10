@@ -9,6 +9,7 @@ ENV MODEL_TAG=${MODEL_TAG}
 
 # Copy pre-pulled models into the image
 COPY model-cache/ /root/.ollama/
+RUN chmod -R 555 /root/.ollama/
 
 # Copy server launch script
 COPY run_server.sh .

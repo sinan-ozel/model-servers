@@ -110,19 +110,22 @@ jobs:
       # - name: Install jq
       #   run: sudo snap install jq
 
-      # - name: Test model library (inspect only)
-      #   run: |
-      #     IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
-      #     CONTAINER_ID=$(docker create "$IMAGE_NAME")
-      #     docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
-      #     docker rm "$CONTAINER_ID"
-      #     cat ./library.json
+      - name: Test model library (inspect only)
+        run: |
+          IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+          CONTAINER_ID=$(docker create "$IMAGE_NAME")
+          docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
+          docker rm "$CONTAINER_ID"
+          cat ./library.json
+
+
+      # docker cp "$CONTAINER_ID:/root/.ollama/models/blobs/sha256" ./model-blobs
 
       - name: Test model file (inspect only)
         run: |
           IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
           CONTAINER_ID=$(docker create "$IMAGE_NAME")
-          docker cp "$CONTAINER_ID:/root/.ollama/models/blobs/sha256" ./model-blobs
+          docker cp "$CONTAINER_ID:/root/.ollama/models/blobs" ./model-blobs
           docker rm "$CONTAINER_ID"
           if [ -z "$(ls -A ./model-blobs)" ]; then
             echo "Model not found in image"

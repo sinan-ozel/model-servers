@@ -97,6 +97,17 @@ jobs:
           docker ps
 
 
+      # - name: Install jq
+      #   run: sudo snap install jq
+
+      # - name: Test model library (inspect only)
+      #   run: |
+      #     IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+      #     CONTAINER_ID=$(docker create "$IMAGE_NAME")
+      #     docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
+      #     docker rm "$CONTAINER_ID"
+      #     cat ./library.json
+
       - name: Test model file (inspect only)
         run: |
           IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
@@ -110,6 +121,7 @@ jobs:
             echo "Model files found:"
             ls ./model-blobs
           fi
+
       # - name: Test model preload
       #   run: |
       #     docker run --rm model-servers/ollama-server-$MODEL_NAME:$MODEL_TAG curl -s http://localhost:11434/api/generate -d '{"model": "'"$MODEL_NAME""}',"prompt":"2 + 2 ="}' || (echo "Model not loaded" && exit 1)

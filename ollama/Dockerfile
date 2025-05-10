@@ -11,8 +11,8 @@ ENV MODEL_TAG=${MODEL_TAG}
 COPY model-cache/ /root/.ollama/
 RUN chmod -R 555 /root/.ollama/
 
-RUN ls -al /root/.ollama/models/blobs
-RUN ls -al /root/.ollama/models/manifests
+RUN ls -al /root/.ollama/models/blobs/sha256-*
+RUN ls -al /root/.ollama/models/manifests/registry.ollama.ai
 
 # Copy server launch script
 COPY run_server.sh .

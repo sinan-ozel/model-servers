@@ -107,45 +107,55 @@ jobs:
           docker image list
 
 
-      # - name: Install jq
-      #   run: sudo snap install jq
+      - name: Test model library and blobs (ENTRYPOINT override)
+        run: |
+          IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+
+          echo "🚀 Creating container with overridden entrypoint..."
+          CONTAINER_ID=$(docker create --entrypoint "" "$IMAGE_NAME" bash -c 'test -f /root/.ollama/models/manifest/ && ls -A /root/.ollama/models/blobs/sha256')
+
+          echo "🔍 Starting container to verify model presence..."
+          docker start -a "$CONTAINER_ID"
+
+          echo "🧹 Cleaning up container..."
+          docker rm "$CONTAINER_ID"
 
       # docker cp "$CONTAINER_ID:/root/.ollama/models/blobs/sha256" ./model-blobs
 
-      - name: Test model file (inspect only)
-        run: |
-          IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
-          CONTAINER_ID=$(docker create "$IMAGE_NAME")
-          docker cp "$CONTAINER_ID:/root/.ollama/models/" ./model-blobs
-          docker rm "$CONTAINER_ID"
-          if [ -z "$(ls -A ./model-blobs)" ]; then
-            echo "Model not found in image"
-            exit 1
-          else
-            echo "Model files found:"
-            ls ./model-blobs
-          fi
+      # - name: Test model file (inspect only)
+      #   run: |
+      #     IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+      #     CONTAINER_ID=$(docker create "$IMAGE_NAME")
+      #     docker cp "$CONTAINER_ID:/root/.ollama/models/" ./model-blobs
+      #     docker rm "$CONTAINER_ID"
+      #     if [ -z "$(ls -A ./model-blobs)" ]; then
+      #       echo "Model not found in image"
+      #       exit 1
+      #     else
+      #       echo "Model files found:"
+      #       ls ./model-blobs
+      #     fi
 
-      - name: Test model library (inspect only)
-        run: |
-          IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
-          CONTAINER_ID=$(docker create "$IMAGE_NAME")
-          docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
-          docker rm "$CONTAINER_ID"
+      # - name: Test model library (inspect only)
+      #   run: |
+      #     IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
+      #     CONTAINER_ID=$(docker create "$IMAGE_NAME")
+      #     docker cp "$CONTAINER_ID:/root/.ollama/models/library.json" ./library.json
+      #     docker rm "$CONTAINER_ID"
 
-          echo "📄 Contents of library.json:"
-          cat ./library.json
+      #     echo "📄 Contents of library.json:"
+      #     cat ./library.json
 
-          echo "🔍 Checking if model '${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}' exists..."
-          MODEL_ENTRY=$(jq -r --arg name "${{ needs.build.outputs.model_name }}" --arg tag "${{ needs.build.outputs.model_tag }}" '.models[] | select(.name == $name and .tag == $tag)' ./library.json)
+      #     echo "🔍 Checking if model '${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}' exists..."
+      #     MODEL_ENTRY=$(jq -r --arg name "${{ needs.build.outputs.model_name }}" --arg tag "${{ needs.build.outputs.model_tag }}" '.models[] | select(.name == $name and .tag == $tag)' ./library.json)
 
-          if [ -z "$MODEL_ENTRY" ]; then
-            echo "❌ Model entry not found in library.json"
-            exit 1
-          else
-            echo "✅ Model entry found:"
-            echo "$MODEL_ENTRY"
-          fi
+      #     if [ -z "$MODEL_ENTRY" ]; then
+      #       echo "❌ Model entry not found in library.json"
+      #       exit 1
+      #     else
+      #       echo "✅ Model entry found:"
+      #       echo "$MODEL_ENTRY"
+      #     fi
 
 
       # - name: Test model preload

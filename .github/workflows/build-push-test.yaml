@@ -57,7 +57,7 @@ jobs:
         run: |
           mkdir -p ollama-cache
           docker run --rm \
-            -v ${{ github.workspace }}/ollama-cache:/root/.ollama \
+            -v ${{ github.workspace }}/ollama/model-cache:/root/.ollama \
             ollama/ollama:0.6.5 \
             sh -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$MODEL_TAG"
 
@@ -71,7 +71,7 @@ jobs:
             --label org.opencontainers.image.version="$MODEL_TAG" \
             --label org.opencontainers.image.authors="Sinan Ozel" \
             --label org.opencontainers.image.licenses="$LICENSE" \
-            --label org.opencontainers.image.vendor="your-org" \
+            --label org.opencontainers.image.vendor="sinanozel" \
             --label org.opencontainers.image.memory.size="$MODEL_SIZE" \
             --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
             --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED" \

@@ -53,6 +53,14 @@ jobs:
           echo "model_name=$MODEL_NAME" >> $GITHUB_OUTPUT
           echo "model_tag=$MODEL_TAG" >> $GITHUB_OUTPUT
 
+      - name: Preload Ollama model cache
+        run: |
+          mkdir -p ollama-cache
+          docker run --rm \
+            -v ${{ github.workspace }}/ollama-cache:/root/.ollama \
+            ollama/ollama:0.6.5 \
+            sh -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$MODEL_TAG"
+
       - name: Build Docker image
         run: |
           docker build \

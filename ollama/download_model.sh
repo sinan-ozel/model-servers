@@ -1,17 +1,13 @@
 #!/bin/bash
+# scripts/preload_model.sh
 
-# Start Ollama in the background.
-echo "Starting Ollama server..."
-/bin/ollama serve &
-serve_pid=$!
+set -e
 
-# Wait a few seconds for the server to become available.
-sleep 5
+MODEL_NAME=$1
+MODEL_TAG=$2
 
-echo "🔴 Retrieving model $MODEL_NAME:$MODEL_TAG..."
-ollama pull "$MODEL_NAME:$MODEL_TAG"
-echo "🟢 Model download complete!"
-
-# Shut down the background Ollama server.
-kill $serve_pid
-wait $serve_pid 2>/dev/null
+# Create a temporary container to extract the model files
+docker run --rm \
+  -v "$(pwd)/ollama-cache:/root/.ollama" \
+  ollama/ollama:0.6.5 \
+  sh -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG}"

@@ -55,7 +55,7 @@ jobs:
 
       - name: Preload Ollama model cache
         run: |
-          mkdir -p ollama-cache
+          mkdir -p /ollama/model-cache
           docker run --rm \
             -v ${{ github.workspace }}/ollama/model-cache:/root/.ollama \
             ollama/ollama:0.6.5 \

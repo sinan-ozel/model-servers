@@ -61,7 +61,7 @@ jobs:
             -v ${{ github.workspace }}/ollama/model-cache:/root/.ollama \
             -e OLLAMA_ORCHESTRATOR=standalone \
             ollama/ollama:0.6.5 \
-            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$MODEL_TAG"
+            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$PARAMETER_COUNT"
 
       - name: Build Docker image
         run: |

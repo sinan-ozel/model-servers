@@ -66,6 +66,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
+            --platform=linux/amd64 \
             --build-arg MODEL_NAME=$MODEL_NAME \
             --build-arg MODEL_TAG=$MODEL_TAG \
             --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \

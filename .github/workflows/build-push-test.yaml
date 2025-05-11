@@ -61,23 +61,24 @@ jobs:
             -v ${{ github.workspace }}/ollama/model-cache:/root/.ollama \
             -e OLLAMA_ORCHESTRATOR=standalone \
             ollama/ollama:0.6.5 \
-            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$PARAMETER_COUNT"
+            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$MODEL_TAG"
 
       - name: Build Docker image
         run: |
           docker build \
             --platform=linux/amd64 \
             --build-arg MODEL_NAME=$MODEL_NAME \
-            --build-arg MODEL_TAG=$MODEL_TAG \
+            --build-arg MODEL_TAG=$PARAMETER_COUNT \
             --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
-            --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
-            --label org.opencontainers.image.version="$MODEL_TAG" \
+            --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$PARAMETER_COUNT" \
+            --label org.opencontainers.image.version="$PARAMETER_COUNT" \
             --label org.opencontainers.image.authors="Sinan Ozel" \
             --label org.opencontainers.image.licenses="$LICENSE" \
             --label org.opencontainers.image.vendor="sinanozel" \
             --label org.opencontainers.image.memory.size="$MODEL_SIZE" \
             --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
             --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED" \
+            --label org.opencontainers.image.date="$(date +'%Y-%m-%d')" \
             -t ollama-server:$MODEL_NAME-$PARAMETER_COUNT \
             -f ./ollama/Dockerfile ./ollama
 

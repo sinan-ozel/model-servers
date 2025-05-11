@@ -112,7 +112,7 @@ jobs:
           IMAGE_NAME=model-servers/ollama-server-${{ needs.build.outputs.model_name }}:${{ needs.build.outputs.model_tag }}
 
           echo "🚀 Creating container with overridden entrypoint..."
-          CONTAINER_ID=$(docker create --entrypoint "" "$IMAGE_NAME" bash -c 'test -f /root/.ollama/models/manifests/registry.ollama.ai/library/${{ needs.build.outputs.model_name }}')
+          CONTAINER_ID=$(docker create --entrypoint "" "$IMAGE_NAME" bash -c 'ls -al /root/.ollama/models/manifests/registry.ollama.ai/library/${{ needs.build.outputs.model_name }}/${{ needs.build.outputs.model_tag }}')
 
           echo "🔍 Starting container to verify model presence..."
           docker start -a "$CONTAINER_ID"

@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       model_name: ${{ steps.model.outputs.model_name }}
-      model_tag: ${{ steps.model.outputs.model_tag }}
+      parameter_count: ${{ steps.model.outputs.parameter_count }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -39,19 +39,19 @@ jobs:
         run: |
           MODEL_FILE="model_metadata/${{ github.event.inputs.model_file }}"
           MODEL_NAME=$(yq '.name' "$MODEL_FILE")
-          MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
+          PARAMETER_COUNT=$(yq '.tag' "$MODEL_FILE")
           MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
           MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
           MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
           LICENSE=$(yq '.license' "$MODEL_FILE")
           echo "MODEL_NAME=$MODEL_NAME" >> $GITHUB_ENV
-          echo "MODEL_TAG=$MODEL_TAG" >> $GITHUB_ENV
+          echo "PARAMETER_COUNT=$PARAMETER_COUNT" >> $GITHUB_ENV
           echo "MODEL_SIZE=$MODEL_SIZE" >> $GITHUB_ENV
           echo "MEMORY_MIN=$MEMORY_MIN" >> $GITHUB_ENV
           echo "MEMORY_RECOMMENDED=$MEMORY_RECOMMENDED" >> $GITHUB_ENV
           echo "LICENSE=$LICENSE" >> $GITHUB_ENV
           echo "model_name=$MODEL_NAME" >> $GITHUB_OUTPUT
-          echo "model_tag=$MODEL_TAG" >> $GITHUB_OUTPUT
+          echo "parameter_count=$PARAMETER_COUNT" >> $GITHUB_OUTPUT
 
       - name: Preload Ollama model cache
         run: |
@@ -61,7 +61,7 @@ jobs:
             -v ${{ github.workspace }}/ollama/model-cache:/root/.ollama \
             -e OLLAMA_ORCHESTRATOR=standalone \
             ollama/ollama:0.6.5 \
-            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$MODEL_TAG"
+            -c "ollama serve & sleep 5 && ollama pull $MODEL_NAME:$PARAMETER_COUNT"
 
       - name: Build Docker image
         run: |
@@ -78,12 +78,12 @@ jobs:
             --label org.opencontainers.image.memory.size="$MODEL_SIZE" \
             --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
             --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED" \
-            -t model-servers:$MODEL_NAME-$MODEL_TAG \
+            -t ollama-server:$MODEL_NAME-$PARAMETER_COUNT \
             -f ./ollama/Dockerfile ./ollama
 
       - name: Save Docker image as artifact
         run: |
-          docker save model-servers:$MODEL_NAME-$MODEL_TAG -o ollama-server.tar
+          docker save ollama-server:$MODEL_NAME-$PARAMETER_COUNT -o ollama-server.tar
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
@@ -110,10 +110,10 @@ jobs:
 
       - name: Test model library and blobs (ENTRYPOINT override)
         run: |
-          IMAGE_NAME=model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }}
+          IMAGE_NAME=ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}
 
           echo "🚀 Creating container with overridden entrypoint..."
-          CONTAINER_ID=$(docker create --entrypoint "" "$IMAGE_NAME" bash -c 'ls -al /root/.ollama/models/manifests/registry.ollama.ai/library/${{ needs.build.outputs.model_name }}/${{ needs.build.outputs.model_tag }} && ls -al /root/.ollama/models/blobs/sha256-*')
+          CONTAINER_ID=$(docker create --entrypoint "" "$IMAGE_NAME" bash -c 'ls -al /root/.ollama/models/manifests/registry.ollama.ai/library/${{ needs.build.outputs.model_name }}/${{ needs.build.outputs.parameter_count }} && ls -al /root/.ollama/models/blobs/sha256-*')
 
           echo "🔍 Starting container to verify model presence..."
           docker start -a "$CONTAINER_ID"
@@ -150,12 +150,12 @@ jobs:
 
       - name: Tag Docker image for Docker Hub
         run: |
-          docker tag model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }} \
-          ${{ secrets.DOCKER_USERNAME }}/model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }}
+          docker tag ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }} \
+          ${{ secrets.DOCKER_USERNAME }}/ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}
 
       - name: Push to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}
 
       - name: Get AWS Account ID
         id: aws
@@ -163,8 +163,8 @@ jobs:
 
       - name: Tag Docker image for ECR
         run: |
-          ECR_URI="${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }}"
-          docker tag model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }} $ECR_URI
+          ECR_URI="${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}"
+          docker tag ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }} $ECR_URI
 
       - name: Login to ECR
         run: |
@@ -172,12 +172,12 @@ jobs:
 
       - name: Create repository if it doesn't exist
         run: |
-          aws ecr describe-repositories --repository-names model-servers --region $AWS_REGION || \
-          aws ecr create-repository --repository-name model-servers --region $AWS_REGION
+          aws ecr describe-repositories --repository-names ollama-server --region $AWS_REGION || \
+          aws ecr create-repository --repository-name ollama-server --region $AWS_REGION
 
       - name: Push to AWS ECR
         run: |
-          docker push ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/model-servers:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.model_tag }}
+          docker push ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}
 
       - name: Delete artifact
         uses: geekyeggo/delete-artifact@v2

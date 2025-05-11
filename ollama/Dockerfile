@@ -12,7 +12,7 @@ COPY model-cache/ /root/.ollama/
 RUN chmod -R 555 /root/.ollama/
 
 RUN ls -al /root/.ollama/models/blobs/sha256-*
-RUN ls -al /root/.ollama/models/manifests/registry.ollama.ai/library
+RUN ls -al /root/.ollama/models/manifests/registry.ollama.ai/library/${MODEL_NAME}
 
 # Copy server launch script
 COPY run_server.sh .

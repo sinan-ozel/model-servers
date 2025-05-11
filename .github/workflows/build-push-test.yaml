@@ -180,7 +180,3 @@ jobs:
         run: |
           docker push ${{ steps.aws.outputs.account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/ollama-server:${{ needs.build.outputs.model_name }}-${{ needs.build.outputs.parameter_count }}
 
-      - name: Delete artifact
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: ollama-server

@@ -99,7 +99,7 @@ You can also run any of the scripts directly:
 version: '3.8'
 services:
   ollama:
-    image: your-dockerhub-username/ollama-server-gemma-7b:latest
+    image: your-dockerhub-username/ollama-server:gemma2-2b
     ports:
       - "11434:11434"
 ```
@@ -112,9 +112,16 @@ services:
 version: '3.8'
 services:
   ollama:
-    image: your-dockerhub-username/ollama-server-gemma-7b:latest
+    image: your-dockerhub-username/ollama-server:gemma2-2b
     ports:
       - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
 
   webui:
     image: ghcr.io/open-webui/open-webui:main

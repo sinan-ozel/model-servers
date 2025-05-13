@@ -1,63 +1,118 @@
 # Ollama Model Server Automation
 
-This repository automates the process of building and publishing Docker images
-for Ollama model servers with preloaded models.
-Images are published both to AWS Elastic Container Registry (ECR) and Docker Hub.
+This repository automates building and publishing Docker images for Ollama model servers with preloaded models.
 
-## Folder Structure
+You can choose one of three ways to use it:
 
-* `model_metadata/` — YAML files describing each model's metadata.
-* `.github/workflows/build-push-test.yaml` — GitHub Actions workflow to build, test, and push model images.
-* `ollama/` — Dockerfile and server setup.
+1. **GitHub Actions** — Quick and easy; suitable for small models and embedding models (limited by GitHub runner storage).
+2. **VS Code Tasks** — Convenient from your IDE; more flexible.
+3. **Manual Script Execution** — Full control, ideal for large models.
 
-## Model Metadata Example
+Built images are pushed to **Docker Hub** and **AWS Elastic Container Registry (ECR)**.
 
-Each model YAML should look like this:
+---
+
+## 📁 Folder Structure
+
+- `model_metadata/` — YAML files describing each model's name, tag, memory, license, etc.
+- `.github/workflows/` — GitHub Actions workflow for build/test/push.
+- `scripts/` — Shell and PowerShell scripts for building/testing/pushing.
+- `ollama/` — Dockerfile and Ollama server setup.
+
+---
+
+## 🧠 Model Metadata Example
+
+Save this in `model_metadata/gemma-7b.yaml`:
 
 ```yaml
 name: gemma-7b
 tag: latest
-memory: 8GiB
+memory:
+  model_size: 7GiB
+  min: 8GiB
+  recommended: 12GiB
+license: apache-2.0
 ```
 
-Save this as `model_metadata/gemma-7b.yaml`.
+---
 
-## Triggering a Build
+## 🚀 Options for Running the Pipeline
 
-Trigger the GitHub workflow manually and specify the metadata file:
+### 🔹 1. GitHub Actions (Manual Dispatch)
 
-```yaml
-model_file: gemma-7b.yaml
-```
+This is the easiest method for small or embedding models.
+
+1. Go to **Actions** tab in GitHub.
+2. Select `Build, Push and Test Ollama Model Image`.
+3. Click **Run workflow**, and choose the `model_file`, e.g. `gemma2_2b.yaml`.
 
 This will:
 
-* Build a Docker image with the specified model preloaded.
-* Tag and push it to Docker Hub and AWS ECR.
-* Run a test to confirm the model was preloaded (i.e., model file exists inside container).
+- Build and preload the model image.
+- Test for model presence.
+- Push to Docker Hub and AWS ECR.
 
-## Running the Image with Open Web UI
+---
 
-Here are example `docker-compose.yml` configurations:
+### 🔹 2. VS Code Tasks (Large Models)
 
-### Example 1: Standalone Ollama Server
+Use this if you want to avoid GitHub storage limits.
+
+Open the command palette (`Ctrl+Shift+P`) → **Run Task** → choose one of:
+
+- `build_ollama_single_model_server`
+- `inspect_ollama_single_model_server`
+- `push_ollama_single_model_server_to_aws`
+- `push_ollama_single_model_server_to_dockerhub`
+- `full_pipeline` (runs all the above in order)
+
+Make sure to configure your VS Code `settings.json`:
+
+```json
+{
+  "aws.region": "ca-central-1",
+  "docker.hub.namespace": "your-dockerhub-username"
+}
+```
+
+---
+
+### 🔹 3. Manual Shell Script Execution
+
+You can also run any of the scripts directly:
+
+```bash
+./scripts/build_ollama_single_model_server.sh model_metadata/gemma-7b.yaml
+./scripts/inspect_ollama_single_model_server.sh model_metadata/gemma-7b.yaml
+./scripts/push_ollama_single_model_server_to_aws.sh model_metadata/gemma-7b.yaml
+./scripts/push_ollama_single_model_server_to_dockerhub.sh model_metadata/gemma-7b.yaml
+```
+
+---
+
+## 🧪 Run the Image
+
+### Standalone Ollama Server
 
 ```yaml
 version: '3.8'
 services:
   ollama:
-    image: your-docker-username/ollama-server-gemma-7b:latest
+    image: your-dockerhub-username/ollama-server-gemma-7b:latest
     ports:
       - "11434:11434"
 ```
 
-### Example 2: With Open Web UI
+---
+
+### With Open Web UI
 
 ```yaml
 version: '3.8'
 services:
   ollama:
-    image: your-docker-username/ollama-server-gemma-7b:latest
+    image: your-dockerhub-username/ollama-server-gemma-7b:latest
     ports:
       - "11434:11434"
 
@@ -71,16 +126,22 @@ services:
       - ollama
 ```
 
-## Requirements
+---
 
-* `yq` (used in the GitHub workflow to read YAML model metadata)
-* GitHub Secrets:
+## 🛠️ Requirements
 
-  * `AWS_ACCESS_KEY_ID`
-  * `AWS_SECRET_ACCESS_KEY`
-  * `DOCKER_USERNAME`
-  * `DOCKER_TOKEN`
+- [`yq`](https://github.com/mikefarah/yq) — used for parsing YAML in GitHub workflows
+- Docker
+- AWS CLI (for ECR pushing)
+- GitHub Secrets (for GitHub Actions):
 
-## License
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `DOCKER_USERNAME`
+  - `DOCKER_TOKEN`
+
+---
+
+## 🪪 License
 
 MIT

@@ -1,0 +1,148 @@
+{
+    "version": "2.0.0",
+    "inputs": [
+        // {
+        //   "id": "osCommand",
+        //   "type": "pickString",
+        //   "description": "Choose your shell",
+        //   "options": ["bash", "powershell"],
+        //   "default": "bash"
+        // },
+        {
+          "id": "modelFile",
+          "type": "pickString",
+          "description": "Select model metadata file",
+          "options": [
+            "gemma2_2b.yaml",
+            "deepseek-r1_7b.yaml",
+            "deepseek-r1_1.5b.yaml",
+            "deepseek-r1_8b.yaml",
+            "mixtral_8x7b.yaml",
+            "gemma2_9b.yaml",
+            "gemma2_27b.yaml",
+            "all-minilm_33m.yaml"
+          ],
+          "default": "gemma2_2b.yaml"
+        }
+      ],
+      "tasks": [
+        {
+            "label": "build_ollama_single_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/build_ollama_single_model_server.sh",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "./scripts/build_ollama_single_model_server.ps1",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "inspect_ollama_single_model_server",
+            "dependsOn": "build_ollama_single_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/inspect_ollama_single_model_server.sh",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "./scripts/inspect_ollama_single_model_server.ps1",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "push_ollama_single_model_server_to_aws",
+            "dependsOn": [
+                "build_ollama_single_model_server",
+                "inspect_ollama_single_model_server"
+            ],
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/push_ollama_single_model_server_to_aws.sh",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "./scripts/push_ollama_single_model_server_to_aws.ps1",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "options": {
+                "env": {
+                    "AWS_REGION": "${config:aws.region}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "push_ollama_single_model_server_to_dockerhub",
+            "dependsOn": [
+                "build_ollama_single_model_server",
+                "inspect_ollama_single_model_server"
+            ],
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/push_ollama_single_model_server_to_dockerhub.sh",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "./scripts/push_ollama_single_model_server_to_dockerhub.ps1",
+                    "model_metadata/${input:modelFile}"
+                ]
+            },
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "full_pipeline",
+            "dependsOn": [
+                "build_ollama_single_model_server",
+                "inspect_ollama_single_model_server",
+                "push_ollama_single_model_server_to_aws",
+                "push_ollama_single_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ]
+}

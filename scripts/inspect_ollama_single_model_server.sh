@@ -1,24 +1,27 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
 
-MODEL_FILE="$1"
+set -e
 
-# Extract fields using yq (requires yq installed: https://github.com/mikefarah/yq)
-model_name=$(yq '.name' "$MODEL_FILE")
-model_tag=$(yq '.tag' "$MODEL_FILE")
+model_file="$1"
+model_name=$(yq '.name' "$model_file")
+model_tag=$(yq '.tag' "$model_file")
+model_size=$(yq '.memory.model_size' "$model_file")
+
+# Convert GiB to kilobytes (e.g., 1.1GiB -> 1126400)
+model_size_kb=$(echo "$model_size" | sed 's/GiB//' | awk '{printf "%.0f", $1 * 1024 * 1024}')
+expected_file_size_kb=$((model_size_kb / 2))
+
 image_name="model-servers/ollama-server:$model_name-$model_tag"
+manifest_path="/root/.ollama/models/manifests/registry.ollama.ai/library/$model_name/$model_tag"
 
-echo "Creating container with overridden entrypoint..."
-container_id=$(docker create --entrypoint bash "$image_name" -c 'find /root/.ollama/models/blobs -type f -name sha256-* -size +1000000k -print -quit | grep -q . || exit 1')
+container_id=$(docker create \
+  --entrypoint bash \
+  "$image_name" \
+  -c "find /root/.ollama/models/blobs -type f -name sha256-* -size +${expected_file_size_kb}k -print -quit | grep -q . && test -f '$manifest_path'")
 
-echo "Starting container to verify model presence..."
 docker start -a "$container_id"
-
-# Get container exit code
 exit_code=$(docker inspect "$container_id" --format='{{.State.ExitCode}}')
-
-# Clean up
-docker rm "$container_id" > /dev/null
+docker rm "$container_id" >/dev/null
 
 if [ "$exit_code" -ne 0 ]; then
   echo "❌ No file larger than 1GB found. Exiting with error."

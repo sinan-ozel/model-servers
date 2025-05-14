@@ -23,11 +23,11 @@ $modelSize = $yaml.memory.model_size
 $memMin = $yaml.memory.min
 $memRecommended = $yaml.memory.recommended
 
-New-Item -ItemType Directory -Path "ollama\model-cache" -Force | Out-Null
-$cachePath = Resolve-Path "ollama\model-cache"
 if (Test-Path "ollama\model-cache") {
     Remove-Item -Path "ollama\model-cache\*" -Recurse -Force
 }
+New-Item -ItemType Directory -Path "ollama\model-cache" -Force | Out-Null
+$cachePath = Resolve-Path "ollama\model-cache"
 
 docker run --rm `
     --entrypoint sh `

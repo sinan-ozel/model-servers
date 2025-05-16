@@ -29,13 +29,15 @@ docker run --rm \
     -v "$CACHE_PATH:/root/.ollama" \
     -e OLLAMA_ORCHESTRATOR=standalone \
     ollama/ollama:0.6.5 \
-    -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG}"
+    -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG} && chown $(id -u):$(id -g) /root/.ollama -R"
 
 # Docker build command (multiline for readability)
-docker build --no-cache \
+docker buildx build \
+    --load \
+    --no-cache \
     --build-arg MODEL_NAME=$MODEL_NAME \
     --build-arg MODEL_TAG=$MODEL_TAG \
-    --build-arg LICENSE=$LICENSE \
+    --build-arg LICENSE="$LICENSE" \
     --build-arg MODEL_SIZE=$MODEL_SIZE \
     --build-arg MEMORY_MIN=$MEMORY_MIN \
     --build-arg MEMORY_RECOMMENDED=$MEMORY_RECOMMENDED \
@@ -44,7 +46,7 @@ docker build --no-cache \
     --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
     --label org.opencontainers.image.version="$MODEL_NAME-$MODEL_TAG" \
     --label org.opencontainers.image.authors="Sinan Ozel" \
-    --label org.opencontainers.image.licenses=$LICENSE \
+    --label org.opencontainers.image.licenses="$LICENSE" \
     --label org.opencontainers.image.vendor="sinanozel" \
     --label org.opencontainers.image.memory.size=$MODEL_SIZE \
     --label org.opencontainers.image.memory.min=$MEMORY_MIN \

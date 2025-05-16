@@ -4,7 +4,7 @@ This repository automates building and publishing Docker images for Ollama model
 
 You can choose one of three ways to use it:
 
-1. **GitHub Actions** — Quick and easy; suitable for small models and embedding models (limited by GitHub runner storage).
+1. **GitHub Actions** — (No Longer used) ~Quick and easy; suitable for small models and embedding models (limited by GitHub runner storage).~
 2. **VS Code Tasks** — Convenient from your IDE; more flexible.
 3. **Manual Script Execution** — Full control, ideal for large models.
 
@@ -40,6 +40,8 @@ license: apache-2.0
 ## 🚀 Options for Running the Pipeline
 
 ### 🔹 1. GitHub Actions (Manual Dispatch)
+
+IMPORTANT: I have not kept this up-to-date and did not test. Will likely require some fixes if used.
 
 This is the easiest method for small or embedding models.
 

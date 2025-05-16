@@ -14,6 +14,9 @@ function Convert-GiBToKilobytes($sizeString) {
     if ($sizeString -match '^([\d\.]+)GiB$') {
         $number = [double]$matches[1]
         return [int]($number * 1024 * 1024)
+    } elseif ($sizeString -match '^([\d\.]+)\s*(MiB|MB)$') {
+        $number = [double]$matches[1]
+        return [int]($number * 1024)
     } else {
         throw "Invalid model_size format: $sizeString"
     }

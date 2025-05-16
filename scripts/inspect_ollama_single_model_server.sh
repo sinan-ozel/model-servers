@@ -8,7 +8,11 @@ model_tag=$(yq '.tag' "$model_file")
 model_size=$(yq '.memory.model_size' "$model_file")
 
 # Convert GiB to kilobytes (e.g., 1.1GiB -> 1126400)
-model_size_kb=$(echo "$model_size" | sed 's/GiB//' | awk '{printf "%.0f", $1 * 1024 * 1024}')
+model_size_kb=$(echo "$model_size" | awk '
+    /GiB$/ { sub(/GiB/, ""); printf "%.0f", $1 * 1024 * 1024; next }
+    /(MiB|MB)$/ { sub(/(MiB|MB)/, ""); printf "%.0f", $1 * 1024; next }
+    { print "Invalid model_size format: " $0 > "/dev/stderr"; exit 1 }
+')
 expected_file_size_kb=$((model_size_kb / 2))
 
 image_name="model-servers/ollama-server:$model_name-$model_tag"

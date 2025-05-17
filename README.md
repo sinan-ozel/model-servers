@@ -101,7 +101,7 @@ You can also run any of the scripts directly:
 version: '3.8'
 services:
   ollama:
-    image: your-dockerhub-username/ollama-server:gemma2-2b
+    image: sinanozel/ollama-server:gemma2-2b
     ports:
       - "11434:11434"
 ```
@@ -114,7 +114,7 @@ services:
 version: '3.8'
 services:
   ollama:
-    image: your-dockerhub-username/ollama-server:gemma2-2b
+    image: sinanozel/ollama-server:gemma2-2b
     ports:
       - "11434:11434"
     deploy:

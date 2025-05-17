@@ -133,7 +133,25 @@ services:
       - OLLAMA_API_BASE_URL=http://ollama:11434
     depends_on:
       - ollama
+  keep-in-memory:
+    image: curlimages/curl:latest
+    depends_on:
+      - ollama
+    entrypoint: [ "sh", "-c" ]
+    command:
+      - |
+        echo "[keep-alive] Started...";
+        while true; do
+          curl -s -X POST http://ollama:11434/api/generate \
+            -H "Content-Type: application/json" \
+            -d '{"model": "gemma2:2b", "prompt": "ping", "options": {"use_mmap": false}, "stream": false}' \
+            > /dev/null;
+          sleep 300;
+        done
 ```
+
+The `keep-in-memory` pod makes triggers the model every five minutes to make sure that it is always
+in memory.
 
 ---
 

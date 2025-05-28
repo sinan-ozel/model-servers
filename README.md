@@ -133,6 +133,7 @@ services:
       - OLLAMA_API_BASE_URL=http://ollama:11434
     depends_on:
       - ollama
+
   keep-in-memory:
     image: curlimages/curl:latest
     depends_on:
@@ -152,6 +153,28 @@ services:
 
 The `keep-in-memory` pod makes triggers the model every five minutes to make sure that it is always
 in memory.
+
+### To have GPU monitoring
+
+The server writes GPU use regularly to a file. If this is contained as a mount point, other
+containers or pods will be able to access this information.
+
+I am planning to have another method for Prometheus later on.
+
+```
+version: '3.8'
+services:
+  ollama:
+    image: sinanozel/ollama-server:gemma2-2b
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_metrics:/metrics  # <-- volume mount for GPU metrics output
+
+volumes:
+  ollama_metrics:
+
+```
 
 ---
 

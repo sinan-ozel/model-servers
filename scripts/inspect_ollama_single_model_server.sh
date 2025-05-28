@@ -33,3 +33,23 @@ if [ "$exit_code" -ne 0 ]; then
 else
   echo "✅ File larger than 1GB found. Success."
 fi
+
+echo "Creating container to verify /metrics/gpu.json existence and content..."
+gpu_metrics_check_container_id=$(docker create \
+  --entrypoint bash \
+  "$image_name" \
+  -c "test -s /metrics/gpu.json")
+
+echo "Starting container to check /metrics/gpu.json..."
+docker start -a "$gpu_metrics_check_container_id"
+
+gpu_metrics_exit_code=$(docker inspect "$gpu_metrics_check_container_id" --format='{{.State.ExitCode}}')
+
+docker rm "$gpu_metrics_check_container_id" >/dev/null
+
+if [ "$gpu_metrics_exit_code" -ne 0 ]; then
+  echo "❌ /metrics/gpu.json is missing or empty. Exiting with error."
+  exit 1
+else
+  echo "✅ /metrics/gpu.json exists and is not empty."
+fi

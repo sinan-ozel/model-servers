@@ -64,3 +64,26 @@ if ($exitCode -ne 0) {
 } else {
     Write-Host "File larger than $modelSize found. Success." -ForegroundColor Green
 }
+
+Write-Host "Creating container to verify gpu.json existence and content..."
+$gpuMetricsCheckContainerId = docker create `
+    --entrypoint bash `
+    $imageName `
+    "-c" `
+    "test -s /metrics/gpu.json"
+
+Write-Host "Starting container to check gpu.json..."
+docker start -a $gpuMetricsCheckContainerId
+
+# Get the exit code
+$gpuMetricsExitCode = docker inspect $gpuMetricsCheckContainerId --format='{{.State.ExitCode}}'
+
+# Clean up the container
+docker rm $gpuMetricsCheckContainerId | Out-Null
+
+if ($gpuMetricsExitCode -ne 0) {
+    Write-Host "/metrics/gpu.json is missing or empty. Exiting with error." -ForegroundColor Red
+    exit 1
+} else {
+    Write-Host "/metrics/gpu.json exists and is not empty." -ForegroundColor Green
+}

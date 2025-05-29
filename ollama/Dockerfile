@@ -20,6 +20,9 @@ RUN ls -al /root/.ollama/
 
 RUN ls -al /root/.ollama/models/blobs/sha256-*
 
+COPY gpu_metrics_writer.sh /usr/local/bin/gpu_metrics_writer.sh
+RUN chmod +x /usr/local/bin/gpu_metrics_writer.sh
+
 # Copy server launch script
 COPY run_server.sh .
 RUN chmod +x run_server.sh

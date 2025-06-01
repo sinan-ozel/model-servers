@@ -32,4 +32,5 @@ if [ "$exit_code" -ne 0 ]; then
   exit 1
 else
   echo "✅ File larger than 1GB found. Success."
+  exit 0
 fi

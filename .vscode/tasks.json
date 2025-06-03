@@ -96,6 +96,7 @@
                 ]
             },
             "options": {
+                "cwd": "${workspaceFolder}",
                 "env": {
                     "AWS_REGION": "${config:aws.region}"
                 }

@@ -2,11 +2,6 @@
 
 set -e  # Exit on error
 
-# Colors for clarity
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
-
 # Check arguments
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <model.yaml>"
@@ -15,7 +10,7 @@ fi
 
 # Ensure yq is available
 if ! command -v yq >/dev/null 2>&1; then
-  echo "${RED}yq is required but not installed. Install it from https://github.com/mikefarah/yq${NC}"
+  echo "yq is required but not installed. Install it from https://github.com/mikefarah/yq"
   exit 1
 fi
 
@@ -30,7 +25,7 @@ MEM_MIN=$(yq '.memory.min' "$MODEL_FILE")
 MEM_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
 
 # Show parsed values
-echo "${GREEN}Parsed model metadata:${NC}"
+echo "Parsed model metadata:"
 echo "  Name:         $MODEL_NAME"
 echo "  Tag:          $MODEL_TAG"
 echo "  License:      $LICENSE"
@@ -41,15 +36,15 @@ echo ""
 
 # Docker Hub namespace from env
 if [ -z "$DOCKERHUB_NAMESPACE" ]; then
-  echo "${RED}Environment variable DOCKERHUB_NAMESPACE is not set. Exiting.${NC}"
+  echo "Environment variable DOCKERHUB_NAMESPACE is not set. Exiting."
   exit 1
 fi
 
 
 # Login to Docker Hub (interactive)
-echo "${GREEN}Logging in to Docker Hub...${NC}"
+echo "Logging in to Docker Hub..."
 docker login || {
-  echo "${RED}Docker login failed.${NC}"
+  echo "Docker login failed."
   exit 1
 }
 
@@ -58,17 +53,17 @@ LOCAL_IMAGE="model-servers/ollama-server:${MODEL_NAME}-${MODEL_TAG}"
 REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/ollama-server:${MODEL_NAME}-${MODEL_TAG}"
 
 # Tag the image
-echo "${GREEN}Tagging image $LOCAL_IMAGE as $REMOTE_IMAGE...${NC}"
+echo "Tagging image $LOCAL_IMAGE as $REMOTE_IMAGE..."
 docker tag "$LOCAL_IMAGE" "$REMOTE_IMAGE" || {
-  echo "${RED}Failed to tag Docker image.${NC}"
+  echo "Failed to tag Docker image."
   exit 1
 }
 
 # Push the image
-echo "${GREEN}Pushing image to Docker Hub...${NC}"
+echo "Pushing image to Docker Hub..."
 docker push "$REMOTE_IMAGE" || {
-  echo "${RED}Failed to push Docker image.${NC}"
+  echo "Failed to push Docker image."
   exit 1
 }
 
-echo "${GREEN}Image push completed successfully.${NC}"
+echo "Image push completed successfully."

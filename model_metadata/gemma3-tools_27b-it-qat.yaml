@@ -1,0 +1,8 @@
+name: gemma3-tools
+tag: 27b-it-qat
+memory:
+  model_size: 16GiB
+  min: 32GiB
+  recommended: 40GiB
+license: Gemma Terms of Use
+max_context_window: 128k

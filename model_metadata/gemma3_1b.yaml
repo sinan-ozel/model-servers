@@ -1,0 +1,8 @@
+name: gemma3
+tag: 1b
+memory:
+  model_size: 2GiB
+  min: 8GiB
+  recommended: 12GiB
+license: Gemma Terms of Use
+max_context_window: 32k

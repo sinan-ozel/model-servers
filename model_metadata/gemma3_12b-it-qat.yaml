@@ -1,0 +1,8 @@
+name: gemma3
+tag: 12b-it-qat
+memory:
+  model_size: 8GiB
+  min: 24GiB
+  recommended: 32GiB
+license: Gemma Terms of Use
+max_context_window: 128k

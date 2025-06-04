@@ -1,0 +1,9 @@
+# Qwen3 32b model definition
+name: qwen3
+tag: 32b
+memory:
+  model_size: 64GiB
+  min: 64GiB
+  recommended: 80GiB
+license: Apache 2.0
+max_context_window: 128k

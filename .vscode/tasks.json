@@ -1,26 +1,41 @@
 {
     "version": "2.0.0",
     "inputs": [
-        // {
-        //   "id": "osCommand",
-        //   "type": "pickString",
-        //   "description": "Choose your shell",
-        //   "options": ["bash", "powershell"],
-        //   "default": "bash"
-        // },
         {
           "id": "modelFile",
           "type": "pickString",
           "description": "Select model metadata file",
           "options": [
-            "gemma2_2b.yaml",
             "deepseek-r1_7b.yaml",
             "deepseek-r1_1.5b.yaml",
             "deepseek-r1_8b.yaml",
+
             "mixtral_8x7b.yaml",
+
+            "gemma2_2b.yaml",
             "gemma2_9b.yaml",
             "gemma2_27b.yaml",
-            "all-minilm_33m.yaml"
+
+            "all-minilm_33m.yaml",
+
+            "gemma3_1b.yaml",
+            "gemma3_4b.yaml",
+            "gemma3_12b.yaml",
+            "gemma3_27b.yaml",
+            "gemma3_1b-it-qat.yaml",
+            "gemma3_4b-it-qat.yaml",
+            "gemma3_12b-it-qat.yaml",
+            "gemma3_27b-it-qat.yaml",
+            "gemma3-tools_27b-it-qat.yaml",
+
+            "qwen3_0.6b.yaml",
+            "qwen3_1.7b.yaml",
+            "qwen3_4b.yaml",
+            "qwen3_8b.yaml",
+            "qwen3_14b.yaml",
+            "qwen3_32b.yaml",
+            "qwen3_30b-a3b.yaml",
+            "qwen3_235b-a22b.yaml"
           ],
           "default": "gemma2_2b.yaml"
         }

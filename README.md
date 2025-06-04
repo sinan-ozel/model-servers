@@ -176,6 +176,8 @@ volumes:
 
 ```
 
+Inside the folder, you will see a file called `gpu.json`. This file is updated every 2 minutes.
+
 ---
 
 ## 🛠️ Requirements

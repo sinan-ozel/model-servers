@@ -28,7 +28,7 @@ docker run --rm \
     --entrypoint sh \
     -v "$CACHE_PATH:/root/.ollama" \
     -e OLLAMA_ORCHESTRATOR=standalone \
-    ollama/ollama:0.6.5 \
+    ollama/ollama:0.6.6 \
     -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG} && chown $(id -u):$(id -g) /root/.ollama -R"
 
 # Docker build command (multiline for readability)

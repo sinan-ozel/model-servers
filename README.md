@@ -1,3 +1,5 @@
+[![Docker Pulls](https://img.shields.io/docker/pulls/sinanozel/ollama-server)](https://hub.docker.com/r/sinanozel/ollama-server)
+
 # Ollama Model Server Automation
 
 This repository automates building and publishing Docker images for Ollama model servers with preloaded models.

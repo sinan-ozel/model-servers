@@ -17,6 +17,8 @@ LICENSE=$(yq '.license' "$MODEL_FILE")
 MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
 MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
 MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
+MAX_CONTEXT_WINDOW=$(yq '.max_context_window' "$MODEL_FILE")
+
 
 # Ensure model cache directory exists
 CACHE_PATH="$(realpath ollama/model-cache)"
@@ -41,6 +43,7 @@ docker buildx build \
     --build-arg MODEL_SIZE=$MODEL_SIZE \
     --build-arg MEMORY_MIN=$MEMORY_MIN \
     --build-arg MEMORY_RECOMMENDED=$MEMORY_RECOMMENDED \
+    --build-arg MAX_CONTEXT_WINDOW=$MAX_CONTEXT_WINDOW \
     --tag model-servers/ollama-server:$MODEL_NAME-$MODEL_TAG \
     --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
     --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \

@@ -10,6 +10,7 @@ RUN apt update
 RUN apt install curl -y
 RUN rm -rf /var/lib/apt/lists/*
 
+
 # Copy pre-pulled models into the image
 COPY model-cache/ /root/.ollama/
 RUN chmod -R 444 /root/.ollama/models

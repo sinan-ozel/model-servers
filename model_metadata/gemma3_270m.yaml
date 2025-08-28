@@ -1,0 +1,8 @@
+name: gemma3
+tag: 270m
+memory:
+  model_size:  292MiB
+  min: 1GiB
+  recommended: 1GiB
+license: Gemma Terms of Use
+max_context_window: 32k

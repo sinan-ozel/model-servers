@@ -18,6 +18,7 @@
 
             "all-minilm_33m.yaml",
 
+            "gemma3_270m.yaml",
             "gemma3_1b.yaml",
             "gemma3_4b.yaml",
             "gemma3_12b.yaml",

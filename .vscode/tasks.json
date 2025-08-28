@@ -35,7 +35,9 @@
             "qwen3_14b.yaml",
             "qwen3_32b.yaml",
             "qwen3_30b-a3b.yaml",
-            "qwen3_235b-a22b.yaml"
+            "qwen3_235b-a22b.yaml",
+
+            "qwen3_coder-30b.yaml",
           ],
           "default": "gemma2_2b.yaml"
         }

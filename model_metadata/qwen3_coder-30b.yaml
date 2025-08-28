@@ -1,0 +1,9 @@
+# Qwen3 Coder model definition
+name: qwen3-coder
+tag: 30b
+memory:
+  model_size: 19GiB
+  min: 24GiB
+  recommended: 32GiB
+license: apache-2.0
+max_context_window: 262144

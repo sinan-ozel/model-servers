@@ -15,15 +15,6 @@ Additionally, a simple GPU VRAM monitoring script is included, logging usage to 
 
 This project is MIT licensed, giving you freedom to use it commercially. Feel free to clone, enhance, or tweak to your heart’s content. If you want, you can also reach out for explicit permission.
 
-
-You can choose one of three ways to use it:
-
-1. **GitHub Actions** — (No Longer used) ~Quick and easy; suitable for small models and embedding models (limited by GitHub runner storage).~
-2. **VS Code Tasks** — Convenient from your IDE; more flexible.
-3. **Manual Script Execution** — Full control, ideal for large models.
-
-Built images are pushed to **Docker Hub** and **AWS Elastic Container Registry (ECR)**.
-
 ## Quick Start
 
 Requirements: docker
@@ -51,6 +42,14 @@ To test:
 curl http://localhost:11434/api/generate -d '{"model": "gemma3:4b", "prompt": "Is the cake real?"}'
 ```
 
+
+## Advanced - Creating Your Own Image
+
+Requirements: docker, git, VS Code.
+
+Clone the repo and run the "full pipeline" or any one of the tasks that go into the full pipeline.
+You can actually do this without VSCode, just read the file `.vscode/tasks.json` and
+run the same scripts manually.
 
 
 ---

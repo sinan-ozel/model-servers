@@ -2,19 +2,16 @@
 
 # Ollama Model Server Automation
 
-This repository automates building and publishing Docker images for Ollama model servers with preloaded models.
-This allows for:
-1. Version control - the models are frozen and cannot be updated by Hugging Face
-2. It removes dependency on Hugging Face servers
-3. It allows for fast startup, which can be crucial in heavy workloads.
+This repository streamlines the building and publishing of Docker images for Ollama model servers with preloaded models, unlocking a suite of powerful benefits:
 
-I also added a way to keep the container alive, further helping with performance, see below.
-There is also a very basic script that monitors GPU VRAM usage and saves to a file.
-There is also a pipeline to upload to your own AWS repository, this is typically required in larger organizations.
+✨ Version Control: Your models are frozen in time—no more automatic updates from Hugging Face.
+✨ Independence: Say goodbye to relying on external Hugging Face servers.
+✨ Lightning-Fast Startup: Perfect for heavy workloads where every second counts.
 
-Feel free to clone to repo to make more robust.
-It is under MIT license, so you should be able to use for commercial purposes,
-feel free to reach out and get permission if you deem necessary.
+To boost performance even further, the container can be kept alive continuously. There is an example below in this README.md file.
+Additionally, a simple GPU VRAM monitoring script is included, logging usage to a file for easy tracking. For larger organizations, there’s also a ready-made pipeline to upload images to your own AWS repository.
+
+This project is MIT licensed, giving you freedom to use it commercially. Feel free to clone, enhance, or tweak to your heart’s content. If you want, you can also reach out for explicit permission.
 
 
 You can choose one of three ways to use it:
@@ -232,7 +229,7 @@ services:
 The `keep-in-memory` pod makes triggers the model every five minutes to make sure that it is always
 in memory.
 
-### To have GPU monitoring
+### For GPU Monitoring
 
 The server writes GPU use regularly to a file. If this is contained as a mount point, other
 containers or pods will be able to access this information.

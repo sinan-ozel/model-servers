@@ -1,8 +1,8 @@
 name: gemma3n
 tag: e4b
 memory:
-  model_size: 7.5 GiB       # Ollama quantized build size
-  min: 12 GiB
-  recommended: 16 GiB
+  model_size: 7.5GiB
+  min: 12GiB
+  recommended: 16GiB
 license: Gemma Terms of Use
 max_context_window: 32k

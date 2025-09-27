@@ -1,9 +1,21 @@
-[![Docker Pulls 0.6.6](https://img.shields.io/docker/pulls/sinanozel/ollama-server)](https://hub.docker.com/r/sinanozel/ollama-server)
 [![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
 
 # Ollama Model Server Automation
 
 This repository automates building and publishing Docker images for Ollama model servers with preloaded models.
+This allows for:
+1. Version control - the models are frozen and cannot be updated by Hugging Face
+2. It removes dependency on Hugging Face servers
+3. It allows for fast startup, which can be crucial in heavy workloads.
+
+I also added a way to keep the container alive, further helping with performance, see below.
+There is also a very basic script that monitors GPU VRAM usage and saves to a file.
+There is also a pipeline to upload to your own AWS repository, this is typically required in larger organizations.
+
+Feel free to clone to repo to make more robust.
+It is under MIT license, so you should be able to use for commercial purposes,
+feel free to reach out and get permission if you deem necessary.
+
 
 You can choose one of three ways to use it:
 
@@ -12,6 +24,35 @@ You can choose one of three ways to use it:
 3. **Manual Script Execution** — Full control, ideal for large models.
 
 Built images are pushed to **Docker Hub** and **AWS Elastic Container Registry (ECR)**.
+
+## Quick Start
+
+Requirements: docker
+
+### Standalone Ollama Server
+
+```yaml
+version: '3.8'
+services:
+  ollama:
+    image: sinanozel/ollama.0.12.2:gemma3-4b
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
+```
+
+To test:
+```bash
+curl http://localhost:11434/api/generate -d '{"model": "gemma3:4b", "prompt": "Is the cake real?"}'
+```
+
+
 
 ---
 
@@ -26,17 +67,23 @@ Built images are pushed to **Docker Hub** and **AWS Elastic Container Registry (
 
 ## 🧠 Model Metadata Example
 
-Save this in `model_metadata/gemma-7b.yaml`:
+If you want to clone the repo and add another file.
+
+Save this in `model_metadata/devstral_24b.yaml`:
 
 ```yaml
-name: gemma-7b
-tag: latest
+name: devstral
+tag: 24b
 memory:
-  model_size: 7GiB
-  min: 8GiB
-  recommended: 12GiB
-license: apache-2.0
+  model_size: 25GiB
+  min: 32GiB
+  recommended: 56GiB
+license: Apache License Version 2.0, January 2004
+max_context_window: 128k
+
 ```
+
+Then add to `.vscode/tasks.json`
 
 ---
 
@@ -109,6 +156,7 @@ services:
       - "11434:11434"
 ```
 
+To test:
 ```bash
 curl http://localhost:11434/api/embed -d '{"model": "all-minilm:33m", "input": "The cake is a lie."}'
 ```
@@ -120,7 +168,7 @@ curl http://localhost:11434/api/embed -d '{"model": "all-minilm:33m", "input": "
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama.0.12.2:gemma2-2b
+    image: sinanozel/ollama.0.12.2:gemma3-4b
     ports:
       - "11434:11434"
     deploy:
@@ -132,13 +180,11 @@ services:
             count: all
 ```
 
+To test:
 ```bash
-curl http://localhost:11434/api/generate -d '{"model": "all-minilm:33m", "prompt": "Is the cake real?"}'
+curl http://localhost:11434/api/generate -d '{"model": "gemma3:4b", "prompt": "Is the cake real?"}'
 ```
 
-
-
----
 
 ### With Open Web UI
 
@@ -177,7 +223,7 @@ services:
         while true; do
           curl -s -X POST http://ollama:11434/api/generate \
             -H "Content-Type: application/json" \
-            -d '{"model": "gemma2:2b", "prompt": "ping", "options": {"use_mmap": false}, "stream": false}' \
+            -d '{"model": "gemma3:4b", "prompt": "ping", "options": {"use_mmap": false}, "stream": false}' \
             > /dev/null;
           sleep 300;
         done
@@ -191,20 +237,25 @@ in memory.
 The server writes GPU use regularly to a file. If this is contained as a mount point, other
 containers or pods will be able to access this information.
 
-I am planning to have another method for Prometheus later on.
+I am planning to have another method for Prometheus, or at least make this a bit more robust
+by changing it into a service and adding timestamps.
 
-```
+```yaml
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama-server:gemma2-2b
+    image: sinanozel/ollama.0.12.2:gemma3-4b
     ports:
       - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
     volumes:
-      - ollama_metrics:/metrics  # <-- volume mount for GPU metrics output
-
-volumes:
-  ollama_metrics:
+      - './ollama_gpu_metrics:/metrics'
 
 ```
 

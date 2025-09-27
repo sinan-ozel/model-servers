@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Start GPU metrics writer (non-blocking)
-# echo "Starting GPU metrics writer..."
-# /usr/local/bin/gpu_metrics_writer.sh &
+echo "Starting GPU metrics writer..."
+/usr/local/bin/gpu_metrics_writer.sh &
 
 # Start Ollama server in the background
 echo "Starting Ollama server..."

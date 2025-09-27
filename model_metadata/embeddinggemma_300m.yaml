@@ -1,7 +1,8 @@
 name: embeddinggemma
 tag: 300m
 memory:
-  model_size: 622 MiB
-  min: 2 GiB
-  recommended: 4 GiB
+  model_size: 622MiB
+  min: 2GiB
+  recommended: 4GiB
 license: Gemma Terms of Use
+max_context_window: N/A

@@ -26,8 +26,5 @@ RUN chmod +x /usr/local/bin/gpu_metrics_writer.sh
 COPY run_server.sh .
 RUN chmod +x run_server.sh
 
-COPY preload_model.sh .
-RUN chmod +x preload_model.sh
-
 EXPOSE 11434
 ENTRYPOINT ["./run_server.sh"]

@@ -1,8 +1,8 @@
 name: gemma3n
 tag: e2b
 memory:
-  model_size: 5.6 GiB
-  min: 10 GiB
-  recommended: 16 GiB
+  model_size: 5.6GiB
+  min: 10GiB
+  recommended: 16GiB
 license: Gemma Terms of Use :contentReference[oaicite:0]{index=0}
 max_context_window: 32k

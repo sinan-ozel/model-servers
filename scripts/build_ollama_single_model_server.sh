@@ -21,6 +21,16 @@ MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
 MAX_CONTEXT_WINDOW=$(yq '.max_context_window' "$MODEL_FILE")
 
 
+# Show parsed values
+echo "${GREEN}Parsed model metadata:${NC}"
+echo "  Name:              $MODEL_NAME"
+echo "  Tag:               $MODEL_TAG"
+echo "  License:           $LICENSE"
+echo "  Model Size:        $MODEL_SIZE"
+echo "  Memory Min:        $MEMORY_MIN"
+echo "  Memory Rec.:       $MEMORY_RECOMMENDED"
+echo "  Max Context Win.:  $MAX_CONTEXT_WINDOW"
+
 # Ensure model cache directory exists
 CACHE_PATH="$(realpath ollama/model-cache)"
 mkdir -p "$CACHE_PATH"
@@ -41,10 +51,10 @@ docker buildx build \
     --build-arg MODEL_NAME=$MODEL_NAME \
     --build-arg MODEL_TAG=$MODEL_TAG \
     --build-arg LICENSE="$LICENSE" \
-    --build-arg MODEL_SIZE=$MODEL_SIZE \
-    --build-arg MEMORY_MIN=$MEMORY_MIN \
-    --build-arg MEMORY_RECOMMENDED=$MEMORY_RECOMMENDED \
-    --build-arg MAX_CONTEXT_WINDOW=$MAX_CONTEXT_WINDOW \
+    --build-arg MODEL_SIZE="$MODEL_SIZE" \
+    --build-arg MEMORY_MIN="$MEMORY_MIN" \
+    --build-arg MEMORY_RECOMMENDED="$MEMORY_RECOMMENDED" \
+    --build-arg MAX_CONTEXT_WINDOW="$MAX_CONTEXT_WINDOW" \
     --tag model-servers/ollama.$OLLAMA_VERSION:$MODEL_NAME-$MODEL_TAG \
     --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
     --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
@@ -52,9 +62,9 @@ docker buildx build \
     --label org.opencontainers.image.authors="Sinan Ozel" \
     --label org.opencontainers.image.licenses="$LICENSE" \
     --label org.opencontainers.image.vendor="sinanozel" \
-    --label org.opencontainers.image.memory.size=$MODEL_SIZE \
-    --label org.opencontainers.image.memory.min=$MEMORY_MIN \
-    --label org.opencontainers.image.memory.recommended=$MEMORY_RECOMMENDED \
+    --label org.opencontainers.image.memory.size="$MODEL_SIZE" \
+    --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
+    --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED" \
     --label org.opencontainers.image.date="$(date +'%Y-%m-%d')" \
     --file ./ollama/Dockerfile ./ollama
 

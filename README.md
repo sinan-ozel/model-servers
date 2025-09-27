@@ -5,7 +5,9 @@
 This repository streamlines the building and publishing of Docker images for Ollama model servers with preloaded models, unlocking a suite of powerful benefits:
 
 ✨ Version Control: Your models are frozen in time—no more automatic updates from Hugging Face.
+
 ✨ Independence: Say goodbye to relying on external Hugging Face servers.
+
 ✨ Lightning-Fast Startup: Perfect for heavy workloads where every second counts.
 
 To boost performance even further, the container can be kept alive continuously. There is an example below in this README.md file.

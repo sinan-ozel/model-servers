@@ -1,0 +1,7 @@
+name: embeddinggemma
+tag: 300m
+memory:
+  model_size: 622 MiB
+  min: 2 GiB
+  recommended: 4 GiB
+license: Gemma Terms of Use

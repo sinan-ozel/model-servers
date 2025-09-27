@@ -1,0 +1,8 @@
+name: mistral
+tag: 7b
+memory:
+  model_size: 4.4GiB
+  min: 16GiB
+  recommended: 24GiB
+license: Apache License Version 2.0, January 2004
+max_context_window: 32k

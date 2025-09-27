@@ -2,6 +2,8 @@
 
 set -e  # Exit on error
 
+OLLAMA_VERSION="0.12.2"
+
 # Check arguments
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <model.yaml>"
@@ -49,8 +51,8 @@ docker login || {
 }
 
 # Compose image names
-LOCAL_IMAGE="model-servers/ollama-server:${MODEL_NAME}-${MODEL_TAG}"
-REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/ollama-server:${MODEL_NAME}-${MODEL_TAG}"
+LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
+REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
 
 # Tag the image
 echo "Tagging image $LOCAL_IMAGE as $REMOTE_IMAGE..."

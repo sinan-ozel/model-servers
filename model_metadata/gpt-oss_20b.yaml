@@ -1,0 +1,8 @@
+name: gpt-oss
+tag: 20b
+memory:
+  model_size:  14GiB
+  min: 24GiB
+  recommended: 32GiB
+license: Apache 2.0
+max_context_window: 128k

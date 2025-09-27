@@ -9,14 +9,24 @@
             "deepseek-r1_7b.yaml",
             "deepseek-r1_1.5b.yaml",
             "deepseek-r1_8b.yaml",
+            "deepcoder_1.5b.yaml",
+            "deepcoder_14b.yaml",
 
+            "mistral-small3.2_24b.yaml",
+            "mistral_7b.yaml",
             "mixtral_8x7b.yaml",
+            "magistral_24b.yaml",
+            "devstral_24b.yaml",
 
             "gemma2_2b.yaml",
             "gemma2_9b.yaml",
             "gemma2_27b.yaml",
 
             "all-minilm_33m.yaml",
+            "embeddinggemma_300m.yaml",
+            "qwen3-embedding_0.6b.yaml",
+            "qwen3-embedding_4b.yaml",
+            "qwen3-embedding_8b.yaml",
 
             "gemma3_270m.yaml",
             "gemma3_1b.yaml",
@@ -29,6 +39,11 @@
             "gemma3_27b-it-qat.yaml",
             "gemma3-tools_27b-it-qat.yaml",
 
+            "gemma3n_e2b.yaml",
+            "gemma3n_e2b.yaml",
+
+            "phi4-mini-reasoning_3.8b.yaml",
+
             "qwen3_0.6b.yaml",
             "qwen3_1.7b.yaml",
             "qwen3_4b.yaml",
@@ -38,7 +53,10 @@
             "qwen3_30b-a3b.yaml",
             "qwen3_235b-a22b.yaml",
 
-            "qwen3_coder-30b.yaml",
+            "qwen3-coder_30b.yaml",
+
+            "gpt-oss_20b.yaml",
+            "gpt-oss_120b.yaml"
           ],
           "default": "gemma2_2b.yaml"
         }

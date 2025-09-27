@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.6.6
+FROM ollama/ollama:0.12.2
 
 ARG MODEL_NAME
 ARG MODEL_TAG
@@ -16,8 +16,6 @@ COPY model-cache/ /root/.ollama/
 RUN chmod -R 444 /root/.ollama/models
 
 RUN ls -al /root/.ollama/
-
-# RUN mv /root/.ollama/models/* /root/.ollama/
 
 RUN ls -al /root/.ollama/models/blobs/sha256-*
 

@@ -1,0 +1,8 @@
+name: deepcoder
+tag: 14b
+memory:
+  model_size: 9.0 GiB
+  min: 24 GiB
+  recommended: 32 GiB
+license: MIT License
+max_context_window: 128k

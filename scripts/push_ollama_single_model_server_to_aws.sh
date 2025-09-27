@@ -4,6 +4,8 @@ echo "🚀 Starting push to AWS"
 
 set -euo pipefail
 
+OLLAMA_VERSION="0.12.2"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -57,9 +59,9 @@ if [[ -z "$ACCOUNT_ID" ]]; then
 fi
 
 HOSTNAME="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-REPO_NAME="model-servers/ollama-server"
+REPO_NAME="model-servers/ollama.${OLLAMA_VERSION}"
 REMOTE_IMAGE="${HOSTNAME}/${REPO_NAME}:${MODEL_NAME}-${MODEL_TAG}"
-LOCAL_IMAGE="model-servers/ollama-server:${MODEL_NAME}-${MODEL_TAG}"
+LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
 
 # Authenticate with ECR
 log "🔐 Logging in to AWS ECR..."

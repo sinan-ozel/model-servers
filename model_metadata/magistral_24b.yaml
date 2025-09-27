@@ -1,0 +1,8 @@
+name: magistral
+tag: 24b
+memory:
+  model_size: 14 GiB     # Ollama quantized build Q4_K_M ~14 GB :contentReference[oaicite:0]{index=0}
+  min: 24 GiB
+  recommended: 32 GiB
+license: Apache-2.0
+max_context_window: 40k

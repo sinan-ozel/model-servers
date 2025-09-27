@@ -33,7 +33,7 @@ docker run --rm `
     --entrypoint sh `
     -v "$($cachePath.Path):/root/.ollama" `
     -e OLLAMA_ORCHESTRATOR=standalone `
-    ollama/ollama:0.6.5 `
+    ollama/ollama:0.12.2 `
     -c "ollama serve & sleep 5 && ollama pull ${modelName}:${modelTag}"
 
 # Get current date in yyyy-MM-dd format

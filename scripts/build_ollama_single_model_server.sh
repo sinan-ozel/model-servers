@@ -3,6 +3,7 @@
 set -e
 
 MODEL_FILE="$1"
+OLLAMA_VERSION="0.12.2"
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null; then
@@ -30,7 +31,7 @@ docker run --rm \
     --entrypoint sh \
     -v "$CACHE_PATH:/root/.ollama" \
     -e OLLAMA_ORCHESTRATOR=standalone \
-    ollama/ollama:0.6.6 \
+    ollama/ollama:$OLLAMA_VERSION \
     -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG} && chown $(id -u):$(id -g) /root/.ollama -R"
 
 # Docker build command (multiline for readability)
@@ -44,7 +45,7 @@ docker buildx build \
     --build-arg MEMORY_MIN=$MEMORY_MIN \
     --build-arg MEMORY_RECOMMENDED=$MEMORY_RECOMMENDED \
     --build-arg MAX_CONTEXT_WINDOW=$MAX_CONTEXT_WINDOW \
-    --tag model-servers/ollama-server:$MODEL_NAME-$MODEL_TAG \
+    --tag model-servers/ollama.$OLLAMA_VERSION:$MODEL_NAME-$MODEL_TAG \
     --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
     --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
     --label org.opencontainers.image.version="$MODEL_NAME-$MODEL_TAG" \

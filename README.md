@@ -1,4 +1,5 @@
-[![Docker Pulls](https://img.shields.io/docker/pulls/sinanozel/ollama-server)](https://hub.docker.com/r/sinanozel/ollama-server)
+[![Docker Pulls 0.6.6](https://img.shields.io/docker/pulls/sinanozel/ollama-server)](https://hub.docker.com/r/sinanozel/ollama-server)
+[![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
 
 # Ollama Model Server Automation
 
@@ -97,16 +98,45 @@ You can also run any of the scripts directly:
 
 ## 🧪 Run the Image
 
+### Standalone Ollama Embedding Server
+
+```yaml
+version: '3.8'
+services:
+  ollama:
+    image: sinanozel/ollama.0.12.2:all-minilm-33m
+    ports:
+      - "11434:11434"
+```
+
+```bash
+curl http://localhost:11434/api/embed -d '{"model": "all-minilm:33m", "input": "The cake is a lie."}'
+```
+
+
 ### Standalone Ollama Server
 
 ```yaml
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama-server:gemma2-2b
+    image: sinanozel/ollama.0.12.2:gemma2-2b
     ports:
       - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
 ```
+
+```bash
+curl http://localhost:11434/api/generate -d '{"model": "all-minilm:33m", "prompt": "Is the cake real?"}'
+```
+
+
 
 ---
 

@@ -1,0 +1,9 @@
+# Llama 3.2 Vision model definition
+name: llama3.2-vision
+tag: 11b
+memory:
+  model_size: 7.8GiB
+  min: 16GiB
+  recommended: 24GiB
+license: Llama 3.2 Community License
+max_context_window: 131072

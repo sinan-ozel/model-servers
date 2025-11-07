@@ -1,0 +1,8 @@
+name: llava
+tag: 7b
+memory:
+  model_size: 4.1GiB
+  min: 8GiB
+  recommended: 12GiB
+license: Apache 2.0
+max_context_window: 4096

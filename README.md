@@ -21,6 +21,13 @@ Requirements: docker
 
 ### Standalone Ollama Server
 
+Here is the command I use to run the 4B parameter Gemma3 model:
+```bash
+docker run -p 11434:11434 sinanozel/ollama.0.12.2:gemma3-4b
+```
+
+Or, here is a sample `docker-compose.yaml`:
+
 ```yaml
 version: '3.8'
 services:
@@ -37,11 +44,57 @@ services:
             count: all
 ```
 
+### Call the Server
+
 To test:
 ```bash
 curl http://localhost:11434/api/generate -d '{"model": "gemma3:4b", "prompt": "Is the cake real?"}'
 ```
 
+Or, use Python httpx to get a streaming response:
+```python
+import httpx
+
+HOST = 'http://localhost:11434'
+
+payload = {
+    "model": "gemma3:4b",
+    "stream": True,
+    "num_predict": 64,
+    "messages": [
+        {
+            "role": "user",
+            "content": prompty_prompt
+        }
+    ]
+}
+
+with httpx.stream('POST', 
+                  f'{HOST}/api/chat', 
+                  json=payload, 
+                  timeout=None) as steaming_response:
+    steaming_response.raise_for_status()
+    content = ''
+    for line in steaming_response.iter_lines():
+        print(line)
+        obj = json.loads(line)
+        content += obj.get("message", {}).get("content", "")
+        if obj.get('done'):
+            break
+```
+
+Here is the LiteLLM Integration:
+```python
+from litellm import completion
+
+response = completion(
+    model="ollama/gemma3:4b",
+    messages=[
+        {"role": "user", "content": "Is the cake real?"}
+    ],
+    api_base="http://localhost:11434",
+)
+```
 
 ## Advanced - Creating Your Own Image
 
@@ -50,6 +103,8 @@ Requirements: docker, git, VS Code.
 Clone the repo and run the "full pipeline" or any one of the tasks that go into the full pipeline.
 You can actually do this without VSCode, just read the file `.vscode/tasks.json` and
 run the same scripts manually.
+
+Under the same file, you can also find the script that uploads to a custom ECR server, if you need to send a corporate or personal server on AWS.
 
 
 ---

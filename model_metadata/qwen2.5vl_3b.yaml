@@ -1,0 +1,9 @@
+# Qwen2.5VL 3B model definition
+name: qwen2.5vl
+tag: 3b
+memory:
+  model_size: 3.2GiB
+  min: 8GiB
+  recommended: 12GiB
+license: Apache 2.0
+max_context_window: 128k

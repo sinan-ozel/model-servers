@@ -1,0 +1,9 @@
+# Qwen2.5VL 32B model definition
+name: qwen2.5vl
+tag: 32b
+memory:
+  model_size: 56GiB
+  min: 64GiB
+  recommended: 80GiB
+license: Apache 2.0
+max_context_window: 128k

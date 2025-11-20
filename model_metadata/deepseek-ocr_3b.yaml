@@ -1,0 +1,9 @@
+# DeepSeek‑OCR 3B model definition
+name: deepseek-ocr
+tag: 3b
+memory:
+  model_size: 6.7GiB
+  min: 8GiB
+  recommended: 16GiB
+license: MIT
+max_context_window: 8k

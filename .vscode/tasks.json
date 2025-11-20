@@ -55,8 +55,17 @@
 
             "qwen3-coder_30b.yaml",
 
+            "qwen2.5vl_3b.yaml",
+            "qwen2.5vl_7b.yaml",
+            "qwen2.5vl_32b.yaml",
+            "qwen2.5vl_72b.yaml",
+
             "llava_7b.yaml",
+
             "llama3.2-vision_11b.yaml",
+            "llama3.2-vision_90b.yaml",
+
+            "deepseek-ocr_3b.yaml",
 
             "gpt-oss_20b.yaml",
             "gpt-oss_120b.yaml"

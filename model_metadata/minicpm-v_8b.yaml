@@ -1,0 +1,9 @@
+# MiniCPM‑V 8B model definition
+name: minicpm-v
+tag: 8b
+memory:
+  model_size: 5.5GiB
+  min: 8GiB
+  recommended: 16GiB
+license: MiniCPM Model Community License (OpenBMB)
+max_context_window: 32k

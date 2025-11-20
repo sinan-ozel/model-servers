@@ -1,0 +1,9 @@
+# Qwen3‑VL 4B model definition
+name: qwen3-vl
+tag: 4b
+memory:
+  model_size: 3.3GiB
+  min: 8GiB
+  recommended: 16GiB
+license: Apache 2.0
+max_context_window: 256k

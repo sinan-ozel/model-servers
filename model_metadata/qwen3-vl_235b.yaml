@@ -1,0 +1,9 @@
+# Qwen3‑VL 235B model definition
+name: qwen3-vl
+tag: 235b
+memory:
+  model_size: 142GiB
+  min: 256GiB
+  recommended: 320GiB
+license: Apache 2.0
+max_context_window: 256k

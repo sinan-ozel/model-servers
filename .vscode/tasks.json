@@ -60,10 +60,19 @@
             "qwen2.5vl_32b.yaml",
             "qwen2.5vl_72b.yaml",
 
+            "qwen3-vl_2b.yaml",
+            "qwen3-vl_4b.yaml",
+            "qwen3-vl_8b.yaml",
+            "qwen3-vl_30b.yaml",
+            "qwen3-vl_32b.yaml",
+            "qwen3-vl_235b.yaml",
+
             "llava_7b.yaml",
 
             "llama3.2-vision_11b.yaml",
             "llama3.2-vision_90b.yaml",
+
+            "minicpm-v_8b.yaml",
 
             "deepseek-ocr_3b.yaml",
 

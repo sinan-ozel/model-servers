@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MODEL_FILE="$1"
-OLLAMA_VERSION="0.12.2"
+OLLAMA_VERSION="0.12.11"
 
 model_name=$(yq '.name' "$MODEL_FILE")
 model_tag=$(yq '.tag' "$MODEL_FILE")

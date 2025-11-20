@@ -2,7 +2,7 @@
 
 set -e  # Exit on error
 
-OLLAMA_VERSION="0.12.2"
+OLLAMA_VERSION="0.12.11"
 
 # Check arguments
 if [ $# -lt 1 ]; then

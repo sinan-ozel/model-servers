@@ -1,4 +1,5 @@
 [![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
+[![Docker Pulls 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
 
 # Ollama Model Server Automation
 

@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.12.2
+FROM ollama/ollama:0.12.11
 
 ARG MODEL_NAME
 ARG MODEL_TAG

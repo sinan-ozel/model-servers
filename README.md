@@ -1,5 +1,5 @@
-[![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
-[![Docker Pulls 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
+[![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2?label=docker%20pulls%200.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
+[![Docker Pulls 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11?label=docker%20pulls%200.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
 
 # Ollama Model Server Automation
 
@@ -70,13 +70,13 @@ payload = {
     ]
 }
 
-with httpx.stream('POST', 
-                  f'{HOST}/api/chat', 
-                  json=payload, 
-                  timeout=None) as steaming_response:
-    steaming_response.raise_for_status()
+with httpx.stream('POST',
+                  f'{HOST}/api/chat',
+                  json=payload,
+                  timeout=None) as streaming_response:
+    streaming_response.raise_for_status()
     content = ''
-    for line in steaming_response.iter_lines():
+    for line in streaming_response.iter_lines():
         print(line)
         obj = json.loads(line)
         content += obj.get("message", {}).get("content", "")

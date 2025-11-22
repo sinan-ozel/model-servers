@@ -18,7 +18,7 @@ This project is MIT licensed, giving you freedom to use it commercially. Feel fr
 
 ## Quick Start
 
-Requirements: docker
+Requirements: 🐳 `docker`, `nvidia-container-runtime`, Cuda 12 or later drivers, NVidia GPU and driver. (All installable through apt on Ubuntu.)
 
 ### Standalone Ollama Server
 

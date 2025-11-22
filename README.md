@@ -16,9 +16,44 @@ Additionally, a simple GPU VRAM monitoring script is included, logging usage to 
 
 This project is MIT licensed, giving you freedom to use it commercially. Feel free to clone, enhance, or tweak to your heart’s content. If you want, you can also reach out for explicit permission.
 
+## Requirements
+
+The host machine requirements: 🐳 `docker`, `nvidia-container-runtime`, CUDA 12 or later drivers, NVidia GPU and driver. (All installable through `apt` on Ubuntu.)
+
+In my case, on Ubuntu 24.04, `nvidia-smi` was already installed. If you do not have it, it should be installable through `apt get nvidia-smi`. See the versions I used here:
+```
+nvidia-smi --version
+NVIDIA-SMI version  : 580.95.05
+NVML version        : 580.95
+DRIVER version      : 580.95.05
+CUDA Version        : 13.0
+```
+
+(You don't actually need CUDA 13.0 on the host machine, CUDA 12 should be enough.
+
+For the so-called `nvidia-container-toolkit`, I used the following commands to install:
+```
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update
+export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.8-1
+  sudo apt-get install -y \
+      nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
+
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+```
+
+
 ## Quick Start
 
-Requirements: 🐳 `docker`, `nvidia-container-runtime`, Cuda 12 or later drivers, NVidia GPU and driver. (All installable through apt on Ubuntu.)
+Once you have `nvidia-container-toolkit` and `nvidia-smi` installed...
 
 ### Standalone Ollama Server
 

@@ -18,7 +18,9 @@ This project is MIT licensed, giving you freedom to use it commercially. Feel fr
 
 ## Requirements
 
-The host machine requirements: 🐳 `docker`, `nvidia-container-runtime`, CUDA 12 or later drivers, NVidia GPU and driver. (All installable through `apt` on Ubuntu.)
+The host machine requirements: 🐳 `docker`, `nvidia-container-runtime`, CUDA 12 or later drivers, NVidia GPU and driver. (All installable through `apt` on Ubuntu.) On AWS, you just need a GPU-enabled AMI (everything is installed on those), see the Pulumi code on my IAC repo to do so automatically: (https://github.com/sinan-ozel/iac)[https://github.com/sinan-ozel/iac]
+
+I used an old piece of hardware to test the smaller models (<10B parameters): GeForce GTX 1660 Ti with 6GB GPU RAM. Note that results in multiple seconds of response time, even for the smaller models. So the containers are tested in a worst-case scenario, you should be fine running them on any standard hardware.
 
 In my case, on Ubuntu 24.04, `nvidia-smi` was already installed. If you do not have it, it should be installable through `apt get nvidia-smi`. See the versions I used here:
 ```
@@ -49,6 +51,8 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 
 ```
+
+On AWS, the standard GPU-enabled AMI is enough to host these containers, if that is your node, you don't need to install anything. (I tested a similar container a while back on 32GB nodes.)
 
 
 ## Quick Start

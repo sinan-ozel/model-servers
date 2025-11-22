@@ -2,8 +2,8 @@
 name: qwen3
 tag: 0.6b
 memory:
-  model_size: 2GiB
-  min: 8GiB
-  recommended: 12GiB
+  model_size: 1GiB
+  min: 4GiB
+  recommended: 8GiB
 license: Apache 2.0
 max_context_window: 32k

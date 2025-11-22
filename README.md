@@ -24,7 +24,7 @@ Requirements: 🐳 `docker`, `nvidia-container-runtime`, Cuda 12 or later driver
 
 Here is the command I use to run the 4B parameter Gemma3 model:
 ```bash
-docker run -p 11434:11434 sinanozel/ollama.0.12.2:gemma3-4b
+docker run -p 11434:11434 sinanozel/ollama.0.12.11:gemma3-4b
 ```
 
 Or, here is a sample `docker-compose.yaml`:
@@ -33,7 +33,7 @@ Or, here is a sample `docker-compose.yaml`:
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama.0.12.2:gemma3-4b
+    image: sinanozel/ollama.0.12.11:gemma3-4b
     ports:
       - "11434:11434"
     deploy:
@@ -222,7 +222,7 @@ curl http://localhost:11434/api/embed -d '{"model": "all-minilm:33m", "input": "
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama.0.12.2:gemma3-4b
+    image: sinanozel/ollama.0.12.11:gemma3-4b
     ports:
       - "11434:11434"
     deploy:
@@ -298,7 +298,7 @@ by changing it into a service and adding timestamps.
 version: '3.8'
 services:
   ollama:
-    image: sinanozel/ollama.0.12.2:gemma3-4b
+    image: sinanozel/ollama.0.12.11:gemma3-4b
     ports:
       - "11434:11434"
     deploy:

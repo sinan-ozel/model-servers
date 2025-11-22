@@ -16,9 +16,30 @@ Additionally, a simple GPU VRAM monitoring script is included, logging usage to 
 
 This project is MIT licensed, giving you freedom to use it commercially. Feel free to clone, enhance, or tweak to your heart’s content. If you want, you can also reach out for explicit permission.
 
+## Requirements
+🐳 `docker`, `nvidia-container-runtime`, Cuda 12 or later drivers, NVidia GPU and driver. (All installable through `apt` on Ubuntu.) I ran many of these on CUDA 13.0 on Ubuntu 24.04, nvidia-smi NVML 580.95, driver 580.95, GeForce GTX 1660 Ti with 6GB GPU RAM. (Note that larger models, even those that at around 12B parameters, will not run on such a limited hardware, and even the smaller models these have seconds of response time on this old hardware.)
+
+On Ubuntu 24.04, `nvidia-smi` was already installed in my case. If you don't have it, it should be available through `apt get nvidia-smi`.
+
+For the so-called `nvidia-container-toolkit`, I used the following commands to install:
+```
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt-get update
+export NVIDIA_CONTAINER_TOOLKIT_VERSION=1.17.8-1
+  sudo apt-get install -y \
+      nvidia-container-toolkit=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      nvidia-container-toolkit-base=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
+      libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
+
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
 ## Quick Start
 
-Requirements: 🐳 `docker`, `nvidia-container-runtime`, Cuda 12 or later drivers, NVidia GPU and driver. (All installable through apt on Ubuntu.)
 
 ### Standalone Ollama Server
 

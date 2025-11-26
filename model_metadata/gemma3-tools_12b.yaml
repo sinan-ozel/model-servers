@@ -1,0 +1,8 @@
+name: orieg/gemma3-tools
+tag: 12b
+memory:
+  model_size: 8.9GiB
+  min: 12GiB
+  recommended: 24GiB
+license: Gemma Terms of Use
+max_context_window: 128k

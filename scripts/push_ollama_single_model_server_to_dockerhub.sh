@@ -51,8 +51,9 @@ docker login || {
 }
 
 # Compose image names
-LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
-REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
+SAFE_NAME="${MODEL_NAME//\//-}"
+REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/ollama.${OLLAMA_VERSION}:${SAFE_NAME}-${MODEL_TAG}"
+LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${SAFE_NAME}-${MODEL_TAG}"
 
 # Tag the image
 echo "Tagging image $LOCAL_IMAGE as $REMOTE_IMAGE..."

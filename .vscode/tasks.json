@@ -37,7 +37,10 @@
             "gemma3_4b-it-qat.yaml",
             "gemma3_12b-it-qat.yaml",
             "gemma3_27b-it-qat.yaml",
-            "gemma3-tools_27b-it-qat.yaml",
+            "gemma3-tools_1b.yaml",
+            "gemma3-tools_4b.yaml",
+            "gemma3-tools_12b.yaml",
+            "gemma3-tools_27b.yaml",
 
             "gemma3n_e2b.yaml",
             "gemma3n_e4b.yaml",

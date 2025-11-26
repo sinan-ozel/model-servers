@@ -60,8 +60,9 @@ fi
 
 HOSTNAME="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 REPO_NAME="model-servers/ollama.${OLLAMA_VERSION}"
-REMOTE_IMAGE="${HOSTNAME}/${REPO_NAME}:${MODEL_NAME}-${MODEL_TAG}"
-LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${MODEL_NAME}-${MODEL_TAG}"
+SAFE_NAME="${MODEL_NAME//\//-}"
+REMOTE_IMAGE="${HOSTNAME}/${REPO_NAME}:${SAFE_NAME}-${MODEL_TAG}"
+LOCAL_IMAGE="model-servers/ollama.${OLLAMA_VERSION}:${SAFE_NAME}-${MODEL_TAG}"
 
 # Authenticate with ECR
 log "🔐 Logging in to AWS ECR..."

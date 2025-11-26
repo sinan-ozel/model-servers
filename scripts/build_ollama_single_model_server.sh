@@ -44,6 +44,8 @@ docker run --rm \
     ollama/ollama:$OLLAMA_VERSION \
     -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG} && chown $(id -u):$(id -g) /root/.ollama -R"
 
+SAFE_NAME="${MODEL_NAME//\//-}"
+
 # Docker build command (multiline for readability)
 docker buildx build \
     --load \
@@ -55,7 +57,7 @@ docker buildx build \
     --build-arg MEMORY_MIN="$MEMORY_MIN" \
     --build-arg MEMORY_RECOMMENDED="$MEMORY_RECOMMENDED" \
     --build-arg MAX_CONTEXT_WINDOW="$MAX_CONTEXT_WINDOW" \
-    --tag model-servers/ollama.$OLLAMA_VERSION:$MODEL_NAME-$MODEL_TAG \
+    --tag model-servers/ollama.$OLLAMA_VERSION:$SAFE_NAME-$MODEL_TAG \
     --label org.opencontainers.image.title="Ollama Server - $MODEL_NAME" \
     --label org.opencontainers.image.description="Preloaded Ollama model server for $MODEL_NAME:$MODEL_TAG" \
     --label org.opencontainers.image.version="$MODEL_NAME-$MODEL_TAG" \

@@ -36,8 +36,15 @@ if [ -z "$model_size_kb" ]; then
 fi
 echo "Model size: $model_size. Parsed size in kB: $model_size_kb."
 
-image_name="model-servers/ollama.${OLLAMA_VERSION}:$model_name-$model_tag"
-manifest_path="/root/.ollama/models/manifests/registry.ollama.ai/library/$model_name/$model_tag"
+safe_name="${model_name//\//-}"
+image_name="model-servers/ollama.${OLLAMA_VERSION}:$safe_name-$model_tag"
+if [[ "$model_name" == */* ]]; then
+    manifest_path="/root/.ollama/models/manifests/registry.ollama.ai/$model_name/$model_tag"
+else
+    manifest_path="/root/.ollama/models/manifests/registry.ollama.ai/library/$model_name/$model_tag"
+fi
+echo "Inspecting Docker image: $image_name"
+
 
 container_id=$(docker create \
   --entrypoint bash \
@@ -45,7 +52,8 @@ container_id=$(docker create \
   -c "find /root/.ollama/models/blobs -type f -name sha256-* -size +${expected_file_size_kb}k -print -quit | grep -q . && test -f '$manifest_path'")
 
 if [ -z "$container_id" ]; then
-  echo "❌ Docker create failed. Check image name: $image_name" >&2
+  echo "❌ Docker create failed. Check image name: $safe_name" >&2
+
   exit 1
 fi
 

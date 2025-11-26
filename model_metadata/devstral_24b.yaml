@@ -1,7 +1,7 @@
 name: devstral
 tag: 24b
 memory:
-  model_size: 25GiB
+  model_size: 14GiB
   min: 32GiB
   recommended: 56GiB
 license: Apache License Version 2.0, January 2004

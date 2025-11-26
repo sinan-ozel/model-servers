@@ -1,7 +1,7 @@
 name: phi4-mini-reasoning
 tag: 3.8b
 memory:
-  model_size: 2.5GiB
+  model_size: 3.2GiB
   min: 8GiB
   recommended: 12GiB
 license: MIT

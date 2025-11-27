@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 MODEL_FILE="$1"
 OLLAMA_VERSION="0.12.11"

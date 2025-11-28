@@ -56,6 +56,9 @@ docker buildx build \
     --label org.opencontainers.image.memory.min="$MEMORY_MIN" \
     --label org.opencontainers.image.memory.recommended="$MEMORY_RECOMMENDED" \
     --label org.opencontainers.image.date="$(date +'%Y-%m-%d')" \
+    --label org.opencontainers.image.source="https://github.com/sinan-ozel/model-servers" \
+    --label org.opencontainers.image.url="https://github.com/sinan-ozel/model-servers" \
+    --label org.opencontainers.image.documentation="https://github.com/sinan-ozel/model-servers/text2image/swagger/${MODEL_PUBLISHER}/${MODEL_NAME}/v${VERSION}" \
     --file ./text2image/Dockerfile ./text2image
 
 rm -rf "${TARGET_DIR}"

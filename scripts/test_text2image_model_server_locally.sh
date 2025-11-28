@@ -41,7 +41,7 @@ while true; do
     fi
 
     # Check if server responds AND model is loaded
-    if curl -sf http://localhost:8000/status 2>/dev/null | grep -q '"model_loaded": true'; then
+    if curl -sf http://localhost:8000/status | grep '"model_loaded":[ ]*true'; then
         break
     fi
 
@@ -56,6 +56,8 @@ done
 
 echo "Model loaded."
 
+rm output.png || true
+
 # Test generation
 curl http://localhost:8000/v3/images/generations \
   -H "Content-Type: application/json" \
@@ -67,8 +69,14 @@ curl http://localhost:8000/v3/images/generations \
   }" \
 | jq -r '.data[0].b64_json' | base64 --decode > output.png
 
-echo "Saved to output.png"
+if [[ -f output.png ]]; then
+    echo "output.png created successfully"
+    docker stop text2image-server
+    docker rm text2image-server
+    echo "Server stopped and removed"
+    exit 0
+else
+    echo "output.png not created"
+    exit 1
+fi
 
-docker stop text2image-server
-docker rm text2image-server
-echo "Server stopped and removed"

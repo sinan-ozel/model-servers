@@ -3,8 +3,10 @@ set -e
 
 VERSION="0.1.0"
 
-MODEL_PUBLISHER="CompVis"
-MODEL_NAME="stable-diffusion-v1-4"
+INPUT="$1"
+
+MODEL_PUBLISHER="${INPUT%%/*}"
+MODEL_NAME="${INPUT#*/}"
 
 docker stop text2image-server || true
 docker rm text2image-server || true
@@ -22,10 +24,26 @@ until curl -sf http://localhost:8000/openapi.json >/dev/null 2>&1; do
 done
 
 # Create output folder
-OUTDIR="swagger"
+OUTDIR="text2image/swagger/${MODEL_PUBLISHER}/${MODEL_NAME}/v${VERSION}"
 mkdir -p "$OUTDIR"
 
 # Download Swagger / OpenAPI spec
 curl -s http://localhost:8000/openapi.json -o "${OUTDIR}/openapi.json"
+curl -s http://localhost:8000/openapi.yaml -o "${OUTDIR}/openapi.yaml"
+curl -s http://localhost:8000/docs -o "${OUTDIR}/swagger.html"
+curl -s http://localhost:8000/redoc -o "${OUTDIR}/redoc.html"
+
 
 echo "Swagger saved to ${OUTDIR}/openapi.json"
+echo "Swagger saved to ${OUTDIR}/openapi.yaml"
+echo "Swagger saved to ${OUTDIR}/swagger.html"
+echo "Swagger saved to ${OUTDIR}/redoc.html"
+
+# Git add, commit, and push
+git add "${OUTDIR}/openapi.json" \
+        "${OUTDIR}/openapi.yaml" \
+        "${OUTDIR}/swagger.html" \
+        "${OUTDIR}/redoc.html"
+
+git commit -m "Add swagger for ${MODEL_PUBLISHER}/${MODEL_NAME} v${VERSION}"
+git push

@@ -83,9 +83,56 @@
             "gpt-oss_120b.yaml"
           ],
           "default": "gemma2_2b.yaml"
+        },
+        {
+          "id": "modelFolder",
+          "type": "pickString",
+          "description": "Select model folder",
+          "options": [
+            "CompVis/stable-diffusion-v1-4",
+          ],
+          "default": "CompVis/stable-diffusion-v1-4"
         }
       ],
       "tasks": [
+        {
+            "label": "build_text2image_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/build_text2image_model_server.sh",
+                    "${input:modelFolder}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test_text2image_model_server_locally",
+            // "dependsOn": "build_text2image_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/test_text2image_model_server_locally.sh",
+                    "${input:modelFolder}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "print_text2image_swagger",
+            "dependsOn": "test_text2image_model_server_locally",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/print_text2image_swagger.sh",
+                    "${input:modelFolder}"
+                ]
+            },
+            "problemMatcher": []
+        },
         {
             "label": "build_ollama_single_model_server",
             "type": "shell",

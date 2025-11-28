@@ -4,12 +4,14 @@ set -e
 
 VERSION="0.1.0"
 
-MODEL_PUBLISHER="CompVis"
-MODEL_NAME="stable-diffusion-v1-4"
+INPUT="$1"
+
+MODEL_PUBLISHER="${INPUT%%/*}"
+MODEL_NAME="${INPUT#*/}"
 
 
 docker stop text2image-server || true
-docker rm text2image-server || true
+docker rm -f text2image-server || true
 
 # Diagnostic: show model directory permissions
 docker run --rm \
@@ -18,7 +20,7 @@ docker run --rm \
     --name text2image-server \
     --entrypoint bash \
     model-servers/text2image.v${VERSION}:${MODEL_PUBLISHER}--${MODEL_NAME} \
-    -c 'ls -al /app/hf/hub/'
+    -c 'ls -al /app/hf/hub/models--${MODEL_PUBLISHER}--${MODEL_NAME}'
 
 
 docker run -d \

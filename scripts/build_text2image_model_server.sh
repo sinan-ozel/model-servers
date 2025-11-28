@@ -3,8 +3,10 @@ set -e
 
 VERSION="0.1.0"
 
-MODEL_PUBLISHER="CompVis"
-MODEL_NAME="stable-diffusion-v1-4"
+INPUT="$1"
+
+MODEL_PUBLISHER="${INPUT%%/*}"
+MODEL_NAME="${INPUT#*/}"
 HOST_MODEL_PATH="/home/sinan//hf/hub/models--${MODEL_PUBLISHER}--${MODEL_NAME}"
 MODEL_SIZE=$(du -BG ${HOST_MODEL_PATH}/blobs | awk '{print $1}')  # e.g. "11G"
 

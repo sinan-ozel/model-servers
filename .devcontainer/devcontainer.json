@@ -1,0 +1,26 @@
+{
+    "name": "model-builder-and-deployer",
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "workspace",
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind",
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ],
+    "features": {
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
+        "ghcr.io/devcontainers/features/aws-cli:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "clemenspeters.format-json",
+                "euskadi31.json-pretty-printer",
+                "github.vscode-github-actions"
+            ]
+        }
+    },
+    "postCreateCommand": "kubectl version --client=true",
+    "remoteUser": "root"
+}

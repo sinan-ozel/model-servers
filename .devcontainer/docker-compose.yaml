@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/sinan//hf/hub/:/home/sinan//hf/hub/
+      - /mnt/c/Users/sinan/secrets/.aws:/root/.aws
+      - ..:/workspace
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      KUBECONFIG: /workspace/.iac/kubeconfig.yaml
+
+    command: >
+      bash -c "echo 'export KUBECONFIG=/workspace/.iac/kubeconfig.yaml' >> /root/.bashrc && sleep infinity"

@@ -1,0 +1,43 @@
+# Default values for basic-deployment
+nameOverride: "basic-llm"
+replicaCount: 1
+
+# Model configuration for path-based routing
+model:
+  name: "gemma3"
+  tag: "12b"
+
+image:
+  repository: sinanozel/ollama.0.12.11
+  tag: "orieg-gemma3-tools-1b"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 11434
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+  hosts:
+    - host: ""
+      paths:
+        - path: /gemma3/12b
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    memory: "8Gi"
+    cpu: "2000m"
+  requests:
+    memory: "4Gi"
+    cpu: "1000m"
+
+nameOverride: ""
+fullnameOverride: ""

@@ -106,11 +106,10 @@
             "type": "shell",
             "command": [
                 "gh auth status >/dev/null 2>&1 || gh auth login;",
-                "mkdir -p iac;",
-                "[ -f ${workspaceFolder}/iac/model-server.json ] && rm ${workspaceFolder}/iac/model-server.json;",
-                "gh run download --repo ${config:iac.repo} --name pulumi-${input:provider}-model-server --dir ${workspaceFolder}/iac;",
-                "cat iac/model-server.json | jq -r '.kubeconfig' > ${workspaceFolder}/iac/kubeconfig.yaml;",
-                "export KUBECONFIG=\"$PWD/iac/kubeconfig.yaml\""
+                "mkdir -p .iac;",
+                "[ -f ${workspaceFolder}/.iac/model-server.json ] && rm -f ${workspaceFolder}/.iac/model-server.json;",
+                "gh run download --repo ${config:iac.repo} --name pulumi-${input:provider}-model-server --dir ${workspaceFolder}/.iac;",
+                "cat ${workspaceFolder}/.iac/model-server.json | jq -r '.kubeconfig' > ${workspaceFolder}/.iac/kubeconfig.yaml;",
             ],
             "group": {
                 "kind": "build",
@@ -239,6 +238,51 @@
                 "push_ollama_single_model_server_to_dockerhub"
             ],
             "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "deploy_ollama_single_model_server_to_k8s",
+            "type": "shell",
+            "linux": {
+                "command": "./scripts/deploy_ollama_single_model_server_to_k8s.sh",
+                "args": [
+                    "${input:modelFile}"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test_ollama_single_model_server_on_k8s",
+            "type": "shell",
+            "linux": {
+                "command": "./scripts/test_ollama_single_model_server_on_k8s.sh",
+                "args": [
+                    "${input:modelFile}"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "KUBECONFIG": "${workspaceFolder}/.iac/kubeconfig.yaml"
+                }
+            },
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
             "problemMatcher": []
         }
     ]

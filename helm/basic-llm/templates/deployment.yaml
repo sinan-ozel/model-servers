@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "basic-deployment.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "basic-deployment.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "basic-deployment.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "basic-deployment.selectorLabels" . | nindent 8 }}
+    spec:
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"
+      nodeSelector:
+        node.kubernetes.io/instance-type: "g4dn.xlarge"
+      containers:
+      - name: ollama-container
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 11434
+        env:
+        - name: OLLAMA_ORIGINS
+          value: "*"
+        - name: OLLAMA_HOST
+          value: "0.0.0.0:11434"
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+          limits:
+            nvidia.com/gpu: 1
+          requests:
+            nvidia.com/gpu: 1

@@ -1,0 +1,12 @@
+# Values for nginx ingress controller
+ingress-nginx:
+  controller:
+    service:
+      type: LoadBalancer
+    config:
+      use-forwarded-headers: "true"
+      compute-full-forwarded-for: "true"
+    metrics:
+      enabled: false
+  defaultBackend:
+    enabled: false

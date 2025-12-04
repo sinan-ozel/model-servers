@@ -28,8 +28,8 @@ OUTDIR="text2image/swagger/${MODEL_PUBLISHER}/${MODEL_NAME}/v${VERSION}"
 mkdir -p "$OUTDIR"
 
 # Download Swagger / OpenAPI spec
-curl -s http://localhost:8000/openapi.json -o "${OUTDIR}/openapi.json"
-curl -s http://localhost:8000/openapi.yaml -o "${OUTDIR}/openapi.yaml"
+curl -s http://localhost:8000/openapi.json | jq '.' > "${OUTDIR}/openapi.json"
+yq -P < "${OUTDIR}/openapi.json" > "${OUTDIR}/openapi.yaml"
 curl -s http://localhost:8000/docs -o "${OUTDIR}/swagger.html"
 curl -s http://localhost:8000/redoc -o "${OUTDIR}/redoc.html"
 

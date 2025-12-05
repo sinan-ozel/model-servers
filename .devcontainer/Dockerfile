@@ -39,8 +39,14 @@ RUN type -p curl >/dev/null || apt-get install -y curl && \
         | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
     apt-get update && apt-get install -y gh
 
+# Create ubuntu user and add to docker group for docker-in-docker
+RUN usermod -aG sudo ubuntu && \
+    echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    groupadd -f docker && \
+    usermod -aG docker ubuntu
+
 # Create workspace directory
-RUN mkdir -p /workspace
+RUN mkdir -p /workspace && chown ubuntu:ubuntu /workspace
 
 WORKDIR /workspace
 

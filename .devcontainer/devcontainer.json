@@ -4,7 +4,7 @@
     "service": "workspace",
     "workspaceFolder": "/workspace",
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind",
+        "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind",
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
     ],
     "features": {
@@ -22,5 +22,5 @@
         }
     },
     "postCreateCommand": "kubectl version --client=true",
-    "remoteUser": "root"
+    "remoteUser": "ubuntu"
 }

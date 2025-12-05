@@ -3,7 +3,7 @@ name: qwen3-vl
 tag: 8b
 memory:
   model_size: 6.1GiB
-  min: 16GiB
-  recommended: 24GiB
+  min: 12GiB
+  recommended: 16GiB
 license: Apache 2.0 :contentReference[oaicite:1]{index=1}
 max_context_window: 256k

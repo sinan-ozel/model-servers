@@ -5,6 +5,7 @@
     "workspaceFolder": "/workspace",
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind",
+        "source=${localEnv:HOME}/secrets/.aws,target=/home/ubuntu/.aws,type=bind",
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
     ],
     "features": {

@@ -102,7 +102,7 @@
       ],
       "tasks": [
         {
-            "label": "download-model-server-kubeconfig",
+            "label": "download_model_cluster_kubeconfig",
             "type": "shell",
             "command": [
                 "gh auth status >/dev/null 2>&1 || gh auth login;",

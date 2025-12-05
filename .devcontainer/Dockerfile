@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     jq \
     tree \
     apt-transport-https \
+    wget \
     gnupg \
     lsb-release \
     software-properties-common

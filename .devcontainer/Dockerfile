@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     lsb-release \
-    software-properties-common
+    software-properties-common \
+    sudo
 
 # Docker CLI
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \

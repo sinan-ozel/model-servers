@@ -21,6 +21,6 @@
             ]
         }
     },
-    "postCreateCommand": "kubectl version --client=true",
+    "postCreateCommand": "kubectl version --client=true && sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh && sudo chmod 700 /home/ubuntu/.ssh && sudo chmod 600 /home/ubuntu/.ssh/* 2>/dev/null || true",
     "remoteUser": "ubuntu"
 }

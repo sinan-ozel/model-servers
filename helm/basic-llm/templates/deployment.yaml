@@ -24,7 +24,7 @@ spec:
         operator: "Exists"
         effect: "NoSchedule"
       nodeSelector:
-        node.kubernetes.io/instance-type: "g4dn.xlarge"
+        node.kubernetes.io/instance-type: {{ .Values.nodeSelector.instanceType | quote }}
       containers:
       - name: ollama-container
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

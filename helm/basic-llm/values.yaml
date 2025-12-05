@@ -2,6 +2,10 @@
 nameOverride: "basic-llm"
 replicaCount: 1
 
+# Node configuration
+nodeSelector:
+  instanceType: "g4dn.xlarge"
+
 # Model configuration for path-based routing
 model:
   name: "gemma3"

@@ -60,6 +60,17 @@ if [ -z "$LB_HOSTNAME" ]; then
     exit 1
 fi
 
+# Find GPU node type based on nvidia.com/gpu taint
+echo "=== Finding GPU node type ==="
+GPU_NODE_TYPE=$(kubectl get nodes -o json | jq -r '.items[] | select(.spec.taints != null) | select(.spec.taints[] | .key == "nvidia.com/gpu" and .value == "true") | .metadata.labels["node.kubernetes.io/instance-type"]' | head -1)
+
+if [ -z "$GPU_NODE_TYPE" ]; then
+    echo "Warning: No GPU node with nvidia.com/gpu=true taint found, using default g4dn.xlarge"
+    GPU_NODE_TYPE="g4dn.xlarge"
+else
+    echo "Found GPU node type: $GPU_NODE_TYPE"
+fi
+
 # Deploy LLM service
 MODEL_PATH="/$MODEL_NAME/$MODEL_TAG"
 echo "=== Deploying LLM service ==="
@@ -78,7 +89,8 @@ helm install basic-llm ./helm/basic-llm \
     --set ingress.hosts[0].host="$LB_HOSTNAME" \
     --set ingress.hosts[0].paths[0].path="$MODEL_PATH" \
     --set model.name="$MODEL_NAME" \
-    --set model.tag="$MODEL_TAG"
+    --set model.tag="$MODEL_TAG" \
+    --set nodeSelector.instanceType="$GPU_NODE_TYPE"
 
 echo "=== Deployment Complete ==="
 echo "Access URL: http://$LB_HOSTNAME$MODEL_PATH"

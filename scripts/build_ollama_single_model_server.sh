@@ -32,19 +32,39 @@ echo "  Memory Rec.:       $MEMORY_RECOMMENDED"
 echo "  Max Context Win.:  $MAX_CONTEXT_WINDOW"
 
 # Ensure model cache directory exists
-CACHE_PATH="$(realpath ollama/model-cache)"
+CACHE_PATH="/tmp/model-cache"
 mkdir -p "$CACHE_PATH"
-[ -d ollama/model-cache ] && rm -rf ollama/model-cache/*
+rm -rf "$CACHE_PATH"/*
 
 # Preload model using Ollama container
+# DEBUG: Find where models are actually downloading
+echo "=== DEBUGGING MODEL DOWNLOAD LOCATION ==="
+echo "Current working directory: $(pwd)"
+echo "Cache path (inside devcontainer): $CACHE_PATH"
+echo "Checking Docker host mount behavior..."
+
+# Test where Docker actually mounts our volume
+docker run --rm -v "$CACHE_PATH:/test-mount" alpine sh -c "echo 'Testing mount' && ls -la /test-mount && echo 'Mount test complete'"
+
+echo "Starting model download with debugging..."
 docker run --rm \
     --entrypoint sh \
     -v "$CACHE_PATH:/root/.ollama" \
     -e OLLAMA_ORCHESTRATOR=standalone \
     ollama/ollama:$OLLAMA_VERSION \
-    -c "ollama serve & sleep 5 && ollama pull ${MODEL_NAME}:${MODEL_TAG} && chown $(id -u):$(id -g) /root/.ollama -R"
+    -c "echo 'Container started, checking mount point:' && ls -la /root/.ollama && echo 'Starting ollama server...' && ollama serve & sleep 5 && echo 'Pulling model...' && ollama pull ${MODEL_NAME}:${MODEL_TAG} && echo 'Model pulled, checking files:' && find /root/.ollama -name '*.bin' -o -name '*blob*' | head -5 && echo 'Fixing ownership...' && chown $(id -u):$(id -g) /root/.ollama -R && echo 'Final contents:' && ls -la /root/.ollama"
+
+echo "After download, checking host cache directory:"
+ls -la "$CACHE_PATH"
+echo "Searching for model files on host:"
+find "$CACHE_PATH" -name "*${MODEL_TAG}*" -o -name "*blob*" 2>/dev/null || echo "No model files found in cache"
 
 SAFE_NAME="${MODEL_NAME//\//-}"
+
+# Copy model cache to Docker build context
+echo "Copying model cache to Docker build context..."
+rm -rf ollama/model-cache
+cp -r "$CACHE_PATH" ollama/model-cache
 
 # Docker build command (multiline for readability)
 docker buildx build \

@@ -6,6 +6,7 @@ ingress-nginx:
     config:
       use-forwarded-headers: "true"
       compute-full-forwarded-for: "true"
+      proxy-body-size: "10m"
     metrics:
       enabled: false
   defaultBackend:

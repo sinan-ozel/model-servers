@@ -1,4 +1,4 @@
-name: gemma3-tools
+name: orieg/gemma3-tools
 tag: 27b
 memory:
   model_size: 18GiB

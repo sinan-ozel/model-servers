@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     tree \
     apt-transport-https \
     wget \
+    vim \
     gnupg \
     lsb-release \
     software-properties-common \

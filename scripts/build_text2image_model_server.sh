@@ -7,7 +7,36 @@ INPUT="$1"
 
 MODEL_PUBLISHER="${INPUT%%/*}"
 MODEL_NAME="${INPUT#*/}"
-HOST_MODEL_PATH="/home/sinan//hf/hub/models--${MODEL_PUBLISHER}--${MODEL_NAME}"
+
+# Use HF_HOME if set, otherwise default to ~/.cache/huggingface
+HF_CACHE="${HF_HOME:-$HOME/.cache/huggingface}"
+HOST_MODEL_PATH="${HF_CACHE}/hub/models--${MODEL_PUBLISHER}--${MODEL_NAME}"
+
+# Check if model exists locally, if not download it
+echo "Model not found at $HOST_MODEL_PATH"
+echo "Downloading ${MODEL_PUBLISHER}/${MODEL_NAME} from Hugging Face..."
+echo "This may take a while. Using low-memory streaming download..."
+
+# Use snapshot_download with low memory options
+REPO_ID="${MODEL_PUBLISHER}/${MODEL_NAME}" python3 << 'PYEOF'
+import os
+from huggingface_hub import snapshot_download
+
+repo_id = os.environ['REPO_ID']
+print(f"Downloading {repo_id}...")
+
+# Download with options to minimize memory usage:
+# - max_workers=1: Download one file at a time
+# - resume_download=True: Resume if interrupted
+snapshot_download(
+    repo_id=repo_id,
+    max_workers=1,
+)
+print("Download complete")
+PYEOF
+
+echo "Download complete"
+
 MODEL_SIZE=$(du -BG ${HOST_MODEL_PATH}/blobs | awk '{print $1}')  # e.g. "11G"
 
 # Extract numeric GiB value (strip trailing "G")

@@ -7,7 +7,8 @@
         "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind",
         "source=${localEnv:HOME}/secrets/.aws,target=/home/ubuntu/.aws,type=bind",
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-        "source=/tmp/model-cache,target=/tmp/model-cache,type=bind"
+        "source=/tmp/model-cache,target=/tmp/model-cache,type=bind",
+        "source=${localEnv:HOME}/.cache/huggingface,target=/root/.cache/huggingface,type=bind"
     ],
     "features": {
         "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},

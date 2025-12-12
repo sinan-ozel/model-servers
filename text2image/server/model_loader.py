@@ -17,6 +17,7 @@ with open('/app/MODEL_PATH.txt', 'r') as f:
     model_path = f.read().strip()
 
 OVERRIDE_SAFETY_CHECKER = os.getenv('OVERRIDE_SAFETY_CHECKER', 'false').lower() == 'true'
+ENABLE_CPU_OFFLOADING = os.getenv('ENABLE_CPU_OFFLOADING', 'false').lower() == 'true'
 
 def load_model():
     if not os.path.exists(model_path):
@@ -33,5 +34,9 @@ def load_model():
             model_path,
             torch_dtype=torch.float16
         )
-    pipe = pipe.to("cuda")
+    if ENABLE_CPU_OFFLOADING:
+        pipe.enable_sequential_cpu_offload()
+        pipe.enable_attention_slicing()
+    else:
+        pipe = pipe.to("cuda")
     return pipe

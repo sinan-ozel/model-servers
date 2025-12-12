@@ -40,6 +40,10 @@ RUN type -p curl >/dev/null || apt-get install -y curl && \
         | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
     apt-get update && apt-get install -y gh
 
+# Python and Hugging Face Hub
+RUN apt-get install -y python3 python3-pip && \
+    pip3 install --break-system-packages huggingface_hub
+
 # Create ubuntu user and add to docker group for docker-in-docker
 RUN usermod -aG sudo ubuntu && \
     echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \

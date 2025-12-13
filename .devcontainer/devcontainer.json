@@ -4,8 +4,8 @@
     "service": "workspace",
     "workspaceFolder": "/workspace",
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind",
-        "source=${localEnv:HOME}/secrets/.aws,target=/home/ubuntu/.aws,type=bind",
+        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind",
+        "source=${localEnv:HOME}/secrets/.aws,target=/root/.aws,type=bind",
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
         "source=/tmp/model-cache,target=/tmp/model-cache,type=bind",
         "source=${localEnv:HOME}/.cache/huggingface,target=/root/.cache/huggingface,type=bind"
@@ -18,13 +18,18 @@
     "customizations": {
         "vscode": {
             "extensions": [
+		        "github.copilot",
+		        "github.copilot-chat",
                 "clemenspeters.format-json",
                 "euskadi31.json-pretty-printer",
                 "jgalianoz.qr-generator",
-                "github.vscode-github-actions"
+                "github.vscode-github-actions",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy"
             ]
         }
     },
-    "postCreateCommand": "kubectl version --client=true && sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh && sudo chmod 700 /home/ubuntu/.ssh && sudo chmod 600 /home/ubuntu/.ssh/* 2>/dev/null || true",
+    "postCreateCommand": "kubectl version --client=true && chmod 700 /root/.ssh && chmod 600 /root/.ssh/* 2>/dev/null || true",
     "remoteUser": "root"
 }

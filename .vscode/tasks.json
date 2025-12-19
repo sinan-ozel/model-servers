@@ -174,8 +174,9 @@
             "label": "build_ollama_single_model_server",
             "type": "shell",
             "linux": {
-                "command": "bash",
+                "command": "sudo",
                 "args": [
+                    "bash",
                     "./scripts/build_ollama_single_model_server.sh",
                     "model_metadata/${input:modelFile}"
                 ]

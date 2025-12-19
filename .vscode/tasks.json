@@ -2,6 +2,12 @@
     "version": "2.0.0",
     "inputs": [
         {
+          "id": "ollamaVersion",
+          "type": "promptString",
+          "description": "Enter Ollama version (e.g., 0.13.5)",
+          "default": "0.13.5"
+        },
+        {
           "id": "modelFile",
           "type": "pickString",
           "description": "Select model metadata file",
@@ -300,6 +306,30 @@
                     "KUBECONFIG": "${workspaceFolder}/.iac/kubeconfig.yaml"
                 }
             },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "create_dockerhub_repository",
+            "type": "shell",
+            "linux": {
+                "command": "./scripts/create_dockerhub_repo.sh",
+                "args": [
+                    "${input:ollamaVersion}"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "group": "build",
             "presentation": {
                 "echo": true,
                 "reveal": "always",

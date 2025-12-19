@@ -14,6 +14,9 @@ services:
 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/sinan//hf/hub/:/home/sinan//hf/hub/
+      - /mnt/c/Users/sinan/secrets/.aws:/home/ubuntu/.aws
+      - /home/sinan/.ssh:/home/ubuntu/.ssh
       - ..:/workspace
 
     environment:

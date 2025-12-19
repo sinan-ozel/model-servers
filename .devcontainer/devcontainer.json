@@ -30,6 +30,11 @@
             ]
         }
     },
+<<<<<<< HEAD
     "postCreateCommand": "kubectl version --client=true && chmod 700 /root/.ssh && chmod 600 /root/.ssh/* 2>/dev/null || true",
     "remoteUser": "root"
+=======
+    "postCreateCommand": "kubectl version --client=true && sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh && sudo chmod 700 /home/ubuntu/.ssh && sudo chmod 600 /home/ubuntu/.ssh/* 2>/dev/null || true",
+    "remoteUser": "ubuntu"
+>>>>>>> 0661118 ([not working] Add the devcontainer mounts)
 }

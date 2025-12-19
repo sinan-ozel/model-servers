@@ -1,0 +1,231 @@
+name: Deploy Model to Kubernetes
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_file:
+        description: 'Model metadata file (without path)'
+        required: true
+        default: 'gemma2_2b.yaml'
+        type: choice
+        options:
+          - deepseek-r1_7b.yaml
+          - deepseek-r1_1.5b.yaml
+          - deepseek-r1_8b.yaml
+          - deepcoder_1.5b.yaml
+          - deepcoder_14b.yaml
+          - granite3.2_2b.yaml
+          - granite3.2_8b.yaml
+          - granite3.2-vision_2b.yaml
+          - mistral-small3.2_24b.yaml
+          - mistral_7b.yaml
+          - mixtral_8x7b.yaml
+          - magistral_24b.yaml
+          - devstral_24b.yaml
+          - gemma2_2b.yaml
+          - gemma2_9b.yaml
+          - gemma2_27b.yaml
+          - all-minilm_33m.yaml
+          - embeddinggemma_300m.yaml
+          - qwen3-embedding_0.6b.yaml
+          - qwen3-embedding_4b.yaml
+          - qwen3-embedding_8b.yaml
+          - gemma3_270m.yaml
+          - gemma3_1b.yaml
+          - gemma3_4b.yaml
+          - gemma3_12b.yaml
+          - gemma3_27b.yaml
+          - gemma3_1b-it-qat.yaml
+          - gemma3_4b-it-qat.yaml
+          - gemma3_12b-it-qat.yaml
+          - gemma3_27b-it-qat.yaml
+          - gemma3-tools_1b.yaml
+          - gemma3-tools_4b.yaml
+          - gemma3-tools_12b.yaml
+          - gemma3-tools_27b.yaml
+          - gemma3n_e2b.yaml
+          - gemma3n_e4b.yaml
+          - phi4-mini-reasoning_3.8b.yaml
+          - qwen3_0.6b.yaml
+          - qwen3_1.7b.yaml
+          - qwen3_4b.yaml
+          - qwen3_8b.yaml
+          - qwen3_14b.yaml
+          - qwen3_32b.yaml
+          - qwen3_30b-a3b.yaml
+          - qwen3_235b-a22b.yaml
+          - qwen3-coder_30b.yaml
+          - qwen2.5vl_3b.yaml
+          - qwen2.5vl_7b.yaml
+          - qwen2.5vl_32b.yaml
+          - qwen2.5vl_72b.yaml
+          - qwen3-vl_2b.yaml
+          - qwen3-vl_4b.yaml
+          - qwen3-vl_8b.yaml
+          - qwen3-vl_30b.yaml
+          - qwen3-vl_32b.yaml
+          - qwen3-vl_235b.yaml
+          - llava_7b.yaml
+          - llama3.2-vision_11b.yaml
+          - llama3.2-vision_90b.yaml
+          - minicpm-v_8b.yaml
+          - deepseek-ocr_3b.yaml
+          - gpt-oss_20b.yaml
+          - gpt-oss_120b.yaml
+      provider:
+        description: 'Cloud provider for kubeconfig'
+        required: true
+        default: 'aws'
+        type: choice
+        options:
+          - aws
+          - exoscale
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  DOCKERHUB_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE }}
+
+jobs:
+  deploy-to-k8s:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup dependencies
+        run: |
+          # Install kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -m 0755 kubectl /usr/local/bin/kubectl
+          rm kubectl
+
+          # Install yq
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+          # Install Helm
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+          # Install jq (already available on ubuntu-latest)
+          # sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Login to GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GITHUB_TOKEN" | gh auth login --with-token
+
+      - name: Download kubeconfig artifact
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IAC_REPO: ${{ vars.IAC_REPO }}
+        run: |
+          echo "=== Downloading kubeconfig artifact ==="
+          mkdir -p .iac
+
+          # Remove existing artifact if it exists
+          [ -f .iac/model-server.json ] && rm -f .iac/model-server.json
+
+          # Download artifact from IAC repository
+          gh run download \
+            --repo "$IAC_REPO" \
+            --name "pulumi-${{ github.event.inputs.provider }}-model-server" \
+            --dir .iac
+
+          # Extract kubeconfig from the JSON artifact
+          cat .iac/model-server.json | jq -r '.kubeconfig' > .iac/kubeconfig.yaml
+
+          echo "Kubeconfig downloaded and extracted successfully"
+
+      - name: Verify kubeconfig and cluster access
+        env:
+          KUBECONFIG: ${{ github.workspace }}/.iac/kubeconfig.yaml
+        run: |
+          echo "=== Verifying cluster access ==="
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Deploy model to Kubernetes
+        env:
+          KUBECONFIG: ${{ github.workspace }}/.iac/kubeconfig.yaml
+          WORKSPACE_FOLDER: ${{ github.workspace }}
+        run: |
+          echo "=== Deploying model: ${{ github.event.inputs.model_file }} ==="
+          chmod +x ./scripts/deploy_ollama_single_model_server_to_k8s.sh
+          ./scripts/deploy_ollama_single_model_server_to_k8s.sh "${{ github.event.inputs.model_file }}"
+
+      - name: Get model server URL
+        id: get_url
+        env:
+          KUBECONFIG: ${{ github.workspace }}/.iac/kubeconfig.yaml
+          WORKSPACE_FOLDER: ${{ github.workspace }}
+        run: |
+          echo "=== Getting model server URL ==="
+          chmod +x ./scripts/get_model_server_url.sh
+
+          # Capture the URL output
+          URL_OUTPUT=$(./scripts/get_model_server_url.sh)
+          echo "$URL_OUTPUT"
+
+          # Extract just the URL (last line of output)
+          MODEL_URL=$(echo "$URL_OUTPUT" | tail -n 1)
+          echo "model_url=$MODEL_URL" >> $GITHUB_OUTPUT
+
+          # Also save to file for artifact
+          echo "$MODEL_URL" > model-server-url.txt
+          echo "Full URL output:" >> model-server-url.txt
+          echo "$URL_OUTPUT" >> model-server-url.txt
+
+      - name: Test model server endpoint
+        run: |
+          echo "=== Testing model server endpoint ==="
+          MODEL_URL="${{ steps.get_url.outputs.model_url }}"
+          echo "Testing URL: $MODEL_URL"
+
+          # Wait a bit for the service to be fully ready
+          sleep 30
+
+          # Test the endpoint (with timeout)
+          if curl -f --connect-timeout 10 --max-time 30 "$MODEL_URL/api/tags" > /dev/null 2>&1; then
+            echo "✅ Model server is responding at $MODEL_URL"
+          else
+            echo "⚠️ Model server may not be fully ready yet at $MODEL_URL"
+            echo "This is normal during initial deployment - the model may still be loading"
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "=== Deployment Summary ===" >> deployment-summary.txt
+          echo "Model File: ${{ github.event.inputs.model_file }}" >> deployment-summary.txt
+          echo "Provider: ${{ github.event.inputs.provider }}" >> deployment-summary.txt
+          echo "Deployed at: $(date)" >> deployment-summary.txt
+          echo "Model URL: ${{ steps.get_url.outputs.model_url }}" >> deployment-summary.txt
+          echo "" >> deployment-summary.txt
+          echo "=== Kubernetes Resources ===" >> deployment-summary.txt
+          kubectl get pods,svc,ingress >> deployment-summary.txt || echo "Failed to get k8s resources" >> deployment-summary.txt
+
+      - name: Upload model URL as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-server-endpoint-${{ github.event.inputs.provider }}-${{ github.run_number }}
+          path: |
+            model-server-url.txt
+            deployment-summary.txt
+          retention-days: 30
+
+      - name: Output deployment info
+        run: |
+          echo "🚀 **Deployment Complete!**"
+          echo ""
+          echo "**Model:** ${{ github.event.inputs.model_file }}"
+          echo "**Provider:** ${{ github.event.inputs.provider }}"
+          echo "**URL:** ${{ steps.get_url.outputs.model_url }}"
+          echo ""
+          echo "The model server endpoint has been uploaded as an artifact."
+          echo ""
+          echo "**API Endpoints:**"
+          echo "- Health: ${{ steps.get_url.outputs.model_url }}/api/tags"
+          echo "- Generate: ${{ steps.get_url.outputs.model_url }}/api/generate"
+          echo "- Chat: ${{ steps.get_url.outputs.model_url }}/api/chat"

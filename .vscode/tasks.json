@@ -12,6 +12,9 @@
             "deepcoder_1.5b.yaml",
             "deepcoder_14b.yaml",
 
+            "granite3.2_2b.yaml",
+            "granite3.2_8b.yaml",
+
             "mistral-small3.2_24b.yaml",
             "mistral_7b.yaml",
             "mixtral_8x7b.yaml",

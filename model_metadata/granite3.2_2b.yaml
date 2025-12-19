@@ -1,0 +1,9 @@
+# Granite 3.2 2B model definition
+name: granite3.2
+tag: 2b
+memory:
+  model_size: 1.5GiB
+  min: 4GiB
+  recommended: 8GiB
+license: Apache License Version 2.0
+max_context_window: 128k

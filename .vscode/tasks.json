@@ -20,6 +20,7 @@
 
             "granite3.2_2b.yaml",
             "granite3.2_8b.yaml",
+            "granite3.2-vision_2b.yaml",
 
             "mistral-small3.2_24b.yaml",
             "mistral_7b.yaml",

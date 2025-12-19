@@ -1,0 +1,9 @@
+# Granite 3.2 Vision 2B model definition
+name: granite3.2-vision
+tag: 2b
+memory:
+  model_size: 2.4GiB
+  min: 4GiB
+  recommended: 8GiB
+license: Apache License Version 2.0
+max_context_window: 16384

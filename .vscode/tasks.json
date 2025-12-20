@@ -252,27 +252,6 @@
             "problemMatcher": []
         },
         {
-            "label": "deploy_ollama_single_model_server_to_k8s",
-            "type": "shell",
-            "linux": {
-                "command": "./scripts/deploy_ollama_single_model_server_to_k8s.sh",
-                "args": [
-                    "${input:modelFile}"
-                ]
-            },
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "test_ollama_single_model_server_on_k8s",
             "type": "shell",
             "linux": {
@@ -330,6 +309,54 @@
                 "env": {
                     "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
                 }
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build_deployment_container",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/build_deployment_container.sh"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "deploy_ollama_single_model_server_to_k8s",
+            "type": "shell",
+            "dependsOn": [
+                "download_model_cluster_kubeconfig",
+                "build_deployment_container"
+            ],
+            "dependsOrder": "sequence",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/deploy_ollama_single_model_server_to_k8s/run_containerized_deployment.sh",
+                    "${input:modelFile}"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
             },
             "group": "build",
             "presentation": {

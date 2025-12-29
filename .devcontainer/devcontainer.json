@@ -7,17 +7,10 @@
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "mounts": [
-<<<<<<< HEAD
         "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind",
         "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
         "source=${localEnv:HOME}${localEnv:USERPROFILE}/secrets/.aws,target=/home/vscode/.aws,type=bind,consistency=cached",
         "source=${localEnv:HOME}${localEnv:USERPROFILE}/secrets/.aws,target=/home/vscode/secrets/.aws,type=bind,consistency=cached"
-=======
-        "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind",
-        "source=${localEnv:HOME}/secrets/.aws,target=/home/ubuntu/.aws,type=bind",
-        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-        "source=/tmp/model-cache,target=/tmp/model-cache,type=bind"
->>>>>>> 8962e9a (Increase timeouts and fix some mounts)
     ],
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
@@ -49,11 +42,8 @@
     "customizations": {
         "vscode": {
             "extensions": [
-<<<<<<< HEAD
                 "github.copilot",
                 "github.copilot-chat",
-=======
->>>>>>> 8962e9a (Increase timeouts and fix some mounts)
                 "clemenspeters.format-json",
                 "euskadi31.json-pretty-printer",
                 "jgalianoz.qr-generator",
@@ -61,11 +51,6 @@
             ]
         }
     },
-<<<<<<< HEAD
     "postCreateCommand": "echo 'export KUBECONFIG=/workspace/.iac/kubeconfig.yaml' >> /home/vscode/.bashrc && kubectl version --client=true && chmod 700 /home/vscode/.ssh && chmod 600 /home/vscode/.ssh/* 2>/dev/null || true",
     "remoteUser": "vscode"
-=======
-    "postCreateCommand": "kubectl version --client=true && sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh && sudo chmod 700 /home/ubuntu/.ssh && sudo chmod 600 /home/ubuntu/.ssh/* 2>/dev/null || true",
-    "remoteUser": "ubuntu"
->>>>>>> 8962e9a (Increase timeouts and fix some mounts)
 }

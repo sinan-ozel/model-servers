@@ -31,7 +31,7 @@ echo "Image tag: $IMAGE_TAG"
 
 # Install NVIDIA GPU device plugin
 echo "=== Installing NVIDIA GPU device plugin ==="
-if ! kubectl get daemonset -n kube-system nvidia-device-plugin-daemonset 2>/dev/null; then
+if ! kubectl get daemonset -n kube-system nvidia-device-plugin-daemonset; then
     echo "Installing NVIDIA GPU device plugin..."
     kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.14.0/nvidia-device-plugin.yml
     echo "Waiting for GPU device plugin to be ready..."

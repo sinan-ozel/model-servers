@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     sudo \
     bash \
+    dnsutils \
+    netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,7 +51,6 @@ WORKDIR /app
 COPY scripts/deploy_ollama_single_model_server_to_k8s/containerized_scripts/deploy_ollama_single_model_server_to_k8s.sh /app/
 COPY helm/ /app/helm/
 COPY model_metadata/ /app/model_metadata/
-COPY .iac/ /app/.iac/
 
 # Set default command
 ENTRYPOINT ["/app/deploy_ollama_single_model_server_to_k8s.sh"]

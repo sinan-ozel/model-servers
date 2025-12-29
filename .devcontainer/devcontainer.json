@@ -1,25 +1,49 @@
 {
     "name": "model-builder-and-deployer",
-    "dockerComposeFile": "docker-compose.yaml",
-    "service": "workspace",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
     "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind",
-        "source=${localEnv:HOME}/secrets/.aws,target=/root/.aws,type=bind",
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-        "source=/tmp/model-cache,target=/tmp/model-cache,type=bind",
-        "source=${localEnv:HOME}/.cache/huggingface,target=/root/.cache/huggingface,type=bind"
+        "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind",
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached",
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/secrets/.aws,target=/home/vscode/.aws,type=bind,consistency=cached",
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/secrets/.aws,target=/home/vscode/secrets/.aws,type=bind,consistency=cached"
     ],
     "features": {
-        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
-        "ghcr.io/devcontainers/features/aws-cli:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "installOhMyZsh": false,
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000",
+            "upgradePackages": false
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "version": "latest",
+            "moby": false
+        },
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/aws-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        }
+    },
+    "containerEnv": {
+        "KUBECONFIG": "/workspace/.iac/kubeconfig.yaml"
     },
     "customizations": {
         "vscode": {
             "extensions": [
-		        "github.copilot",
-		        "github.copilot-chat",
+                "github.copilot",
+                "github.copilot-chat",
                 "clemenspeters.format-json",
                 "euskadi31.json-pretty-printer",
                 "jgalianoz.qr-generator",
@@ -30,11 +54,6 @@
             ]
         }
     },
-<<<<<<< HEAD
-    "postCreateCommand": "kubectl version --client=true && chmod 700 /root/.ssh && chmod 600 /root/.ssh/* 2>/dev/null || true",
-    "remoteUser": "root"
-=======
-    "postCreateCommand": "kubectl version --client=true && sudo chown -R ubuntu:ubuntu /home/ubuntu/.ssh && sudo chmod 700 /home/ubuntu/.ssh && sudo chmod 600 /home/ubuntu/.ssh/* 2>/dev/null || true",
-    "remoteUser": "ubuntu"
->>>>>>> 0661118 ([not working] Add the devcontainer mounts)
+    "postCreateCommand": "echo 'export KUBECONFIG=/workspace/.iac/kubeconfig.yaml' >> /home/vscode/.bashrc && kubectl version --client=true && chmod 700 /home/vscode/.ssh && chmod 600 /home/vscode/.ssh/* 2>/dev/null || true",
+    "remoteUser": "vscode"
 }

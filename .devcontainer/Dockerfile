@@ -15,14 +15,16 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     lsb-release \
     software-properties-common \
-    sudo
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
 
-# Docker CLI
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository \
-      "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) stable" && \
-    apt-get update && apt-get install -y docker-ce-cli
+# Remove ubuntu user if it exists (to avoid UID/GID conflicts)
+RUN userdel -r ubuntu 2>/dev/null || true
+
+# Docker group will be created by docker-outside-of-docker feature
+# vscode user will be created by devcontainer features
+
+# Note: Docker CLI will be installed by the docker-outside-of-docker feature
 
 # kubectl
 RUN curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
@@ -42,17 +44,12 @@ RUN type -p curl >/dev/null || apt-get install -y curl && \
     apt-get update && apt-get install -y gh
 
 # Python and Hugging Face Hub
-RUN apt-get install -y python3 python3-pip && \
-    pip3 install --break-system-packages huggingface_hub
-
-# Create ubuntu user and add to docker group for docker-in-docker
-RUN usermod -aG sudo ubuntu && \
-    echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    groupadd -f docker && \
-    usermod -aG docker ubuntu
+RUN apt-get update && apt-get install -y python3 python3-pip && \
+    pip3 install --break-system-packages huggingface_hub && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create workspace directory
-RUN mkdir -p /workspace && chown ubuntu:ubuntu /workspace
+RUN mkdir -p /workspace && chmod 777 /workspace
 
 WORKDIR /workspace
 

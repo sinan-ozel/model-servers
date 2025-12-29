@@ -14,9 +14,28 @@ MODEL_FILE="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
+# Detect if we're in a dev container with DooD and get the host paths
+if [ "$REMOTE_CONTAINERS" = "true" ] && command -v docker >/dev/null 2>&1; then
+    # Get the host mount path from the current container
+    HOST_MOUNT=$(docker inspect $(hostname) --format '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || echo "")
+    if [ -n "$HOST_MOUNT" ]; then
+        HOST_WORKSPACE_DIR="$HOST_MOUNT"
+        # Infer host home from workspace path (e.g., /Users/username/path/to/workspace -> /Users/username)
+        HOST_HOME_DIR=$(echo "$HOST_MOUNT" | sed -E 's|(/[^/]+/[^/]+)/.*|\1|')
+    else
+        HOST_WORKSPACE_DIR="$WORKSPACE_DIR"
+        HOST_HOME_DIR="$HOME"
+    fi
+else
+    # Running on host directly
+    HOST_WORKSPACE_DIR="$WORKSPACE_DIR"
+    HOST_HOME_DIR="$HOME"
+fi
+
 echo "=== Running Containerized Deployment ==="
 echo "Model file: $MODEL_FILE"
 echo "Workspace: $WORKSPACE_DIR"
+echo "Docker mount path: $HOST_WORKSPACE_DIR"
 
 # Check if kubeconfig exists
 KUBECONFIG_PATH="$WORKSPACE_DIR/.iac/kubeconfig.yaml"
@@ -41,11 +60,23 @@ fi
 
 # Run deployment container
 CONTAINER_TAG="model-server-deployer:latest"
+
+# Mount AWS credentials directory if available
+AWS_MOUNT=""
+if [ -f "$HOME/.aws/credentials" ] && [ -f "$HOME/.aws/config" ]; then
+    echo "Mounting AWS credentials from ~/.aws"
+    AWS_MOUNT="-v $HOST_HOME_DIR/.aws:/root/.aws:ro"
+elif [ -d "$HOME/secrets/.aws" ]; then
+    echo "Mounting AWS credentials from ~/secrets/.aws"
+    AWS_MOUNT="-v $HOST_HOME_DIR/secrets/.aws:/root/.aws:ro"
+else
+    echo "Warning: No AWS credentials found"
+fi
+
+# Run without workspace mount - everything is copied during build
 docker run --rm \
-    -v "$KUBECONFIG_PATH:/app/.iac/kubeconfig.yaml:ro" \
-    -v "$HOME/secrets/.aws:/root/.aws:ro" \
+    $AWS_MOUNT \
     -e KUBECONFIG="/app/.iac/kubeconfig.yaml" \
-    -e WORKSPACE_FOLDER="/app" \
     "$CONTAINER_TAG" \
     "$MODEL_FILE"
 

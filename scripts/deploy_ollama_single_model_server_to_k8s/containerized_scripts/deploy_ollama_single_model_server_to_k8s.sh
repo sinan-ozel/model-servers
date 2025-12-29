@@ -11,14 +11,18 @@ if [ $# -ne 1 ]; then
 fi
 
 MODEL_FILE="$1"
-export KUBECONFIG="${WORKSPACE_FOLDER:-$(pwd)}/.iac/kubeconfig.yaml"
+
+# Set workspace folder - defaults to /app (container) or current directory
+WORKSPACE_FOLDER="${WORKSPACE_FOLDER:-$(pwd)}"
+export KUBECONFIG="$WORKSPACE_FOLDER/.iac/kubeconfig.yaml"
 
 echo "=== Deploying LLM Model ==="
 echo "Model file: $MODEL_FILE"
+echo "Workspace: $WORKSPACE_FOLDER"
 
 # Parse model metadata
-MODEL_NAME=$(yq eval '.name' "model_metadata/$MODEL_FILE")
-MODEL_TAG=$(yq eval '.tag' "model_metadata/$MODEL_FILE")
+MODEL_NAME=$(yq eval '.name' "$WORKSPACE_FOLDER/model_metadata/$MODEL_FILE")
+MODEL_TAG=$(yq eval '.tag' "$WORKSPACE_FOLDER/model_metadata/$MODEL_FILE")
 IMAGE_TAG="$MODEL_NAME-$MODEL_TAG"
 
 echo "Model name: $MODEL_NAME"
@@ -40,8 +44,8 @@ fi
 echo "=== Checking nginx-ingress installation ==="
 if ! helm list -n ingress-nginx | grep -q nginx-ingress; then
     echo "Installing nginx-ingress..."
-    helm dependency update ./helm/nginx-ingress
-    helm install nginx-ingress ./helm/nginx-ingress --create-namespace --namespace ingress-nginx
+    helm dependency update "$WORKSPACE_FOLDER/helm/nginx-ingress"
+    helm install nginx-ingress "$WORKSPACE_FOLDER/helm/nginx-ingress" --create-namespace --namespace ingress-nginx
 else
     echo "nginx-ingress already installed"
 fi
@@ -84,7 +88,7 @@ if helm list | grep -q basic-llm; then
 fi
 
 # Install new deployment
-helm install basic-llm ./helm/basic-llm \
+helm install basic-llm "$WORKSPACE_FOLDER/helm/basic-llm" \
     --set image.tag="$IMAGE_TAG" \
     --set ingress.hosts[0].host="$LB_HOSTNAME" \
     --set ingress.hosts[0].paths[0].path="$MODEL_PATH" \

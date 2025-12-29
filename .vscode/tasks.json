@@ -322,12 +322,10 @@
         {
             "label": "build_deployment_container",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/build_deployment_container.sh"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/build_deployment_container.sh"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}"
             },

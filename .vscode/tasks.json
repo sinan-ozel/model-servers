@@ -2,12 +2,6 @@
     "version": "2.0.0",
     "inputs": [
         {
-          "id": "ollamaVersion",
-          "type": "promptString",
-          "description": "Enter Ollama version (e.g., 0.13.5)",
-          "default": "0.13.5"
-        },
-        {
           "id": "modelFile",
           "type": "pickString",
           "description": "Select model metadata file",
@@ -20,7 +14,6 @@
 
             "granite3.2_2b.yaml",
             "granite3.2_8b.yaml",
-            "granite3.2-vision_2b.yaml",
 
             "mistral-small3.2_24b.yaml",
             "mistral_7b.yaml",
@@ -175,9 +168,8 @@
             "label": "build_ollama_single_model_server",
             "type": "shell",
             "linux": {
-                "command": "sudo",
+                "command": "bash",
                 "args": [
-                    "bash",
                     "./scripts/build_ollama_single_model_server.sh",
                     "model_metadata/${input:modelFile}"
                 ]
@@ -249,6 +241,27 @@
                 "push_ollama_single_model_server_to_dockerhub"
             ],
             "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "deploy_ollama_single_model_server_to_k8s",
+            "type": "shell",
+            "linux": {
+                "command": "./scripts/deploy_ollama_single_model_server_to_k8s/run_containerized_deployment.sh",
+                "args": [
+                    "${input:modelFile}"
+                ]
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
             "problemMatcher": []
         },
         {

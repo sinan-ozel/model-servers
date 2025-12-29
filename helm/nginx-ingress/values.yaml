@@ -6,11 +6,19 @@ ingress-nginx:
     config:
       use-forwarded-headers: "true"
       compute-full-forwarded-for: "true"
-      proxy-body-size: "10m"
-      proxy-connect-timeout: "900"
-      proxy-send-timeout: "900"
-      proxy-read-timeout: "900"
-      proxy-next-upstream-timeout: "900"
+      proxy-body-size: "100m"
+      client-max-body-size: "100m"
+      proxy-connect-timeout: "60"
+      proxy-send-timeout: "1800"
+      proxy-read-timeout: "1800"
+      proxy-next-upstream-timeout: "1800"
+      proxy-buffer-size: "16k"
+      proxy-buffers: "8 16k"
+      proxy-busy-buffers-size: "32k"
+      keepalive-timeout: "650"
+      keepalive-requests: "10000"
+      upstream-keepalive-connections: "50"
+      upstream-keepalive-timeout: "60"
     metrics:
       enabled: false
   defaultBackend:

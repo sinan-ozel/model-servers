@@ -45,10 +45,12 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
     rm -rf awscliv2.zip aws && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Create app directory and subdirectories
 WORKDIR /app
+RUN mkdir -p /app/.iac
 
 # Copy deployment script and resources
-COPY scripts/deploy_ollama_single_model_server_to_k8s/containerized_scripts/deploy_ollama_single_model_server_to_k8s.sh /app/
+COPY scripts/deploy_ollama_single_model_server_to_k8s/containerized_scripts/deploy_ollama_single_model_server_gitto_k8s.sh /app/
 COPY helm/ /app/helm/
 COPY model_metadata/ /app/model_metadata/
 

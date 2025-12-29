@@ -17,20 +17,6 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 echo "=== Running Containerized Deployment ==="
 echo "Model file: $MODEL_FILE"
 
-# Check if kubeconfig exists
-if [ ! -f "$WORKSPACE_DIR/.iac/kubeconfig.yaml" ]; then
-    echo "Error: kubeconfig not found at .iac/kubeconfig.yaml"
-    echo "Run the download_model_cluster_kubeconfig task first"
-    exit 1
-fi
-
-# Check if AWS credentials exist
-if [ ! -f "$WORKSPACE_DIR/.aws/credentials" ] || [ ! -f "$WORKSPACE_DIR/.aws/config" ]; then
-    echo "Error: AWS credentials not found at .aws/"
-    echo "Copy your AWS credentials to the workspace .aws/ directory"
-    exit 1
-fi
-
 CONTAINER_TAG="model-server-deployer:latest"
 
 # Run with relative path mounts from workspace

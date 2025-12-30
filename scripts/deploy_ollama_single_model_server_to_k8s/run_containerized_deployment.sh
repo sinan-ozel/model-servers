@@ -22,7 +22,7 @@ CONTAINER_TAG="model-server-deployer:latest"
 # Run with relative path mounts from workspace
 docker run --rm \
     --network host \
-    -v "$WORKSPACE_DIR/.aws:/root/.aws:ro" \
+    -v "/home/vscode/.aws:/root/.aws:ro" \
     -v "$WORKSPACE_DIR/.iac:/app/.iac:ro" \
     "$CONTAINER_TAG" \
     "$MODEL_FILE"

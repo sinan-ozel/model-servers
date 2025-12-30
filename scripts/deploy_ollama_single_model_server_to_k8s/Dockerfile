@@ -50,7 +50,7 @@ WORKDIR /app
 RUN mkdir -p /app/.iac
 
 # Copy deployment script and resources
-COPY scripts/deploy_ollama_single_model_server_to_k8s/containerized_scripts/deploy_ollama_single_model_server_gitto_k8s.sh /app/
+COPY scripts/deploy_ollama_single_model_server_to_k8s/containerized_scripts/deploy_ollama_single_model_server_to_k8s.sh /app/
 COPY helm/ /app/helm/
 COPY model_metadata/ /app/model_metadata/
 

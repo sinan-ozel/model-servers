@@ -3,7 +3,7 @@
 set -e
 
 MODEL_FILE="$1"
-OLLAMA_VERSION="0.12.11"
+OLLAMA_VERSION="0.15.2"
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null; then

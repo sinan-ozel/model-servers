@@ -12,7 +12,7 @@ model:
   tag: "12b"
 
 image:
-  repository: sinanozel/ollama.0.12.11
+  repository: sinanozel/ollama.0.15.2
   tag: "orieg-gemma3-tools-1b"
   pullPolicy: IfNotPresent
 

@@ -1,0 +1,9 @@
+# GLM-4.7-Flash model definition
+name: glm-4.7-flash
+tag: q4_K_M
+memory:
+  model_size: 19GB
+  min: 24GiB
+  recommended: 32GiB
+license: MIT License
+max_context_window: 128k

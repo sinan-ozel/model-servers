@@ -5,7 +5,7 @@ set -e
 
 MODEL_NAME=$1
 MODEL_TAG=$2
-OLLAMA_VERSION="0.12.11"
+OLLAMA_VERSION="0.15.2"
 
 # Create a temporary container to extract the model files
 docker run --rm \

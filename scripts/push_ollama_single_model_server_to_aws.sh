@@ -4,7 +4,7 @@ echo "🚀 Starting push to AWS"
 
 set -euo pipefail
 
-OLLAMA_VERSION="0.12.11"
+OLLAMA_VERSION="0.15.2"
 
 # Colors
 RED='\033[0;31m'

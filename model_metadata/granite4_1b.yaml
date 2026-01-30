@@ -1,0 +1,9 @@
+# Granite 4.0 1B model definition
+name: granite4
+tag: 1b
+memory:
+  model_size: 3.3GB
+  min: 4GiB
+  recommended: 8GiB
+license: Apache License Version 2.0
+max_context_window: 128k

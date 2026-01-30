@@ -1,0 +1,9 @@
+# Granite 4.0 3B model definition
+name: granite4
+tag: 3b
+memory:
+  model_size: 2.1GB
+  min: 4GiB
+  recommended: 8GiB
+license: Apache License Version 2.0
+max_context_window: 128k

@@ -88,10 +88,11 @@ fi
 
 echo ""
 echo "=== Testing Model Inference ==="
-echo "Sending test prompt..."
 echo ""
 
-# Test completion endpoint
+# Test 1: Native completion endpoint
+echo "Test 1: Native /completion endpoint"
+echo "Sending test prompt..."
 RESPONSE=$(curl -s http://localhost:$PORT/completion \
   -H "Content-Type: application/json" \
   -d '{
@@ -102,6 +103,25 @@ RESPONSE=$(curl -s http://localhost:$PORT/completion \
 
 echo "Response:"
 echo "$RESPONSE" | jq -r '.content // .text // .' 2>/dev/null || echo "$RESPONSE"
+echo ""
+
+# Test 2: OpenAI-compatible chat completions endpoint
+echo "Test 2: OpenAI-compatible /v1/chat/completions endpoint"
+echo "Sending test prompt..."
+RESPONSE=$(curl -s http://localhost:$PORT/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "model",
+    "messages": [{"role": "user", "content": "What is the capital of France?"}],
+    "max_tokens": 50,
+    "temperature": 0.7
+  }')
+
+echo "Response:"
+echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null || echo "$RESPONSE"
+echo ""
+echo "Full response with metadata:"
+echo "$RESPONSE" | jq '.' 2>/dev/null || echo "$RESPONSE"
 echo ""
 
 echo "=== Container Logs (last 20 lines) ==="

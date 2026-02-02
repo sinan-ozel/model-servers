@@ -153,6 +153,29 @@ curl -s http://localhost:8000/completion \
   }'
 ```
 
+### OpenAI-Compatible Endpoint
+```bash
+curl -s http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemma3-270m",
+    "messages": [{"role": "user", "content": "What is the capital of France?"}],
+    "max_tokens": 50,
+    "temperature": 0.7
+  }'
+```
+
+### With LiteLLM
+```python
+import litellm
+
+response = litellm.completion(
+    model="openai/model",  # or just use custom provider
+    api_base="http://localhost:8080/v1",
+    messages=[{"role": "user", "content": "What is the capital of France?"}]
+)
+```
+
 ## Advanced - Creating Your Own Image
 
 Requirements: docker, git, VS Code.

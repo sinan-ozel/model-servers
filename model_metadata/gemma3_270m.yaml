@@ -6,3 +6,6 @@ memory:
   recommended: 1GiB
 license: Gemma Terms of Use
 max_context_window: 32k
+gguf:
+  url: https://huggingface.co/ggml-org/gemma-3-270m-GGUF/resolve/main/gemma-3-270m-Q8_0.gguf
+  filename: gemma-3-270m-Q8_0.gguf

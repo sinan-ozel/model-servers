@@ -101,7 +101,17 @@
 			"type": "pickString",
 			"description": "Choose a provider to pull kubeconfig data for",
 			"options": ["exoscale", "aws"]
-		}
+		},
+        {
+            "id": "llamacppModelFile",
+            "type": "pickString",
+            "description": "Select model metadata file for llama.cpp",
+            "options": [
+                "gemma3_270m.yaml",
+                "gemma3_1b.yaml",
+                "gemma3_1b-it-qat.yaml"
+            ]
+        }
       ],
       "tasks": [
         {
@@ -376,6 +386,70 @@
                 "focus": true,
                 "panel": "shared"
             },
+            "problemMatcher": []
+        },
+        {
+            "label": "download_gguf_model",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/download_gguf_model.sh",
+                    "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build_llamacpp_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/build_llamacpp_model_server.sh",
+                    "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test_llamacpp_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/test_llamacpp_model_server.sh",
+                    "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "push_llamacpp_model_server_to_dockerhub",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/push_llamacpp_model_server_to_dockerhub.sh",
+                    "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "llamacpp_full_pipeline",
+            "dependsOn": [
+                "download_gguf_model",
+                "build_llamacpp_model_server",
+                "test_llamacpp_model_server",
+                "push_llamacpp_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
             "problemMatcher": []
         }
     ]

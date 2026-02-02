@@ -6,3 +6,7 @@ memory:
   recommended: 24GiB
 license: Gemma Terms of Use
 max_context_window: 128k
+gguf:
+  url: https://huggingface.co/ggml-org/gemma-3-4b-it-qat-GGUF/resolve/main/gemma-3-4b-it-qat-Q4_0.gguf
+  filename: gemma-3-4b-it-qat-Q4_0.gguf
+  file_size: 2.5GiB

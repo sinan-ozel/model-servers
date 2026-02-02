@@ -1,7 +1,7 @@
 [![Docker Pulls 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11?label=docker%20pulls%200.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
 [![Docker Pulls 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2?label=docker%20pulls%200.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
 
-# Ollama Model Server Automation
+# Ollama and llama.cpp Model Server Automation
 
 This repository streamlines the building and publishing of Docker images for Ollama model servers with preloaded models, unlocking a suite of powerful benefits:
 
@@ -9,7 +9,7 @@ This repository streamlines the building and publishing of Docker images for Oll
 
 ✨ Independence: Say goodbye to relying on external Hugging Face servers.
 
-✨ Lightning-Fast Startup: Perfect for heavy workloads where every second counts.
+✨ Fast Startup: Perfect for heavy workloads where every second counts.
 
 To boost performance even further, the container can be kept alive continuously. There is an example below in this README.md file.
 Additionally, a simple GPU VRAM monitoring script is included, logging usage to a file for easy tracking. For larger organizations, there’s also a ready-made pipeline to upload images to your own AWS repository.
@@ -57,13 +57,14 @@ On AWS, the standard GPU-enabled AMI is enough to host these containers, if that
 
 ## Quick Start
 
-Once you have `nvidia-container-toolkit` and `nvidia-smi` installed...
+Once you have `nvidia-container-toolkit` and `nvidia-smi` installed...\
+
 
 ### Standalone Ollama Server
 
 Here is the command I use to run the 4B parameter Gemma3 model:
 ```bash
-docker run -p 11434:11434 sinanozel/ollama.0.12.11:gemma3-4b
+docker run -p 11434:11434 sinanozel/ollama.0.12.11:gemma3-4b --gpus all
 ```
 
 Or, here is a sample `docker-compose.yaml`:
@@ -134,6 +135,22 @@ response = completion(
     ],
     api_base="http://localhost:11434",
 )
+```
+
+### Standalone llama.cpp Server
+```bash
+docker run -p 8000:8000 sinanozel/llama-cuda.b7902:gemma3-4b-it-qat --gpus all
+```
+
+### Test It
+```
+curl -s http://localhost:8000/completion \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "What is the capital of France?",
+    "n_predict": 50,
+    "temperature": 0.7
+  }'
 ```
 
 ## Advanced - Creating Your Own Image

@@ -1,4 +1,4 @@
-[![Docker Pulls llama.b7902](https://img.shields.io/docker/pulls/sinanozel/llama-cuda.b7902?label=docker%20pulls%20b7902)](https://hub.docker.com/r/sinanozel/llama-cuda.b7902)
+[![Docker Pulls llama.cuda](https://img.shields.io/docker/pulls/sinanozel/llama.cuda?label=docker%20pulls%20llama)](https://hub.docker.com/r/sinanozel/llama.cuda)
 [![Docker Pulls Ollama 0.15.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.15.2?label=docker%20pulls%200.15.2)](https://hub.docker.com/r/sinanozel/ollama.0.15.2)
 [![Docker Pulls Ollama 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11?label=docker%20pulls%200.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
 [![Docker Pulls Ollama 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2?label=docker%20pulls%200.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)

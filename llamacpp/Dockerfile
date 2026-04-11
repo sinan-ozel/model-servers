@@ -1,14 +1,13 @@
 FROM ghcr.io/ggml-org/llama.cpp:server-cuda
 
-# Copy model into image (large layer!)
-# This will be replaced during build with actual model
+ARG MODEL_NAME
+ARG MODEL_TAG
+ENV MODEL_ALIAS="${MODEL_NAME}:${MODEL_TAG}"
+
 COPY model.gguf /models/model.gguf
+COPY mmproj.gguf /models/mmproj.gguf
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
-
-# Default CMD - can be overridden with docker run
-CMD ["-m", "/models/model.gguf", \
-     "--host", "0.0.0.0", \
-     "--port", "8080", \
-     "-ngl", "999", \
-     "-c", "4096"]
+ENTRYPOINT ["/entrypoint.sh"]

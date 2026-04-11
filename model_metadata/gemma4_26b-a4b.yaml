@@ -1,0 +1,16 @@
+name: gemma4
+tag: 26b
+memory:
+  model_size: 18GiB
+  min: 24GiB
+  recommended: 48GiB
+license: Gemma Terms of Use
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/gemma-4-26B-A4B-it-Q4_K_M.gguf
+  filename: gemma-4-26B-A4B-it-Q4_K_M.gguf
+  file_size: 16.8GiB
+  mmproj:
+    url: https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mmproj-gemma-4-26B-A4B-it-f16.gguf
+    filename: mmproj-gemma-4-26B-A4B-it-f16.gguf
+    file_size: 1.19GiB

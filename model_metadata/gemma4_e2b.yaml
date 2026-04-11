@@ -1,0 +1,16 @@
+name: gemma4
+tag: e2b
+memory:
+  model_size: 7GiB
+  min: 8GiB
+  recommended: 16GiB
+license: Gemma Terms of Use
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/ggml-org/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-e2b-it-Q8_0.gguf
+  filename: gemma-4-e2b-it-Q8_0.gguf
+  file_size: 4.97GiB
+  mmproj:
+    url: https://huggingface.co/ggml-org/gemma-4-E2B-it-GGUF/resolve/main/mmproj-gemma-4-e2b-it-f16.gguf
+    filename: mmproj-gemma-4-e2b-it-f16.gguf
+    file_size: 986MiB

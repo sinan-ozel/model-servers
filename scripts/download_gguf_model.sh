@@ -30,10 +30,54 @@ if [ ! -f "$MODEL_FILE" ]; then
   exit 1
 fi
 
+# Download a file from a URL, with optional HF_TOKEN auth
+# Usage: _download_file <url> <output_path>
+_download_file() {
+  local url="$1"
+  local output_path="$2"
+
+  if [ -n "$HF_TOKEN" ]; then
+    echo "Using HuggingFace authentication token"
+    if ! wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" -O "$output_path" "$url"; then
+      echo ""
+      echo "❌ Download failed!"
+      if [ -f "$output_path" ]; then
+        echo "   Error response:"
+        head -3 "$output_path"
+      fi
+      rm -f "$output_path"
+      echo ""
+      echo "💡 If this is a gated model, you may need to:"
+      echo "   1. Accept the model's license on HuggingFace"
+      echo "   2. Create a token at https://huggingface.co/settings/tokens"
+      echo "   3. Export it: export HF_TOKEN=your_token_here"
+      exit 1
+    fi
+  else
+    if ! wget --progress=bar:force:noscroll -O "$output_path" "$url"; then
+      echo ""
+      echo "❌ Download failed!"
+      if [ -f "$output_path" ]; then
+        echo "   Error response:"
+        head -3 "$output_path"
+      fi
+      rm -f "$output_path"
+      echo ""
+      echo "💡 If this is a gated model, you may need to:"
+      echo "   1. Accept the model's license on HuggingFace"
+      echo "   2. Create a token at https://huggingface.co/settings/tokens"
+      echo "   3. Export it: export HF_TOKEN=your_token_here"
+      exit 1
+    fi
+  fi
+}
+
 # Extract values using yq
 GGUF_URL=$(yq '.gguf.url' "$MODEL_FILE")
 GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
 EXPECTED_SIZE_MB=$(yq '.gguf.file_size' "$MODEL_FILE" | grep -oP '\d+' | head -1)
+MMPROJ_URL=$(yq '.gguf.mmproj.url' "$MODEL_FILE")
+MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 
 # Validate GGUF fields
 if [ -z "$GGUF_URL" ] || [ "$GGUF_URL" = "null" ] || [ -z "$GGUF_FILENAME" ] || [ "$GGUF_FILENAME" = "null" ]; then
@@ -61,56 +105,21 @@ if [ -f "$OUTPUT_PATH" ]; then
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Skipping download."
-    exit 0
-  fi
-  echo "Re-downloading model..."
-fi
-
-echo "=== Downloading GGUF Model ==="
-echo "Model file: $MODEL_FILE"
-echo "URL: $GGUF_URL"
-echo "Output: $OUTPUT_PATH"
-if [ -n "$EXPECTED_SIZE_MB" ]; then
-  echo "Expected size: ~${EXPECTED_SIZE_MB}MB"
-fi
-echo ""
-
-# Prepare authentication header if HF_TOKEN is set
-if [ -n "$HF_TOKEN" ]; then
-  echo "Using HuggingFace authentication token"
-  # Download with wget for better handling of redirects and errors
-  if ! wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" -O "$OUTPUT_PATH" "$GGUF_URL"; then
-    echo ""
-    echo "❌ Download failed!"
-    if [ -f "$OUTPUT_PATH" ]; then
-      echo "   Error response:"
-      head -3 "$OUTPUT_PATH"
-    fi
-    rm -f "$OUTPUT_PATH"
-    echo ""
-    echo "💡 If this is a gated model, you may need to:"
-    echo "   1. Accept the model's license on HuggingFace"
-    echo "   2. Create a token at https://huggingface.co/settings/tokens"
-    echo "   3. Export it: export HF_TOKEN=your_token_here"
-    exit 1
+  else
+    echo "Re-downloading model..."
+    _download_file "$GGUF_URL" "$OUTPUT_PATH"
   fi
 else
-  # Download without authentication
-  if ! wget --progress=bar:force:noscroll -O "$OUTPUT_PATH" "$GGUF_URL"; then
-    echo ""
-    echo "❌ Download failed!"
-    if [ -f "$OUTPUT_PATH" ]; then
-      echo "   Error response:"
-      head -3 "$OUTPUT_PATH"
-    fi
-    rm -f "$OUTPUT_PATH"
-    echo ""
-    echo "💡 If this is a gated model, you may need to:"
-    echo "   1. Accept the model's license on HuggingFace"
-    echo "   2. Create a token at https://huggingface.co/settings/tokens"
-    echo "   3. Export it: export HF_TOKEN=your_token_here"
-    exit 1
+  echo "=== Downloading GGUF Model ==="
+  echo "Model file: $MODEL_FILE"
+  echo "URL: $GGUF_URL"
+  echo "Output: $OUTPUT_PATH"
+  if [ -n "$EXPECTED_SIZE_MB" ]; then
+    echo "Expected size: ~${EXPECTED_SIZE_MB}MB"
   fi
+  echo ""
+
+  _download_file "$GGUF_URL" "$OUTPUT_PATH"
 fi
 
 # Get actual file size in bytes
@@ -145,4 +154,31 @@ if [ -n "$EXPECTED_SIZE_MB" ] && [ "$EXPECTED_SIZE_MB" -gt 0 ]; then
     echo "  Actual: ${ACTUAL_SIZE_MB}MB"
     echo "  Difference: ${SIZE_DIFF}MB (${PERCENT_DIFF}%)"
   fi
+fi
+
+# Download mmproj file if present in metadata
+if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ] && [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
+  MMPROJ_OUTPUT_PATH="$CACHE_DIR/$MMPROJ_FILENAME"
+
+  echo ""
+  echo "=== Downloading mmproj (multimodal projector) ==="
+  echo "URL: $MMPROJ_URL"
+  echo "Output: $MMPROJ_OUTPUT_PATH"
+
+  if [ -f "$MMPROJ_OUTPUT_PATH" ]; then
+    echo "✓ mmproj already exists at: $MMPROJ_OUTPUT_PATH"
+    echo "  File size: $(du -h "$MMPROJ_OUTPUT_PATH" | cut -f1)"
+    read -p "Do you want to re-download? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Skipping mmproj download."
+    else
+      _download_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH"
+    fi
+  else
+    _download_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH"
+  fi
+
+  echo "✓ mmproj saved to: $MMPROJ_OUTPUT_PATH"
+  echo "  File size: $(du -h "$MMPROJ_OUTPUT_PATH" | cut -f1)"
 fi

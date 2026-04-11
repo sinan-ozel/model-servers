@@ -1,0 +1,16 @@
+name: qwen3.5
+tag: 27b
+memory:
+  model_size: 16GiB
+  min: 24GiB
+  recommended: 32GiB
+license: Apache 2.0
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.Q4_K_H.gguf
+  filename: Qwen3.5-27B.Q4_K_H.gguf
+  file_size: 16GiB
+  mmproj:
+    url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.mmproj.BF16.gguf
+    filename: Qwen3.5-27B.mmproj.BF16.gguf
+    file_size: 931MiB

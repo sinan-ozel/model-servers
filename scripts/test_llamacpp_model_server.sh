@@ -83,16 +83,35 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
 done
 
 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-  echo "⚠ Server health check timed out, but continuing with tests..."
+  echo "❌ Server did not become ready in time."
+  docker logs --tail 30 "$CONTAINER_NAME"
+  docker stop "$CONTAINER_NAME" >/dev/null 2>&1
+  docker rm "$CONTAINER_NAME" >/dev/null 2>&1
+  exit 1
 fi
 
 echo ""
 echo "=== Testing Model Inference ==="
 echo ""
 
+# Helper: assert response contains "Paris" (case-insensitive)
+_assert_paris() {
+  local label="$1"
+  local text="$2"
+  if echo "$text" | grep -qi "paris"; then
+    echo "✓ $label: response contains 'Paris'"
+  else
+    echo "❌ $label: expected 'Paris' in response, got:"
+    echo "$text"
+    docker logs --tail 30 "$CONTAINER_NAME"
+    docker stop "$CONTAINER_NAME" >/dev/null 2>&1
+    docker rm "$CONTAINER_NAME" >/dev/null 2>&1
+    exit 1
+  fi
+}
+
 # Test 1: Native completion endpoint
 echo "Test 1: Native /completion endpoint"
-echo "Sending test prompt..."
 RESPONSE=$(curl -s http://localhost:$PORT/completion \
   -H "Content-Type: application/json" \
   -d '{
@@ -100,35 +119,31 @@ RESPONSE=$(curl -s http://localhost:$PORT/completion \
     "n_predict": 50,
     "temperature": 0.7
   }')
-
-echo "Response:"
-echo "$RESPONSE" | jq -r '.content // .text // .' 2>/dev/null || echo "$RESPONSE"
+CONTENT=$(echo "$RESPONSE" | jq -r '.content // .text // empty' 2>/dev/null)
+echo "Response: $CONTENT"
+_assert_paris "Test 1" "$CONTENT"
 echo ""
 
 # Test 2: OpenAI-compatible chat completions endpoint
 echo "Test 2: OpenAI-compatible /v1/chat/completions endpoint"
-echo "Sending test prompt..."
 RESPONSE=$(curl -s http://localhost:$PORT/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{
-    "model": "model",
-    "messages": [{"role": "user", "content": "What is the capital of France?"}],
-    "max_tokens": 50,
-    "temperature": 0.7
-  }')
-
-echo "Response:"
-echo "$RESPONSE" | jq -r '.choices[0].message.content' 2>/dev/null || echo "$RESPONSE"
-echo ""
-echo "Full response with metadata:"
-echo "$RESPONSE" | jq '.' 2>/dev/null || echo "$RESPONSE"
+  -d "{
+    \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
+    \"messages\": [{\"role\": \"user\", \"content\": \"What is the capital of France?\"}],
+    \"max_tokens\": 50,
+    \"temperature\": 0.7
+  }")
+CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+echo "Response: $CONTENT"
+_assert_paris "Test 2" "$CONTENT"
 echo ""
 
 echo "=== Container Logs (last 20 lines) ==="
 docker logs --tail 20 "$CONTAINER_NAME"
 echo ""
 
-echo "✓ Test complete!"
+echo "✓ All tests passed!"
 echo ""
 echo "Stopping and removing container..."
 docker stop "$CONTAINER_NAME" >/dev/null 2>&1

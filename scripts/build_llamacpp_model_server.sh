@@ -29,6 +29,7 @@ fi
 MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
+MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 
 # Validate fields
 if [ -z "$MODEL_NAME" ] || [ "$MODEL_NAME" = "null" ]; then
@@ -57,6 +58,19 @@ if [ ! -f "$MODEL_PATH" ]; then
   exit 1
 fi
 
+# Determine if this is a multimodal build
+HAS_MMPROJ=false
+MMPROJ_PATH=""
+if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
+  MMPROJ_PATH="$CACHE_DIR/$MMPROJ_FILENAME"
+  if [ ! -f "$MMPROJ_PATH" ]; then
+    echo "❌ Error: mmproj file not found at $MMPROJ_PATH"
+    echo "Please run download_gguf_model.sh first."
+    exit 1
+  fi
+  HAS_MMPROJ=true
+fi
+
 echo "=== Building llama.cpp Model Server ==="
 echo "Model file: $MODEL_FILE"
 echo "Model name: $MODEL_NAME"
@@ -65,11 +79,20 @@ echo "GGUF filename: $GGUF_FILENAME"
 echo "Model path: $MODEL_PATH"
 echo "Image tag: $IMAGE_TAG"
 echo "Model size: $(du -h "$MODEL_PATH" | cut -f1)"
+if [ "$HAS_MMPROJ" = true ]; then
+  echo "mmproj: $MMPROJ_PATH ($(du -h "$MMPROJ_PATH" | cut -f1))"
+fi
 echo ""
 
 # Copy model to build context
 echo "Preparing build context..."
 cp "$MODEL_PATH" "./llamacpp/model.gguf"
+
+DOCKERFILE="llamacpp/Dockerfile"
+if [ "$HAS_MMPROJ" = true ]; then
+  cp "$MMPROJ_PATH" "./llamacpp/mmproj.gguf"
+  # DOCKERFILE="llamacpp/Dockerfile.mmproj"
+fi
 
 # Build Docker image
 IMAGE_NAME="model-servers/llamacpp:$IMAGE_TAG"
@@ -78,11 +101,16 @@ echo ""
 
 docker build \
   -t "$IMAGE_NAME" \
-  -f llamacpp/Dockerfile \
+  -f "$DOCKERFILE" \
+  --build-arg MODEL_NAME="$MODEL_NAME" \
+  --build-arg MODEL_TAG="$MODEL_TAG" \
   llamacpp/
 
-# Clean up temporary model file
+# Clean up temporary files
 rm -f "./llamacpp/model.gguf"
+if [ "$HAS_MMPROJ" = true ]; then
+  rm -f "./llamacpp/mmproj.gguf"
+fi
 
 echo ""
 echo "✓ Build complete!"
@@ -91,3 +119,9 @@ echo "  Image size: $(docker images "$IMAGE_NAME" --format "{{.Size}}")"
 echo ""
 echo "To run locally:"
 echo "  docker run --rm --gpus all -p 8080:8080 $IMAGE_NAME"
+if [ "$HAS_MMPROJ" = true ]; then
+  echo ""
+  echo "Multimodal (vision) image — send images via the /v1/chat/completions endpoint:"
+  echo '  curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" \'
+  echo '    -d '"'"'{"model":"gemma4","messages":[{"role":"user","content":[{"type":"text","text":"Describe this image"},{"type":"image_url","image_url":{"url":"data:image/jpeg;base64,<BASE64>"}}]}]}'"'"
+fi

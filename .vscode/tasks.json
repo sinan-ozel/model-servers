@@ -21,9 +21,9 @@
             "magistral_24b.yaml",
             "devstral_24b.yaml",
 
-            "gemma2_2b.yaml",
-            "gemma2_9b.yaml",
-            "gemma2_27b.yaml",
+            // "gemma2_2b.yaml",
+            // "gemma2_9b.yaml",
+            // "gemma2_27b.yaml",
 
             "all-minilm_33m.yaml",
             "embeddinggemma_300m.yaml",
@@ -31,40 +31,52 @@
             "qwen3-embedding_4b.yaml",
             "qwen3-embedding_8b.yaml",
 
-            "gemma3_270m.yaml",
-            "gemma3_1b.yaml",
-            "gemma3_4b.yaml",
-            "gemma3_12b.yaml",
-            "gemma3_27b.yaml",
-            "gemma3_1b-it-qat.yaml",
-            "gemma3_4b-it-qat.yaml",
-            "gemma3_12b-it-qat.yaml",
-            "gemma3_27b-it-qat.yaml",
-            "gemma3-tools_1b.yaml",
-            "gemma3-tools_4b.yaml",
-            "gemma3-tools_12b.yaml",
-            "gemma3-tools_27b.yaml",
+            // "gemma3_270m.yaml",
+            // "gemma3_1b.yaml",
+            // "gemma3_4b.yaml",
+            // "gemma3_12b.yaml",
+            // "gemma3_27b.yaml",
+            // "gemma3_1b-it-qat.yaml",
+            // "gemma3_4b-it-qat.yaml",
+            // "gemma3_12b-it-qat.yaml",
+            // "gemma3_27b-it-qat.yaml",
+            // "gemma3-tools_1b.yaml",
+            // "gemma3-tools_4b.yaml",
+            // "gemma3-tools_12b.yaml",
+            // "gemma3-tools_27b.yaml",
 
-            "gemma3n_e2b.yaml",
-            "gemma3n_e4b.yaml",
+            // "gemma3n_e2b.yaml",
+            // "gemma3n_e4b.yaml",
+
+            "gemma4_e2b.yaml",
+            "gemma4_e4b.yaml",
+            "gemma4_26b-a4b.yaml",
+            "gemma4_31b.yaml",
 
             "phi4-mini-reasoning_3.8b.yaml",
 
-            "qwen3_0.6b.yaml",
-            "qwen3_1.7b.yaml",
-            "qwen3_4b.yaml",
-            "qwen3_8b.yaml",
-            "qwen3_14b.yaml",
-            "qwen3_32b.yaml",
-            "qwen3_30b-a3b.yaml",
-            "qwen3_235b-a22b.yaml",
+            // "qwen3_0.6b.yaml",
+            // "qwen3_1.7b.yaml",
+            // "qwen3_4b.yaml",
+            // "qwen3_8b.yaml",
+            // "qwen3_14b.yaml",
+            // "qwen3_32b.yaml",
+            // "qwen3_30b-a3b.yaml",
+            // "qwen3_235b-a22b.yaml",
 
             "qwen3-coder_30b.yaml",
 
-            "qwen2.5vl_3b.yaml",
-            "qwen2.5vl_7b.yaml",
-            "qwen2.5vl_32b.yaml",
-            "qwen2.5vl_72b.yaml",
+            "qwen3.5_0.8b.yaml",
+            "qwen3.5_2b.yaml",
+            "qwen3.5_4b.yaml",
+            "qwen3.5_9b.yaml",
+            "qwen3.5_27b.yaml",
+            "qwen3.5_35b.yaml",
+
+            // "qwen2.5vl_3b.yaml",
+            // "qwen2.5vl_7b.yaml",
+            // "qwen2.5vl_32b.yaml",
+            // "qwen2.5vl_72b.yaml",
 
             "qwen3-vl_2b.yaml",
             "qwen3-vl_4b.yaml",
@@ -109,7 +121,19 @@
             "options": [
                 "gemma3_270m.yaml",
                 "gemma3_1b.yaml",
-                "gemma3_1b-it-qat.yaml"
+                "gemma3_1b-it-qat.yaml",
+
+                "gemma4_e2b.yaml",
+                "gemma4_e4b.yaml",
+                "gemma4_26b-a4b.yaml",
+                "gemma4_31b.yaml",
+
+                "qwen3.5_0.8b.yaml",
+                "qwen3.5_2b.yaml",
+                "qwen3.5_4b.yaml",
+                "qwen3.5_9b.yaml",
+                "qwen3.5_27b.yaml",
+                "qwen3.5_35b.yaml"
             ]
         }
       ],
@@ -188,7 +212,6 @@
         },
         {
             "label": "inspect_ollama_single_model_server",
-            "dependsOn": "build_ollama_single_model_server",
             "type": "shell",
             "linux": {
                 "command": "bash",
@@ -202,7 +225,6 @@
         {
             "label": "push_ollama_single_model_server_to_aws",
             "dependsOn": [
-                "build_ollama_single_model_server",
                 "inspect_ollama_single_model_server"
             ],
             "type": "shell",
@@ -224,7 +246,6 @@
         {
             "label": "push_ollama_single_model_server_to_dockerhub",
             "dependsOn": [
-                "build_ollama_single_model_server",
                 "inspect_ollama_single_model_server"
             ],
             "type": "shell",
@@ -389,6 +410,26 @@
             "problemMatcher": []
         },
         {
+            "label": "run_llamacpp_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/run_llamacpp_model_server.sh",
+                    "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "download_gguf_model",
             "type": "shell",
             "linux": {
@@ -402,6 +443,9 @@
         },
         {
             "label": "build_llamacpp_model_server",
+            "dependsOn": [
+                "download_gguf_model"
+            ],
             "type": "shell",
             "linux": {
                 "command": "bash",
@@ -426,6 +470,9 @@
         },
         {
             "label": "push_llamacpp_model_server_to_dockerhub",
+            "dependsOn": [
+                // "test_llamacpp_model_server"
+            ],
             "type": "shell",
             "linux": {
                 "command": "bash",

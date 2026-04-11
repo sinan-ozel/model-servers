@@ -1,0 +1,16 @@
+name: qwen3.5
+tag: 2b
+memory:
+  model_size: 1.28GiB
+  min: 4GiB
+  recommended: 8GiB
+license: Apache 2.0
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf
+  filename: Qwen3.5-2B-Q4_K_M.gguf
+  file_size: 1.28GiB
+  mmproj:
+    url: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/mmproj-BF16.gguf
+    filename: Qwen3.5-2B-mmproj-BF16.gguf
+    file_size: 671MiB

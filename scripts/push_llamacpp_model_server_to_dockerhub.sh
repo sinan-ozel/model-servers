@@ -50,7 +50,7 @@ if [ -z "$DOCKERHUB_NAMESPACE" ]; then
   exit 1
 fi
 
-REMOTE_IMAGE="$DOCKERHUB_NAMESPACE/llama-cuda.b7902:$IMAGE_TAG"
+REMOTE_IMAGE="$DOCKERHUB_NAMESPACE/llama.cuda:$IMAGE_TAG"
 
 echo "=== Pushing llama.cpp Model Server to Docker Hub ==="
 echo "Model file: $MODEL_FILE"

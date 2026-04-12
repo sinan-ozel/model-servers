@@ -469,6 +469,23 @@
             "problemMatcher": []
         },
         {
+            "label": "clear_llamacpp_model_cache",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "./scripts/clear_llamacpp_model_cache.sh"
+                ]
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "push_llamacpp_model_server_to_dockerhub",
             "dependsOn": [
                 // "test_llamacpp_model_server"

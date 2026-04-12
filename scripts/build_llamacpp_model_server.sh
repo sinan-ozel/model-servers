@@ -84,15 +84,23 @@ if [ "$HAS_MMPROJ" = true ]; then
 fi
 echo ""
 
-# Copy model to build context
+# Copy model to build context (preserving real filenames)
 echo "Preparing build context..."
-cp "$MODEL_PATH" "./llamacpp/model.gguf"
+cp "$MODEL_PATH" "./llamacpp/$GGUF_FILENAME"
 
 DOCKERFILE="llamacpp/Dockerfile"
+MMPROJ_BUILD_ARG=""
 if [ "$HAS_MMPROJ" = true ]; then
-  cp "$MMPROJ_PATH" "./llamacpp/mmproj.gguf"
-  # DOCKERFILE="llamacpp/Dockerfile.mmproj"
+  cp "$MMPROJ_PATH" "./llamacpp/$MMPROJ_FILENAME"
+  MMPROJ_BUILD_ARG="--build-arg MMPROJ_FILENAME=$MMPROJ_FILENAME"
 fi
+
+# Clean up temp files on exit (success or failure)
+_cleanup() {
+  rm -f "./llamacpp/$GGUF_FILENAME"
+  [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME"
+}
+trap _cleanup EXIT
 
 # Build Docker image
 IMAGE_NAME="model-servers/llamacpp:$IMAGE_TAG"
@@ -104,13 +112,9 @@ docker build \
   -f "$DOCKERFILE" \
   --build-arg MODEL_NAME="$MODEL_NAME" \
   --build-arg MODEL_TAG="$MODEL_TAG" \
+  --build-arg GGUF_FILENAME="$GGUF_FILENAME" \
+  $MMPROJ_BUILD_ARG \
   llamacpp/
-
-# Clean up temporary files
-rm -f "./llamacpp/model.gguf"
-if [ "$HAS_MMPROJ" = true ]; then
-  rm -f "./llamacpp/mmproj.gguf"
-fi
 
 echo ""
 echo "✓ Build complete!"

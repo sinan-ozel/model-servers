@@ -11,6 +11,6 @@ gguf:
   filename: gemma-4-26B-A4B-it-Q4_K_M.gguf
   file_size: 16.8GiB
   mmproj:
-    url: https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mmproj-gemma-4-26B-A4B-it-f16.gguf
-    filename: mmproj-gemma-4-26B-A4B-it-f16.gguf
+    url: https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/main/mmproj-gemma-4-26B-A4B-it-bf16.gguf
+    filename: mmproj-gemma-4-26B-A4B-it-bf16.gguf
     file_size: 1.19GiB

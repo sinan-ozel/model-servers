@@ -10,4 +10,4 @@ fi
 if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ] && [ -f "/models/$MMPROJ_FILENAME" ]; then
   ARGS="$ARGS --mmproj /models/$MMPROJ_FILENAME"
 fi
-exec /app/llama-server $ARGS
+exec /app/llama-server $ARGS "$@"

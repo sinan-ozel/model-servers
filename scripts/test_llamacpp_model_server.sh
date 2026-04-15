@@ -159,15 +159,21 @@ echo ""
 
 # Test 2: OpenAI-compatible chat completions endpoint
 echo "Test 2: OpenAI-compatible /v1/chat/completions endpoint"
-RESPONSE=$(curl -sf --max-time 60 http://localhost:$PORT/v1/chat/completions \
+RESPONSE=$(curl -sf --max-time 120 http://localhost:$PORT/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d "{
     \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
     \"messages\": [{\"role\": \"user\", \"content\": \"What is the capital of France? Answer in one word.\"}],
-    \"max_tokens\": 100,
+    \"max_tokens\": 2048,
     \"temperature\": 0
   }") || _fail "Test 2" "curl request failed (HTTP error or timeout)"
+# Reasoning models (e.g. Qwen3, DeepSeek-R1) put the final answer in content
+# and chain-of-thought in reasoning_content. Fall back to reasoning_content only
+# when content is absent, as it may still contain the answer for some models.
 CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+if [ -z "$CONTENT" ]; then
+  CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.reasoning_content // empty' 2>/dev/null)
+fi
 if [ -z "$CONTENT" ]; then
   _fail "Test 2" "empty or unparseable response: $RESPONSE"
 fi
@@ -196,7 +202,7 @@ PYEOF
   if [ -z "$SIMPLE_IMG_B64" ]; then
     echo "⚠ Skipping Test 3: python3 unavailable for image generation"
   else
-    RESPONSE=$(curl -sf --max-time 90 http://localhost:$PORT/v1/chat/completions \
+    RESPONSE=$(curl -sf --max-time 180 http://localhost:$PORT/v1/chat/completions \
       -H "Content-Type: application/json" \
       -d "{
         \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
@@ -207,10 +213,13 @@ PYEOF
             {\"type\": \"text\", \"text\": \"What color is this image? Answer in one word.\"}
           ]
         }],
-        \"max_tokens\": 50,
+        \"max_tokens\": 2048,
         \"temperature\": 0
       }") || _fail "Test 3" "curl request failed (HTTP error or timeout)"
     CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+    if [ -z "$CONTENT" ]; then
+      CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.reasoning_content // empty' 2>/dev/null)
+    fi
     if [ -z "$CONTENT" ]; then
       _fail "Test 3" "empty or unparseable response: $RESPONSE"
     fi
@@ -222,6 +231,51 @@ else
   echo "Test 3: Vision — skipped (no mmproj in $MODEL_FILE)"
   echo ""
 fi
+
+# Test 4: Extra docker run args are passed through to llama-server and override defaults
+# The entrypoint appends "$@" after its own args, so --ctx-size N passed at docker run
+# time should win over the hardcoded -c 4096 in DEFAULT_ARGS.
+echo "Test 4: Extra docker run args override entrypoint defaults via \"\$@\""
+TEST4_CONTAINER="${CONTAINER_NAME}-argstest"
+TEST4_PORT=$(python3 -c "import socket; s=socket.socket(); s.bind(('',0)); print(s.getsockname()[1]); s.close()")
+
+if docker ps -a --format '{{.Names}}' | grep -q "^${TEST4_CONTAINER}$"; then
+  docker stop "$TEST4_CONTAINER" >/dev/null 2>&1 || true
+  docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1 || true
+fi
+
+docker run -d \
+  --name "$TEST4_CONTAINER" \
+  --gpus all \
+  -p "$TEST4_PORT:8080" \
+  "$IMAGE_NAME" \
+  --ctx-size 512
+
+sleep $INITIAL_WAIT
+ATTEMPT=0
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  if curl -sf "http://localhost:$TEST4_PORT/health" >/dev/null 2>&1; then break; fi
+  ATTEMPT=$((ATTEMPT + 1))
+  sleep 5
+done
+
+if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+  docker stop "$TEST4_CONTAINER" >/dev/null 2>&1 || true
+  docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1 || true
+  _fail "Test 4" "server did not become ready"
+fi
+
+if docker logs "$TEST4_CONTAINER" 2>&1 | grep -qE 'n_ctx\s*=\s*512\b'; then
+  echo "✓ Test 4: n_ctx=512 found in startup logs — extra docker run args correctly override entrypoint defaults"
+else
+  FOUND=$(docker logs "$TEST4_CONTAINER" 2>&1 | grep -oE 'n_ctx\s*=\s*[0-9]+' | head -5 | tr '\n' ' ')
+  docker stop "$TEST4_CONTAINER" >/dev/null 2>&1
+  docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1
+  _fail "Test 4" "n_ctx=512 not found in server startup logs — extra args may not be passed through. n_ctx lines found: ${FOUND:-none}"
+fi
+docker stop "$TEST4_CONTAINER" >/dev/null 2>&1
+docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1
+echo ""
 
 echo "=== Container Logs (last 20 lines) ==="
 docker logs --tail 20 "$CONTAINER_NAME"

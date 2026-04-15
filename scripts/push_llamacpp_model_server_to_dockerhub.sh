@@ -2,16 +2,17 @@
 
 set -e
 
-# Usage: ./push_llamacpp_model_server_to_dockerhub.sh <model_metadata.yaml>
-# Example: ./push_llamacpp_model_server_to_dockerhub.sh model_metadata/gemma3_270m.yaml
+# Usage: ./push_llamacpp_model_server_to_dockerhub.sh <model_metadata.yaml> [repo]
+# Example: ./push_llamacpp_model_server_to_dockerhub.sh model_metadata/gemma3_270m.yaml llama.cuda.6gb
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <model_metadata.yaml>"
-  echo "Example: $0 model_metadata/gemma3_270m.yaml"
+  echo "Usage: $0 <model_metadata.yaml> [repo]"
+  echo "Example: $0 model_metadata/gemma3_270m.yaml llama.cuda.6gb"
   exit 1
 fi
 
 MODEL_FILE="$1"
+REPO="${2:-llama.cuda}"
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null; then
@@ -50,7 +51,7 @@ if [ -z "$DOCKERHUB_NAMESPACE" ]; then
   exit 1
 fi
 
-REMOTE_IMAGE="$DOCKERHUB_NAMESPACE/llama.cuda:$IMAGE_TAG"
+REMOTE_IMAGE="$DOCKERHUB_NAMESPACE/$REPO:$IMAGE_TAG"
 
 echo "=== Pushing llama.cpp Model Server to Docker Hub ==="
 echo "Model file: $MODEL_FILE"
@@ -85,7 +86,7 @@ docker push "$REMOTE_IMAGE"
 echo ""
 echo "✓ Push complete!"
 echo "  Image: $REMOTE_IMAGE"
-echo "  Docker Hub: https://hub.docker.com/r/$DOCKERHUB_NAMESPACE/llamacpp"
+echo "  Docker Hub: https://hub.docker.com/r/$DOCKERHUB_NAMESPACE/$REPO"
 echo ""
 echo "To pull and run on another machine:"
 echo "  docker pull $REMOTE_IMAGE"

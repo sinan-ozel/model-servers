@@ -2,16 +2,29 @@
 
 set -e
 
-# Usage: ./test_llamacpp_model_server.sh <model_metadata.yaml>
-# Example: ./test_llamacpp_model_server.sh model_metadata/gemma3_270m.yaml
+# Usage: ./test_llamacpp_model_server.sh <model_metadata.yaml> [vram_gb]
+# Example: ./test_llamacpp_model_server.sh model_metadata/gemma3_270m.yaml 6
+# vram_gb: 6 | 12 | 24  (default: 6)
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <model_metadata.yaml>"
-  echo "Example: $0 model_metadata/gemma3_270m.yaml"
+  echo "Usage: $0 <model_metadata.yaml> [vram_gb]"
+  echo "Example: $0 model_metadata/gemma3_270m.yaml 6"
   exit 1
 fi
 
 MODEL_FILE="$1"
+VRAM_GB="${2:-6}"
+
+# Model weight budget per VRAM tier — remainder covers KV cache + CUDA overhead
+case "$VRAM_GB" in
+  6)  VRAM_BUDGET_MiB=4608  ;;  # leaves ~1.5 GB for KV cache + overhead
+  12) VRAM_BUDGET_MiB=10240 ;;  # leaves ~2 GB
+  24) VRAM_BUDGET_MiB=20480 ;;  # leaves ~4 GB
+  *)
+    echo "❌ Error: unsupported vram_gb '$VRAM_GB'. Choose 6, 12, or 24."
+    exit 1
+    ;;
+esac
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null; then
@@ -112,11 +125,7 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
 fi
 
 echo ""
-echo "=== VRAM Budget Check ==="
-# On a 6GB card the model weights must leave room for KV cache and CUDA overhead.
-# 4608 MiB (4.5 GB) is the ceiling for model weights; the remaining ~1.5 GB covers
-# a 4096-token KV cache, CUDA context, and typical driver overhead.
-VRAM_BUDGET_MiB=4608
+echo "=== VRAM Budget Check (${VRAM_GB}GB tier) ==="
 VRAM_LINE=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -oP 'CUDA\d+ model buffer size\s*=\s*\K[0-9]+\.[0-9]+' | head -1)
 if [ -z "$VRAM_LINE" ]; then
   echo "⚠ VRAM check skipped — 'CUDA model buffer size' not found in logs (CPU-only run?)"

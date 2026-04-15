@@ -115,6 +115,32 @@
 			"options": ["exoscale", "aws"]
 		},
         {
+            "id": "llamacppVramTier",
+            "type": "pickString",
+            "description": "Target VRAM tier for the VRAM budget check",
+            "options": ["6", "12", "24"],
+            "default": "6"
+        },
+        {
+            "id": "llamacppRepo",
+            "type": "pickString",
+            "description": "Select Docker Hub repo for llama.cpp push",
+            "options": [
+                "llama.cuda",
+                "llama.cuda.6gb",
+                "llama.cuda.12gb"
+            ],
+            "default": "llama.cuda"
+        },
+        {
+            "id": "llamacppBundleFile",
+            "type": "pickString",
+            "description": "Select bundle config file for llama.cpp",
+            "options": [
+                "bundles/llama.cuda.6gb.yaml"
+            ]
+        },
+        {
             "id": "llamacppModelFile",
             "type": "pickString",
             "description": "Select model metadata file for llama.cpp",
@@ -463,7 +489,8 @@
                 "command": "bash",
                 "args": [
                     "./scripts/test_llamacpp_model_server.sh",
-                    "model_metadata/${input:llamacppModelFile}"
+                    "model_metadata/${input:llamacppModelFile}",
+                    "${input:llamacppVramTier}"
                 ]
             },
             "problemMatcher": []
@@ -495,7 +522,8 @@
                 "command": "bash",
                 "args": [
                     "./scripts/push_llamacpp_model_server_to_dockerhub.sh",
-                    "model_metadata/${input:llamacppModelFile}"
+                    "model_metadata/${input:llamacppModelFile}",
+                    "${input:llamacppRepo}"
                 ]
             },
             "options": {

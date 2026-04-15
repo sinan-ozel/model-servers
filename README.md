@@ -1,4 +1,6 @@
 [![Docker Pulls llama.cuda](https://img.shields.io/docker/pulls/sinanozel/llama.cuda?label=docker%20pulls%20llama)](https://hub.docker.com/r/sinanozel/llama.cuda)
+[![Docker Pulls Ollama 0.20.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.20.2?label=docker%20pulls%200.20.2)](https://hub.docker.com/r/sinanozel/ollama.0.20.2)
+[![Docker Pulls Ollama 0.17.5](https://img.shields.io/docker/pulls/sinanozel/ollama.0.17.5?label=docker%20pulls%200.17.5)](https://hub.docker.com/r/sinanozel/ollama.0.17.5)
 [![Docker Pulls Ollama 0.15.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.15.2?label=docker%20pulls%200.15.2)](https://hub.docker.com/r/sinanozel/ollama.0.15.2)
 [![Docker Pulls Ollama 0.12.11](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.11?label=docker%20pulls%200.12.11)](https://hub.docker.com/r/sinanozel/ollama.0.12.11)
 [![Docker Pulls Ollama 0.12.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.12.2?label=docker%20pulls%200.12.2)](https://hub.docker.com/r/sinanozel/ollama.0.12.2)
@@ -17,6 +19,133 @@ To boost performance even further, the container can be kept alive continuously.
 Additionally, a simple GPU VRAM monitoring script is included, logging usage to a file for easy tracking. For larger organizations, there’s also a ready-made pipeline to upload images to your own AWS repository.
 
 This project is MIT licensed, giving you freedom to use it commercially. Feel free to clone, enhance, or tweak to your heart’s content. If you want, you can also reach out for explicit permission.
+
+## 2026-04 Update
+
+I am now focusing on llama.cpp models, and also tagging them based on the systems that I use them on regularly.
+`llama.cuda.6gb` is for 6GB VRAM systems. `llama.cuda.12gb` is going to be for 12GB VRAM systems.
+
+I am also creating bundles, tagged at the year and month that they were published.
+
+To download a server complete with multiple models, use the image `llama.cuda.6gb:26.04`.
+To download a server one model, use the image `llama.cuda.6gb:gemma4-e2b`.
+
+Docker run example:
+```bash
+docker run --gpus all -p 8080:8080 \
+  sinanozel/llama.cuda.6gb:gemma4-e2b
+```
+
+Docker compose example:
+```yaml
+services:
+  llama:
+    image: sinanozel/llama.cuda.6gb:gemma4-e2b
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu"]
+              count: all
+```
+
+Docker compose example with webUI:
+```yaml
+services:
+  llama:
+    image: sinanozel/llama.cuda.6gb:gemma4-e2b
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu"]
+              count: all
+
+  webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:3000"
+    environment:
+      - OPENAI_API_BASE_URL=http://llama:8080/v1
+      - OPENAI_API_KEY=none
+    depends_on:
+      - llama
+
+  keep-in-memory:
+    image: curlimages/curl:latest
+    depends_on:
+      - llama
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "[keep-alive] Started...";
+        while true; do
+          curl -s http://llama:8080/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -d '{"model":"gemma4:e2b","messages":[{"role":"user","content":"ping"}],"max_tokens":1}' \
+            > /dev/null;
+          sleep 300;
+        done
+```
+
+Docker compose example with webUI — bundle image (`26.04`):
+```yaml
+services:
+  llama:
+    image: sinanozel/llama.cuda.6gb:26.04
+    ports:
+      - "8080:8080"
+    environment:
+      # Pick one model from the bundle by setting these three vars:
+      #
+      #   gemma4 e2b  →  GGUF_FILENAME=gemma-4-e2b-it-Q8_0.gguf   MODEL_NAME=gemma4    MODEL_TAG=e2b
+      #   gemma3 1b   →  GGUF_FILENAME=gemma-3-1b-pt-bf16.gguf     MODEL_NAME=gemma3    MODEL_TAG=1b
+      #   qwen3.5 2b  →  GGUF_FILENAME=Qwen3.5-2B-Q4_K_M.gguf      MODEL_NAME=qwen3.5   MODEL_TAG=2b
+      #
+      - GGUF_FILENAME=gemma-4-e2b-it-Q8_0.gguf
+      - MODEL_NAME=gemma4
+      - MODEL_TAG=e2b
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: ["gpu"]
+              count: all
+
+  webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:3000"
+    environment:
+      - OPENAI_API_BASE_URL=http://llama:8080/v1
+      - OPENAI_API_KEY=none
+    depends_on:
+      - llama
+
+  keep-in-memory:
+    image: curlimages/curl:latest
+    depends_on:
+      - llama
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        echo "[keep-alive] Started...";
+        while true; do
+          curl -s http://llama:8080/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -d '{"model":"gemma4:e2b","messages":[{"role":"user","content":"ping"}],"max_tokens":1}' \
+            > /dev/null;
+          sleep 300;
+        done
+```
+
 
 ## Requirements
 

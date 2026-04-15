@@ -30,6 +30,11 @@ MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
+LICENSE=$(yq '.license' "$MODEL_FILE")
+MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
+MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
+MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
+MAX_CONTEXT_WINDOW=$(yq '.max_context_window' "$MODEL_FILE")
 
 # Validate fields
 if [ -z "$MODEL_NAME" ] || [ "$MODEL_NAME" = "null" ]; then
@@ -114,6 +119,20 @@ docker build \
   --build-arg MODEL_TAG="$MODEL_TAG" \
   --build-arg GGUF_FILENAME="$GGUF_FILENAME" \
   $MMPROJ_BUILD_ARG \
+  --label "org.opencontainers.image.title=llama.cpp Server - ${MODEL_NAME}" \
+  --label "org.opencontainers.image.description=Preloaded llama.cpp model server for ${MODEL_NAME}:${MODEL_TAG}" \
+  --label "org.opencontainers.image.version=${MODEL_NAME}:${MODEL_TAG}" \
+  --label "org.opencontainers.image.authors=Sinan Ozel" \
+  --label "org.opencontainers.image.licenses=${LICENSE}" \
+  --label "org.opencontainers.image.vendor=sinanozel" \
+  --label "org.opencontainers.image.memory.size=${MODEL_SIZE}" \
+  --label "org.opencontainers.image.memory.min=${MEMORY_MIN}" \
+  --label "org.opencontainers.image.memory.recommended=${MEMORY_RECOMMENDED}" \
+  --label "org.opencontainers.image.date=$(date +'%Y-%m-%d')" \
+  --label "ai.model.name=${MODEL_NAME}" \
+  --label "ai.model.tag=${MODEL_TAG}" \
+  --label "ai.model.identifier=${MODEL_NAME}:${MODEL_TAG}" \
+  --label "ai.model.context_window=${MAX_CONTEXT_WINDOW}" \
   llamacpp/
 
 echo ""

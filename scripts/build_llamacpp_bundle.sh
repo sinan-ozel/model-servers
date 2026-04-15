@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Usage: ./build_llamacpp_bundle.sh <bundle.yaml>
+# Example: ./build_llamacpp_bundle.sh bundles/llama.cuda.6gb.yaml
+
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <bundle.yaml>"
+  echo "Example: $0 bundles/llama.cuda.6gb.yaml"
+  exit 1
+fi
+
+BUNDLE_FILE="$1"
+
+if ! command -v yq &> /dev/null; then
+  echo "Error: yq is not installed. Please install yq before running this script."
+  exit 1
+fi
+
+if [ ! -f "$BUNDLE_FILE" ]; then
+  echo "❌ Error: Bundle file not found: $BUNDLE_FILE"
+  exit 1
+fi
+
+REPO=$(yq '.repo' "$BUNDLE_FILE")
+TAG=$(yq '.tag' "$BUNDLE_FILE")
+MODEL_COUNT=$(yq '.models | length' "$BUNDLE_FILE")
+
+if [ -z "$REPO" ] || [ "$REPO" = "null" ]; then
+  echo "❌ Error: Missing 'repo' field in $BUNDLE_FILE"
+  exit 1
+fi
+
+if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+  echo "❌ Error: Missing 'tag' field in $BUNDLE_FILE"
+  exit 1
+fi
+
+IMAGE_NAME="model-servers/llamacpp:$REPO-$TAG"
+CACHE_DIR="./llamacpp/model-cache"
+
+echo "=== Building llama.cpp Bundle ==="
+echo "Bundle file: $BUNDLE_FILE"
+echo "Repo:        $REPO"
+echo "Tag:         $TAG"
+echo "Models:      $MODEL_COUNT"
+echo "Image:       $IMAGE_NAME"
+echo ""
+
+mkdir -p "$CACHE_DIR"
+
+COPIED_FILES=()
+MODEL_IDENTIFIERS=""
+
+_cleanup() {
+  echo "Cleaning up build context..."
+  for f in "${COPIED_FILES[@]}"; do
+    rm -f "$f"
+  done
+}
+trap _cleanup EXIT
+
+# Download and stage all models
+for i in $(seq 0 $((MODEL_COUNT - 1))); do
+  MODEL_FILE=$(yq ".models[$i]" "$BUNDLE_FILE")
+
+  if [ ! -f "$MODEL_FILE" ]; then
+    echo "❌ Error: Model metadata file not found: $MODEL_FILE"
+    exit 1
+  fi
+
+  GGUF_URL=$(yq '.gguf.url' "$MODEL_FILE")
+  GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
+  MMPROJ_URL=$(yq '.gguf.mmproj.url' "$MODEL_FILE")
+  MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
+  M_NAME=$(yq '.name' "$MODEL_FILE")
+  M_TAG=$(yq '.tag' "$MODEL_FILE")
+  if [ -n "$M_NAME" ] && [ "$M_NAME" != "null" ] && [ -n "$M_TAG" ] && [ "$M_TAG" != "null" ]; then
+    if [ -n "$MODEL_IDENTIFIERS" ]; then
+      MODEL_IDENTIFIERS="$MODEL_IDENTIFIERS,$M_NAME:$M_TAG"
+    else
+      MODEL_IDENTIFIERS="$M_NAME:$M_TAG"
+    fi
+  fi
+
+  if [ -z "$GGUF_URL" ] || [ "$GGUF_URL" = "null" ]; then
+    echo "⚠ Skipping $MODEL_FILE — no gguf.url defined"
+    continue
+  fi
+
+  MODEL_PATH="$CACHE_DIR/$GGUF_FILENAME"
+
+  if [ ! -f "$MODEL_PATH" ]; then
+    echo "=== Downloading $GGUF_FILENAME ==="
+    if [ -n "$HF_TOKEN" ]; then
+      wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" \
+        -O "$MODEL_PATH" "$GGUF_URL"
+    else
+      wget --progress=bar:force:noscroll -O "$MODEL_PATH" "$GGUF_URL"
+    fi
+  else
+    echo "✓ Already cached: $GGUF_FILENAME ($(du -h "$MODEL_PATH" | cut -f1))"
+  fi
+
+  cp "$MODEL_PATH" "./llamacpp/$GGUF_FILENAME"
+  COPIED_FILES+=("./llamacpp/$GGUF_FILENAME")
+
+  if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ]; then
+    MMPROJ_PATH="$CACHE_DIR/$MMPROJ_FILENAME"
+    if [ ! -f "$MMPROJ_PATH" ]; then
+      echo "=== Downloading $MMPROJ_FILENAME ==="
+      if [ -n "$HF_TOKEN" ]; then
+        wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" \
+          -O "$MMPROJ_PATH" "$MMPROJ_URL"
+      else
+        wget --progress=bar:force:noscroll -O "$MMPROJ_PATH" "$MMPROJ_URL"
+      fi
+    else
+      echo "✓ Already cached: $MMPROJ_FILENAME ($(du -h "$MMPROJ_PATH" | cut -f1))"
+    fi
+    cp "$MMPROJ_PATH" "./llamacpp/$MMPROJ_FILENAME"
+    COPIED_FILES+=("./llamacpp/$MMPROJ_FILENAME")
+  fi
+done
+
+echo ""
+echo "=== Building Docker image: $IMAGE_NAME ==="
+echo "  Models: $MODEL_IDENTIFIERS"
+docker build \
+  -t "$IMAGE_NAME" \
+  -f llamacpp/Dockerfile \
+  --label "org.opencontainers.image.title=llama.cpp Bundle - ${REPO}" \
+  --label "org.opencontainers.image.description=llama.cpp bundle ${REPO}:${TAG} containing: ${MODEL_IDENTIFIERS}" \
+  --label "org.opencontainers.image.version=${REPO}:${TAG}" \
+  --label "org.opencontainers.image.authors=Sinan Ozel" \
+  --label "org.opencontainers.image.vendor=sinanozel" \
+  --label "org.opencontainers.image.date=$(date +'%Y-%m-%d')" \
+  --label "ai.bundle.repo=${REPO}" \
+  --label "ai.bundle.tag=${TAG}" \
+  --label "ai.bundle.models=${MODEL_IDENTIFIERS}" \
+  llamacpp/
+
+echo ""
+echo "✓ Build complete!"
+echo "  Image: $IMAGE_NAME"
+echo "  Size:  $(docker images "$IMAGE_NAME" --format "{{.Size}}")"

@@ -6,7 +6,9 @@ The containers are llama.cpp servers with LLM models already downloaded and bake
 
 **(2) Frozen models** — The model version is locked at build time. Upstream updates will not break your prompts or optimizations.
 
-**(3) Tested on real hardware** — Every model is run through an automated test pipeline on a machine with a 6GB VRAM GPU (GeForce GTX 1660 Ti). The image will not be published unless inference actually works on that hardware.
+**(3) Tested on real hardware** — I use the containers myself for projects on a machine with a 6GB VRAM GPU (GeForce GTX 1660 Ti).
+
+**(3) Tested with a pipeline** - I have a full pipeline - check out the scripts in the repo. Models get pushed only if they are actually working, and within memory limits.
 
 # Quick Start
 

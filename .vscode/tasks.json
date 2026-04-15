@@ -159,7 +159,13 @@
                 "qwen3.5_4b.yaml",
                 "qwen3.5_9b.yaml",
                 "qwen3.5_27b.yaml",
-                "qwen3.5_35b.yaml"
+                "qwen3.5_35b.yaml",
+
+                "qwen3-vl_2b.yaml",
+                "qwen3-vl_4b.yaml",
+                "qwen3-vl_8b.yaml",
+                "qwen3-vl_30b.yaml",
+                "qwen3-vl_32b.yaml"
             ]
         }
       ],

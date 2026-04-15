@@ -71,6 +71,21 @@ echo "Port: $PORT"
 echo "Vision (mmproj): $HAS_MMPROJ"
 echo ""
 
+echo "=== Test 0: Image Label — Model Identifier ==="
+LABELS=$(docker inspect --format '{{json .Config.Labels}}' "$IMAGE_NAME" 2>/dev/null) || {
+  echo "❌ Test 0: docker inspect failed — image may not exist: $IMAGE_NAME"
+  exit 1
+}
+MODEL_IDENTIFIER="${MODEL_NAME}:${MODEL_TAG}"
+if echo "$LABELS" | grep -q "\"${MODEL_IDENTIFIER}\""; then
+  echo "✓ Test 0: model identifier '${MODEL_IDENTIFIER}' found in image labels"
+else
+  echo "❌ Test 0: model identifier '${MODEL_IDENTIFIER}' not found in image labels"
+  echo "  Labels: $LABELS"
+  exit 1
+fi
+echo ""
+
 # Check if container is already running
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   echo "Stopping and removing existing container..."
@@ -152,6 +167,19 @@ _fail() {
   docker rm "$CONTAINER_NAME" >/dev/null 2>&1
   exit 1
 }
+
+# Test 1 (pre): /v1/models returns the expected model identifier
+echo "Test 1 (pre): /v1/models lists '${MODEL_NAME}:${MODEL_TAG}'"
+MODELS_RESPONSE=$(curl -sf --max-time 10 http://localhost:$PORT/v1/models) \
+  || _fail "Test 1 (pre)" "curl /v1/models failed"
+if echo "$MODELS_RESPONSE" | grep -q "\"${MODEL_NAME}:${MODEL_TAG}\""; then
+  echo "✓ Test 1 (pre): model identifier '${MODEL_NAME}:${MODEL_TAG}' found in /v1/models"
+else
+  echo "❌ Test 1 (pre): '${MODEL_NAME}:${MODEL_TAG}' not found in /v1/models response:"
+  echo "$MODELS_RESPONSE"
+  _fail "Test 1 (pre)" "model identifier missing from /v1/models"
+fi
+echo ""
 
 # Helper: assert response contains expected string (case-insensitive)
 _assert_contains() {

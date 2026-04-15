@@ -1,5 +1,4 @@
 #!/bin/sh
-MODEL_ALIAS="${MODEL_NAME}:${MODEL_TAG}"
 BASE_ARGS="-m /models/${GGUF_FILENAME} --host 0.0.0.0 --port 8080 --alias ${MODEL_ALIAS}"
 DEFAULT_ARGS="-ngl 999 -c 4096"
 if [ -n "$LLAMACPP_ARGS" ]; then

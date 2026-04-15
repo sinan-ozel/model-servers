@@ -7,3 +7,11 @@ memory:
   recommended: 48GiB
 license: Apache 2.0
 max_context_window: 256k
+gguf:
+  url: https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct-GGUF/resolve/main/Qwen3VL-32B-Instruct-Q4_K_M.gguf
+  filename: Qwen3VL-32B-Instruct-Q4_K_M.gguf
+  file_size: 19.8GiB
+  mmproj:
+    url: https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-32B-Instruct-F16.gguf
+    filename: mmproj-Qwen3VL-32B-Instruct-F16.gguf
+    file_size: 1.2GiB

@@ -112,6 +112,24 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
 fi
 
 echo ""
+echo "=== VRAM Budget Check ==="
+# On a 6GB card the model weights must leave room for KV cache and CUDA overhead.
+# 4608 MiB (4.5 GB) is the ceiling for model weights; the remaining ~1.5 GB covers
+# a 4096-token KV cache, CUDA context, and typical driver overhead.
+VRAM_BUDGET_MiB=4608
+VRAM_LINE=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -oP 'CUDA\d+ model buffer size\s*=\s*\K[0-9]+\.[0-9]+' | head -1)
+if [ -z "$VRAM_LINE" ]; then
+  echo "⚠ VRAM check skipped — 'CUDA model buffer size' not found in logs (CPU-only run?)"
+else
+  VRAM_MiB=$(printf "%.0f" "$VRAM_LINE")
+  if [ "$VRAM_MiB" -gt "$VRAM_BUDGET_MiB" ]; then
+    _fail "VRAM check" "model uses ${VRAM_MiB} MiB on GPU — exceeds 6GB budget of ${VRAM_BUDGET_MiB} MiB (no room for KV cache)"
+  else
+    echo "✓ VRAM check: model uses ${VRAM_MiB} MiB of ${VRAM_BUDGET_MiB} MiB budget ($(( VRAM_BUDGET_MiB - VRAM_MiB )) MiB remaining for KV cache)"
+  fi
+fi
+
+echo ""
 echo "=== Testing Model Inference ==="
 echo ""
 

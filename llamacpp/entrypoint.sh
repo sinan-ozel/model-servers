@@ -9,4 +9,7 @@ fi
 if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ] && [ -f "/models/$MMPROJ_FILENAME" ]; then
   ARGS="$ARGS --mmproj /models/$MMPROJ_FILENAME"
 fi
+if [ -n "$WHISPER_FILENAME" ] && [ "$WHISPER_FILENAME" != "null" ] && [ -f "/models/$WHISPER_FILENAME" ]; then
+  /app/whisper-server -m /models/$WHISPER_FILENAME --host 0.0.0.0 --port 8081 &
+fi
 exec /app/llama-server $ARGS "$@"

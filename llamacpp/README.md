@@ -20,6 +20,20 @@ gguf:
   filename: gemma-3-270m-Q8_0.gguf
 ```
 
+To enable audio transcription (whisper), add an optional `gguf.whisper` section:
+
+```yaml
+gguf:
+  url: ...
+  filename: ...
+  whisper:
+    url: https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+    filename: ggml-small.bin
+    file_size: 488MiB
+```
+
+When configured, `whisper-server` (whisper.cpp v1.8.1) starts automatically on port 8081 alongside the main server.
+
 ## Quick Start
 
 ### 1. Download a GGUF Model
@@ -80,22 +94,34 @@ Once running, the server exposes:
   }
   ```
 
+- **Chat (OpenAI-compatible)**: `POST http://localhost:8080/v1/chat/completions`
+
 - **Health**: `GET http://localhost:8080/health`
 
-For full API documentation, see: https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md
+- **Audio transcription** *(whisper models only)*: `POST http://localhost:8081/inference`
+  ```bash
+  curl http://localhost:8081/inference \
+    -F "file=@audio.mp3" \
+    -F "temperature=0" \
+    -F "response_format=json"
+  ```
+
+For full llama-server API documentation, see: https://github.com/ggerganov/llama.cpp/blob/master/tools/server/README.md
 
 ## Requirements
 
 - Docker with GPU support (nvidia-container-toolkit)
-- NVIDIA GPU with CUDA support
-- Sufficient disk space for models (4-40GB per model)
-- yq (for YAML parsing)
+- NVIDIA GPU with CUDA 12.8 (compute capability 8.0+)
+- Sufficient disk space for models (varies per model)
+- `yq` (for YAML parsing in build/test scripts)
 
 ## Dockerfile Details
 
-The Dockerfile:
-1. Uses CUDA 12.8.0 base image with cuDNN
-2. Clones and builds llama.cpp from source with CMake and CUDA support (`-DGGML_CUDA=ON`)
-3. Embeds the GGUF model in the image
-4. Exposes port 8080
-5. Runs llama-server with optimal GPU settings (-ngl 999 offloads all layers to GPU)
+The Dockerfile uses a two-stage build:
+
+1. **Builder stage** (`nvidia/cuda:12.8.0-devel-ubuntu22.04`): compiles whisper.cpp v1.8.1 from source with CUDA support (`-DGGML_CUDA=1`), producing the `whisper-server` binary.
+2. **Final stage** (`ghcr.io/ggml-org/llama.cpp:server-cuda`, CUDA 12.8): the prebuilt `llama-server` binary with the `whisper-server` binary copied in. The GGUF model is embedded at build time.
+
+Ports:
+- `8080` — llama-server (LLM inference)
+- `8081` — whisper-server (audio transcription, only started when a whisper model is configured)

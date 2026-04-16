@@ -14,3 +14,7 @@ gguf:
     url: https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/mmproj-BF16.gguf
     filename: Qwen3.5-0.8B-mmproj-BF16.gguf
     file_size: 207MiB
+  # whisper:
+  #   url: https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+  #   filename: ggml-small.bin
+  #   file_size: 488MiB

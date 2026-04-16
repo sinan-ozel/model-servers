@@ -42,6 +42,7 @@ fi
 MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
+WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
 
 # Validate fields
 if [ -z "$MODEL_NAME" ] || [ "$MODEL_NAME" = "null" ]; then
@@ -59,6 +60,11 @@ if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
   HAS_MMPROJ=true
 fi
 
+HAS_WHISPER=false
+if [ -n "$WHISPER_FILENAME" ] && [ "$WHISPER_FILENAME" != "null" ]; then
+  HAS_WHISPER=true
+fi
+
 IMAGE_TAG="$MODEL_NAME-$MODEL_TAG"
 IMAGE_NAME="model-servers/llamacpp:$IMAGE_TAG"
 CONTAINER_NAME="llamacpp-test-$IMAGE_TAG"
@@ -69,6 +75,7 @@ echo "Model file: $MODEL_FILE"
 echo "Image: $IMAGE_NAME"
 echo "Port: $PORT"
 echo "Vision (mmproj): $HAS_MMPROJ"
+echo "Audio (whisper): $HAS_WHISPER"
 echo ""
 
 echo "=== Test 0: Image Label — Model Identifier ==="
@@ -95,10 +102,12 @@ fi
 
 # Start container in background
 echo "Starting container..."
+WHISPER_PORT=8081
 docker run -d \
   --name "$CONTAINER_NAME" \
   --gpus all \
   -p "$PORT:$PORT" \
+  -p "$WHISPER_PORT:$WHISPER_PORT" \
   "$IMAGE_NAME"
 
 echo "Container started. Waiting for server to be ready..."
@@ -330,6 +339,37 @@ else
 fi
 docker stop "$TEST4_CONTAINER" >/dev/null 2>&1
 docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1
+echo ""
+
+# Test 5: Audio transcription (only if model has whisper)
+if [ "$HAS_WHISPER" = true ]; then
+  echo "Test 5: Audio — transcription via /v1/audio/transcriptions"
+
+  # Derive the staged filename (build scripts rename .bin → .gguf to satisfy COPY *.gguf)
+  WHISPER_IMAGE_FILENAME="${WHISPER_FILENAME%.*}.gguf"
+  if ! docker exec "$CONTAINER_NAME" test -f "/models/$WHISPER_IMAGE_FILENAME" 2>/dev/null; then
+    _fail "Test 5" "whisper model not found in container at /models/$WHISPER_IMAGE_FILENAME — was the image rebuilt after adding the whisper field?"
+  fi
+  echo "  whisper model present in container: /models/$WHISPER_IMAGE_FILENAME"
+
+  AUDIO_FILE="./cosmic-monster-growl-80376.mp3"
+  if [ ! -f "$AUDIO_FILE" ]; then
+    _fail "Test 5" "audio file not found at $AUDIO_FILE"
+  fi
+  RESPONSE=$(curl -sf --max-time 60 http://localhost:$WHISPER_PORT/inference \
+    -F "file=@$AUDIO_FILE" \
+    -F "temperature=0" \
+    -F "response_format=json") || _fail "Test 5" "curl whisper-server /inference failed — is whisper-server running on port $WHISPER_PORT?"
+  if echo "$RESPONSE" | jq -e 'has("text")' >/dev/null 2>&1; then
+    TEXT=$(echo "$RESPONSE" | jq -r '.text')
+    echo "✓ Test 5: whisper-server /inference returned valid response"
+    echo "  Transcription: '$TEXT'"
+  else
+    _fail "Test 5" "response missing 'text' field: $RESPONSE"
+  fi
+else
+  echo "Test 5: Audio — skipped (no whisper in $MODEL_FILE)"
+fi
 echo ""
 
 echo "=== Container Logs (last 20 lines) ==="

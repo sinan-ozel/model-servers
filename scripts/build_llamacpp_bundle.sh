@@ -26,6 +26,8 @@ fi
 REPO=$(yq '.repo' "$BUNDLE_FILE")
 TAG=$(yq '.tag' "$BUNDLE_FILE")
 MODEL_COUNT=$(yq '.models | length' "$BUNDLE_FILE")
+BUNDLE_WHISPER_URL=$(yq '.whisper.url' "$BUNDLE_FILE")
+BUNDLE_WHISPER_FILENAME=$(yq '.whisper.filename' "$BUNDLE_FILE")
 
 if [ -z "$REPO" ] || [ "$REPO" = "null" ]; then
   echo "❌ Error: Missing 'repo' field in $BUNDLE_FILE"
@@ -46,6 +48,9 @@ echo "Repo:        $REPO"
 echo "Tag:         $TAG"
 echo "Models:      $MODEL_COUNT"
 echo "Image:       $IMAGE_NAME"
+if [ -n "$BUNDLE_WHISPER_FILENAME" ] && [ "$BUNDLE_WHISPER_FILENAME" != "null" ]; then
+  echo "Whisper:     $BUNDLE_WHISPER_FILENAME (bundle-level override)"
+fi
 echo ""
 
 mkdir -p "$CACHE_DIR"
@@ -124,12 +129,36 @@ for i in $(seq 0 $((MODEL_COUNT - 1))); do
   fi
 done
 
+# Download and stage bundle-level whisper model (overrides any per-model whisper config)
+WHISPER_BUILD_ARG=""
+if [ -n "$BUNDLE_WHISPER_URL" ] && [ "$BUNDLE_WHISPER_URL" != "null" ] && \
+   [ -n "$BUNDLE_WHISPER_FILENAME" ] && [ "$BUNDLE_WHISPER_FILENAME" != "null" ]; then
+  WHISPER_PATH="$CACHE_DIR/$BUNDLE_WHISPER_FILENAME"
+  if [ ! -f "$WHISPER_PATH" ]; then
+    echo "=== Downloading $BUNDLE_WHISPER_FILENAME ==="
+    if [ -n "$HF_TOKEN" ]; then
+      wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" \
+        -O "$WHISPER_PATH" "$BUNDLE_WHISPER_URL"
+    else
+      wget --progress=bar:force:noscroll -O "$WHISPER_PATH" "$BUNDLE_WHISPER_URL"
+    fi
+  else
+    echo "✓ Already cached: $BUNDLE_WHISPER_FILENAME ($(du -h "$WHISPER_PATH" | cut -f1))"
+  fi
+  # Stage with .gguf extension so Dockerfile's "COPY *.gguf /models/" picks it up
+  WHISPER_BUILD_FILENAME="${BUNDLE_WHISPER_FILENAME%.*}.gguf"
+  cp "$WHISPER_PATH" "./llamacpp/$WHISPER_BUILD_FILENAME"
+  COPIED_FILES+=("./llamacpp/$WHISPER_BUILD_FILENAME")
+  WHISPER_BUILD_ARG="--build-arg WHISPER_FILENAME=$WHISPER_BUILD_FILENAME"
+fi
+
 echo ""
 echo "=== Building Docker image: $IMAGE_NAME ==="
 echo "  Models: $MODEL_IDENTIFIERS"
 docker build \
   -t "$IMAGE_NAME" \
   -f llamacpp/Dockerfile \
+  $WHISPER_BUILD_ARG \
   --label "org.opencontainers.image.title=llama.cpp Bundle - ${REPO}" \
   --label "org.opencontainers.image.description=llama.cpp bundle ${REPO}:${TAG} containing: ${MODEL_IDENTIFIERS}" \
   --label "org.opencontainers.image.version=${REPO}:${TAG}" \

@@ -30,6 +30,7 @@ MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
+WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
 LICENSE=$(yq '.license' "$MODEL_FILE")
 MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
 MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
@@ -76,6 +77,18 @@ if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
   HAS_MMPROJ=true
 fi
 
+HAS_WHISPER=false
+WHISPER_PATH=""
+if [ -n "$WHISPER_FILENAME" ] && [ "$WHISPER_FILENAME" != "null" ]; then
+  WHISPER_PATH="$CACHE_DIR/$WHISPER_FILENAME"
+  if [ ! -f "$WHISPER_PATH" ]; then
+    echo "❌ Error: whisper file not found at $WHISPER_PATH"
+    echo "Please download the whisper GGUF to $WHISPER_PATH first."
+    exit 1
+  fi
+  HAS_WHISPER=true
+fi
+
 echo "=== Building llama.cpp Model Server ==="
 echo "Model file: $MODEL_FILE"
 echo "Model name: $MODEL_NAME"
@@ -86,6 +99,9 @@ echo "Image tag: $IMAGE_TAG"
 echo "Model size: $(du -h "$MODEL_PATH" | cut -f1)"
 if [ "$HAS_MMPROJ" = true ]; then
   echo "mmproj: $MMPROJ_PATH ($(du -h "$MMPROJ_PATH" | cut -f1))"
+fi
+if [ "$HAS_WHISPER" = true ]; then
+  echo "whisper: $WHISPER_PATH ($(du -h "$WHISPER_PATH" | cut -f1))"
 fi
 echo ""
 
@@ -100,10 +116,20 @@ if [ "$HAS_MMPROJ" = true ]; then
   MMPROJ_BUILD_ARG="--build-arg MMPROJ_FILENAME=$MMPROJ_FILENAME"
 fi
 
+WHISPER_BUILD_ARG=""
+WHISPER_BUILD_FILENAME=""
+if [ "$HAS_WHISPER" = true ]; then
+  # Stage with .gguf extension so Dockerfile's "COPY *.gguf /models/" picks it up
+  WHISPER_BUILD_FILENAME="${WHISPER_FILENAME%.*}.gguf"
+  cp "$WHISPER_PATH" "./llamacpp/$WHISPER_BUILD_FILENAME"
+  WHISPER_BUILD_ARG="--build-arg WHISPER_FILENAME=$WHISPER_BUILD_FILENAME"
+fi
+
 # Clean up temp files on exit (success or failure)
 _cleanup() {
   rm -f "./llamacpp/$GGUF_FILENAME"
   [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME"
+  [ -n "$WHISPER_BUILD_FILENAME" ] && rm -f "./llamacpp/$WHISPER_BUILD_FILENAME"
 }
 trap _cleanup EXIT
 
@@ -119,6 +145,7 @@ docker build \
   --build-arg MODEL_TAG="$MODEL_TAG" \
   --build-arg GGUF_FILENAME="$GGUF_FILENAME" \
   $MMPROJ_BUILD_ARG \
+  $WHISPER_BUILD_ARG \
   --label "org.opencontainers.image.title=llama.cpp Server - ${MODEL_NAME}" \
   --label "org.opencontainers.image.description=Preloaded llama.cpp model server for ${MODEL_NAME}:${MODEL_TAG}" \
   --label "org.opencontainers.image.version=${MODEL_NAME}:${MODEL_TAG}" \

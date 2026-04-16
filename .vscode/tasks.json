@@ -474,16 +474,25 @@
             "problemMatcher": []
         },
         {
-            "label": "build_llamacpp_model_server",
-            "dependsOn": [
-                "download_gguf_model"
-            ],
+            "label": "download_whisper_model",
             "type": "shell",
             "linux": {
                 "command": "bash",
                 "args": [
-                    "./scripts/build_llamacpp_model_server.sh",
+                    "./scripts/download_whisper_model.sh",
                     "model_metadata/${input:llamacppModelFile}"
+                ]
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build_llamacpp_model_server",
+            "type": "shell",
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "./scripts/download_gguf_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/download_whisper_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/build_llamacpp_model_server.sh model_metadata/${input:llamacppModelFile}"
                 ]
             },
             "problemMatcher": []

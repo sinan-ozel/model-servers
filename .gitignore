@@ -5,3 +5,4 @@ text2image/MODEL_PATH.txt
 text2image/PIPELINE.txt
 text2image/requirements.txt
 .iac
+**/*.gguf

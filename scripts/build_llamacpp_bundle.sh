@@ -57,6 +57,7 @@ mkdir -p "$CACHE_DIR"
 
 COPIED_FILES=()
 MODEL_IDENTIFIERS=""
+EMBEDDING_FILENAMES=""
 
 _cleanup() {
   echo "Cleaning up build context..."
@@ -81,6 +82,7 @@ for i in $(seq 0 $((MODEL_COUNT - 1))); do
   MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
   M_NAME=$(yq '.name' "$MODEL_FILE")
   M_TAG=$(yq '.tag' "$MODEL_FILE")
+  M_EMBEDDING=$(yq '.embedding // "false"' "$MODEL_FILE")
   if [ -n "$M_NAME" ] && [ "$M_NAME" != "null" ] && [ -n "$M_TAG" ] && [ "$M_TAG" != "null" ]; then
     if [ -n "$MODEL_IDENTIFIERS" ]; then
       MODEL_IDENTIFIERS="$MODEL_IDENTIFIERS,$M_NAME:$M_TAG"
@@ -110,6 +112,14 @@ for i in $(seq 0 $((MODEL_COUNT - 1))); do
 
   cp "$MODEL_PATH" "./llamacpp/$GGUF_FILENAME"
   COPIED_FILES+=("./llamacpp/$GGUF_FILENAME")
+
+  if [ "$M_EMBEDDING" = "true" ]; then
+    if [ -n "$EMBEDDING_FILENAMES" ]; then
+      EMBEDDING_FILENAMES="$EMBEDDING_FILENAMES,$GGUF_FILENAME"
+    else
+      EMBEDDING_FILENAMES="$GGUF_FILENAME"
+    fi
+  fi
 
   if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ]; then
     MMPROJ_PATH="$CACHE_DIR/$MMPROJ_FILENAME"
@@ -152,6 +162,12 @@ if [ -n "$BUNDLE_WHISPER_URL" ] && [ "$BUNDLE_WHISPER_URL" != "null" ] && \
   WHISPER_BUILD_ARG="--build-arg WHISPER_FILENAME=$WHISPER_BUILD_FILENAME"
 fi
 
+EMBEDDING_FILENAMES_BUILD_ARG=""
+if [ -n "$EMBEDDING_FILENAMES" ]; then
+  EMBEDDING_FILENAMES_BUILD_ARG="--build-arg EMBEDDING_FILENAMES=$EMBEDDING_FILENAMES"
+  echo "  Embedding models: $EMBEDDING_FILENAMES"
+fi
+
 echo ""
 echo "=== Building Docker image: $IMAGE_NAME ==="
 echo "  Models: $MODEL_IDENTIFIERS"
@@ -159,6 +175,7 @@ docker build \
   -t "$IMAGE_NAME" \
   -f llamacpp/Dockerfile \
   $WHISPER_BUILD_ARG \
+  $EMBEDDING_FILENAMES_BUILD_ARG \
   --label "org.opencontainers.image.title=llama.cpp Bundle - ${REPO}" \
   --label "org.opencontainers.image.description=llama.cpp bundle ${REPO}:${TAG} containing: ${MODEL_IDENTIFIERS}" \
   --label "org.opencontainers.image.version=${REPO}:${TAG}" \

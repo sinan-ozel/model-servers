@@ -31,6 +31,7 @@ MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
+IS_EMBEDDING=$(yq '.embedding // "false"' "$MODEL_FILE")
 LICENSE=$(yq '.license' "$MODEL_FILE")
 MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
 MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
@@ -116,6 +117,11 @@ if [ "$HAS_MMPROJ" = true ]; then
   MMPROJ_BUILD_ARG="--build-arg MMPROJ_FILENAME=$MMPROJ_FILENAME"
 fi
 
+EMBEDDING_BUILD_ARG=""
+if [ "$IS_EMBEDDING" = "true" ]; then
+  EMBEDDING_BUILD_ARG="--build-arg EMBEDDING=true"
+fi
+
 WHISPER_BUILD_ARG=""
 WHISPER_BUILD_FILENAME=""
 if [ "$HAS_WHISPER" = true ]; then
@@ -128,8 +134,8 @@ fi
 # Clean up temp files on exit (success or failure)
 _cleanup() {
   rm -f "./llamacpp/$GGUF_FILENAME"
-  [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME"
-  [ -n "$WHISPER_BUILD_FILENAME" ] && rm -f "./llamacpp/$WHISPER_BUILD_FILENAME"
+  [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME" || true
+  [ -n "$WHISPER_BUILD_FILENAME" ] && rm -f "./llamacpp/$WHISPER_BUILD_FILENAME" || true
 }
 trap _cleanup EXIT
 
@@ -146,6 +152,7 @@ docker build \
   --build-arg GGUF_FILENAME="$GGUF_FILENAME" \
   $MMPROJ_BUILD_ARG \
   $WHISPER_BUILD_ARG \
+  $EMBEDDING_BUILD_ARG \
   --label "org.opencontainers.image.title=llama.cpp Server - ${MODEL_NAME}" \
   --label "org.opencontainers.image.description=Preloaded llama.cpp model server for ${MODEL_NAME}:${MODEL_TAG}" \
   --label "org.opencontainers.image.version=${MODEL_NAME}:${MODEL_TAG}" \

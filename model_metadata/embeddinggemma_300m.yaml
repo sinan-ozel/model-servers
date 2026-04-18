@@ -6,3 +6,8 @@ memory:
   recommended: 4GiB
 license: Gemma Terms of Use
 max_context_window: N/A
+embedding: true
+gguf:
+  url: https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF/resolve/main/embeddinggemma-300M-Q8_0.gguf
+  filename: embeddinggemma-300M-Q8_0.gguf
+  file_size: 329MB

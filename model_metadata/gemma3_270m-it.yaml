@@ -1,0 +1,12 @@
+name: gemma3
+tag: 270m-it
+memory:
+  model_size: 292MiB
+  min: 1GiB
+  recommended: 1GiB
+license: Gemma Terms of Use
+max_context_window: 32k
+gguf:
+  url: https://huggingface.co/ggml-org/gemma-3-270m-it-GGUF/resolve/main/gemma-3-270m-it-q8_0.gguf
+  filename: gemma-3-270m-it-q8_0.gguf
+  file_size: 292MiB

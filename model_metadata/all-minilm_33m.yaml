@@ -5,3 +5,8 @@ memory:
   model_size: 67MB
   min: 512MiB
   recommended: 1GiB
+embedding: true
+gguf:
+  url: https://huggingface.co/leliuga/all-MiniLM-L6-v2-GGUF/resolve/main/all-MiniLM-L6-v2.Q8_0.gguf
+  filename: all-MiniLM-L6-v2.Q8_0.gguf
+  file_size: 25MB

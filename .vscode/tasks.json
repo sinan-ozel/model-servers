@@ -149,6 +149,8 @@
                 "gemma3_1b.yaml",
                 "gemma3_1b-it-qat.yaml",
 
+                "cerberus_4b.yaml",
+
                 "gemma4_e2b.yaml",
                 "gemma4_e4b.yaml",
                 "gemma4_26b-a4b.yaml",
@@ -444,13 +446,11 @@
         {
             "label": "run_llamacpp_model_server",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/run_llamacpp_model_server.sh",
-                    "model_metadata/${input:llamacppModelFile}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/run_llamacpp_model_server.sh",
+                "model_metadata/${input:llamacppModelFile}"
+            ],
             "isBackground": true,
             "presentation": {
                 "echo": true,
@@ -464,61 +464,51 @@
         {
             "label": "download_gguf_model",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/download_gguf_model.sh",
-                    "model_metadata/${input:llamacppModelFile}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/download_gguf_model.sh",
+                "model_metadata/${input:llamacppModelFile}"
+            ],
             "problemMatcher": []
         },
         {
             "label": "download_whisper_model",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/download_whisper_model.sh",
-                    "model_metadata/${input:llamacppModelFile}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/download_whisper_model.sh",
+                "model_metadata/${input:llamacppModelFile}"
+            ],
             "problemMatcher": []
         },
         {
             "label": "build_llamacpp_model_server",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "./scripts/download_gguf_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/download_whisper_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/build_llamacpp_model_server.sh model_metadata/${input:llamacppModelFile}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "-c",
+                "./scripts/download_gguf_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/download_whisper_model.sh model_metadata/${input:llamacppModelFile} && ./scripts/build_llamacpp_model_server.sh model_metadata/${input:llamacppModelFile}"
+            ],
             "problemMatcher": []
         },
         {
             "label": "test_llamacpp_model_server",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/test_llamacpp_model_server.sh",
-                    "model_metadata/${input:llamacppModelFile}",
-                    "${input:llamacppVramTier}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/test_llamacpp_model_server.sh",
+                "model_metadata/${input:llamacppModelFile}",
+                "${input:llamacppVramTier}"
+            ],
             "problemMatcher": []
         },
         {
             "label": "clear_llamacpp_model_cache",
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/clear_llamacpp_model_cache.sh"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/clear_llamacpp_model_cache.sh"
+            ],
             "presentation": {
                 "echo": true,
                 "reveal": "always",
@@ -533,14 +523,12 @@
                 // "test_llamacpp_model_server"
             ],
             "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/push_llamacpp_model_server_to_dockerhub.sh",
-                    "model_metadata/${input:llamacppModelFile}",
-                    "${input:llamacppRepo}"
-                ]
-            },
+            "command": "bash",
+            "args": [
+                "./scripts/push_llamacpp_model_server_to_dockerhub.sh",
+                "model_metadata/${input:llamacppModelFile}",
+                "${input:llamacppRepo}"
+            ],
             "options": {
                 "env": {
                     "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
@@ -555,6 +543,52 @@
                 "build_llamacpp_model_server",
                 "test_llamacpp_model_server",
                 "push_llamacpp_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "build_llamacpp_bundle",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_llamacpp_bundle.sh",
+                "${input:llamacppBundleFile}"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_llamacpp_bundle",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_llamacpp_bundle.sh",
+                "${input:llamacppBundleFile}",
+                "${input:llamacppVramTier}"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "push_llamacpp_bundle_to_dockerhub",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_llamacpp_bundle_to_dockerhub.sh",
+                "${input:llamacppBundleFile}"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "llamacpp_bundle_full_pipeline",
+            "dependsOn": [
+                "build_llamacpp_bundle",
+                "test_llamacpp_bundle",
+                "push_llamacpp_bundle_to_dockerhub"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []

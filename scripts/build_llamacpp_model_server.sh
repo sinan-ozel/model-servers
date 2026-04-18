@@ -131,9 +131,17 @@ if [ "$HAS_WHISPER" = true ]; then
   WHISPER_BUILD_ARG="--build-arg WHISPER_FILENAME=$WHISPER_BUILD_FILENAME"
 fi
 
+# Generate manifest.json for the build context
+MANIFEST_ENTRY="{\"alias\":\"${MODEL_NAME}:${MODEL_TAG}\",\"gguf_filename\":\"${GGUF_FILENAME}\""
+[ "$HAS_MMPROJ" = true ] && MANIFEST_ENTRY="${MANIFEST_ENTRY},\"mmproj_filename\":\"${MMPROJ_FILENAME}\""
+[ "$IS_EMBEDDING" = "true" ] && MANIFEST_ENTRY="${MANIFEST_ENTRY},\"embedding\":true"
+MANIFEST_ENTRY="${MANIFEST_ENTRY}}"
+echo "[${MANIFEST_ENTRY}]" > ./llamacpp/manifest.json
+
 # Clean up temp files on exit (success or failure)
 _cleanup() {
   rm -f "./llamacpp/$GGUF_FILENAME"
+  rm -f "./llamacpp/manifest.json"
   [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME" || true
   [ -n "$WHISPER_BUILD_FILENAME" ] && rm -f "./llamacpp/$WHISPER_BUILD_FILENAME" || true
 }
@@ -167,6 +175,7 @@ docker build \
   --label "ai.model.tag=${MODEL_TAG}" \
   --label "ai.model.identifier=${MODEL_NAME}:${MODEL_TAG}" \
   --label "ai.model.context_window=${MAX_CONTEXT_WINDOW}" \
+  --label "ai.model.manifest=[${MANIFEST_ENTRY}]" \
   llamacpp/
 
 echo ""

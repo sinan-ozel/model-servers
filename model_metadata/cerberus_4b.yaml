@@ -1,0 +1,12 @@
+name: cerberus
+tag: 4b
+memory:
+  model_size: 2.71GiB
+  min: 6GiB
+  recommended: 8GiB
+license: Apache 2.0
+max_context_window: 4k
+gguf:
+  url: https://huggingface.co/Grimxlock/cerberus-4b-v2-abliterated/resolve/main/cerberus-4b-v2-abliterated-Q4_K_M.gguf
+  filename: cerberus-4b-v2-abliterated-Q4_K_M.gguf
+  file_size: 2.71GiB

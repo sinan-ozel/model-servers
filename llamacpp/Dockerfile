@@ -34,6 +34,7 @@ ENV EMBEDDING_FILENAMES="${EMBEDDING_FILENAMES}"
 # COPY --from=whisper-builder /whisper.cpp/build/bin/whisper-server /app/whisper-server
 
 COPY *.gguf /models/
+COPY manifest.json /models/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

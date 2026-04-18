@@ -1,0 +1,9 @@
+repo: llama.cuda.6gb
+tag: "26.04"
+models:
+  - model_metadata/gemma4_e2b.yaml
+  - model_metadata/deepseek-r1_1.5b.yaml
+  - model_metadata/all-minilm_33m.yaml
+  - model_metadata/embeddinggemma_300m.yaml
+  - model_metadata/qwen3-vl_2b.yaml
+  - model_metadata/qwen3.5_2b.yaml

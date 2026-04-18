@@ -58,6 +58,7 @@ mkdir -p "$CACHE_DIR"
 COPIED_FILES=()
 MODEL_IDENTIFIERS=""
 EMBEDDING_FILENAMES=""
+MANIFEST_ENTRIES=""
 
 _cleanup() {
   echo "Cleaning up build context..."
@@ -94,6 +95,21 @@ for i in $(seq 0 $((MODEL_COUNT - 1))); do
   if [ -z "$GGUF_URL" ] || [ "$GGUF_URL" = "null" ]; then
     echo "⚠ Skipping $MODEL_FILE — no gguf.url defined"
     continue
+  fi
+
+  # Build manifest entry for this model
+  MANIFEST_ENTRY="{\"alias\":\"${M_NAME}:${M_TAG}\",\"gguf_filename\":\"${GGUF_FILENAME}\""
+  if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ]; then
+    MANIFEST_ENTRY="${MANIFEST_ENTRY},\"mmproj_filename\":\"${MMPROJ_FILENAME}\""
+  fi
+  if [ "$M_EMBEDDING" = "true" ]; then
+    MANIFEST_ENTRY="${MANIFEST_ENTRY},\"embedding\":true"
+  fi
+  MANIFEST_ENTRY="${MANIFEST_ENTRY}}"
+  if [ -n "$MANIFEST_ENTRIES" ]; then
+    MANIFEST_ENTRIES="${MANIFEST_ENTRIES},${MANIFEST_ENTRY}"
+  else
+    MANIFEST_ENTRIES="${MANIFEST_ENTRY}"
   fi
 
   MODEL_PATH="$CACHE_DIR/$GGUF_FILENAME"
@@ -168,6 +184,12 @@ if [ -n "$EMBEDDING_FILENAMES" ]; then
   echo "  Embedding models: $EMBEDDING_FILENAMES"
 fi
 
+# Write manifest.json and stage it for the Docker build
+MANIFEST_JSON="[${MANIFEST_ENTRIES}]"
+echo "$MANIFEST_JSON" > ./llamacpp/manifest.json
+COPIED_FILES+=("./llamacpp/manifest.json")
+echo "  Manifest: ./llamacpp/manifest.json"
+
 echo ""
 echo "=== Building Docker image: $IMAGE_NAME ==="
 echo "  Models: $MODEL_IDENTIFIERS"
@@ -185,6 +207,7 @@ docker build \
   --label "ai.bundle.repo=${REPO}" \
   --label "ai.bundle.tag=${TAG}" \
   --label "ai.bundle.models=${MODEL_IDENTIFIERS}" \
+  --label "ai.bundle.manifest=${MANIFEST_JSON}" \
   llamacpp/
 
 echo ""

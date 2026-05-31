@@ -1,0 +1,18 @@
+FROM ghcr.io/ggml-org/llama.cpp:server
+
+ARG MODEL_NAME
+ARG MODEL_TAG
+ARG GGUF_FILENAME
+ARG EMBEDDING=""
+
+ENV MODEL_ALIAS="${MODEL_NAME}:${MODEL_TAG}"
+ENV GGUF_FILENAME="${GGUF_FILENAME}"
+ENV EMBEDDING="${EMBEDDING}"
+
+COPY *.gguf /models/
+COPY manifest.json /models/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8080
+ENTRYPOINT ["/entrypoint.sh"]

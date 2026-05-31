@@ -1,6 +1,7 @@
 name: qwen3.5
 tag: 4b
 model_type: instruct
+vram_tier: 6g
 memory:
   model_size: 2.74GiB
   min: 8GiB

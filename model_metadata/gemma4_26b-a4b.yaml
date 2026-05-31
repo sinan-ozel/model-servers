@@ -1,6 +1,7 @@
 name: gemma4
 tag: 26b
 model_type: instruct
+vram_tier: 24g
 memory:
   model_size: 18GiB
   min: 24GiB

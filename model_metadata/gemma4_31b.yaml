@@ -1,6 +1,7 @@
 name: gemma4
 tag: 31b
 model_type: instruct
+vram_tier: 24g
 memory:
   model_size: 20GiB
   min: 24GiB
@@ -15,4 +16,3 @@ gguf:
     url: https://huggingface.co/ggml-org/gemma-4-31B-it-GGUF/resolve/main/mmproj-gemma-4-31B-it-f16.gguf
     filename: mmproj-gemma-4-31B-it-f16.gguf
     file_size: 1.2GiB
-+-

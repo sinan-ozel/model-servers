@@ -1,6 +1,7 @@
 name: gemma3
 tag: 270m-it
 model_type: instruct
+vram_tier: 1g
 memory:
   model_size: 292MiB
   min: 1GiB

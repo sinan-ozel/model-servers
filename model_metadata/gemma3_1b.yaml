@@ -1,6 +1,7 @@
 name: gemma3
 tag: 1b
 model_type: base
+vram_tier: 6g
 memory:
   model_size: 2GiB
   min: 8GiB

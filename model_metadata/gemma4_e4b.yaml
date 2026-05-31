@@ -1,6 +1,7 @@
 name: gemma4
 tag: e4b
 model_type: instruct
+vram_tier: 12g
 memory:
   model_size: 10GiB
   min: 16GiB

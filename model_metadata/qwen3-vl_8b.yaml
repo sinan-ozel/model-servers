@@ -2,6 +2,7 @@
 name: qwen3-vl
 tag: 8b
 model_type: instruct
+vram_tier: 12g
 memory:
   model_size: 6.1GiB
   min: 12GiB

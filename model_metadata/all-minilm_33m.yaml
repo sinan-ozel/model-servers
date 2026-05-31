@@ -1,5 +1,6 @@
 name: all-minilm
 tag: 33m
+vram_tier: cpu
 license: MIT License
 memory:
   model_size: 67MB

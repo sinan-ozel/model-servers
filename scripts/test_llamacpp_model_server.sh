@@ -2,29 +2,17 @@
 
 set -e
 
-# Usage: ./test_llamacpp_model_server.sh <model_metadata.yaml> [vram_gb]
-# Example: ./test_llamacpp_model_server.sh model_metadata/gemma3_270m.yaml 6
-# vram_gb: 6 | 12 | 24  (default: 6)
+# Usage: ./test_llamacpp_model_server.sh <model_metadata.yaml>
+# Example: ./test_llamacpp_model_server.sh model_metadata/gemma3_270m.yaml
+# vram_tier is read from the vram_tier field in the YAML (required)
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <model_metadata.yaml> [vram_gb]"
-  echo "Example: $0 model_metadata/gemma3_270m.yaml 6"
+  echo "Usage: $0 <model_metadata.yaml>"
+  echo "Example: $0 model_metadata/gemma3_270m.yaml"
   exit 1
 fi
 
 MODEL_FILE="$1"
-VRAM_GB="${2:-6}"
-
-# Model weight budget per VRAM tier — remainder covers KV cache + CUDA overhead
-case "$VRAM_GB" in
-  6)  VRAM_BUDGET_MiB=4608  ;;  # leaves ~1.5 GB for KV cache + overhead
-  12) VRAM_BUDGET_MiB=10240 ;;  # leaves ~2 GB
-  24) VRAM_BUDGET_MiB=20480 ;;  # leaves ~4 GB
-  *)
-    echo "❌ Error: unsupported vram_gb '$VRAM_GB'. Choose 6, 12, or 24."
-    exit 1
-    ;;
-esac
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null; then
@@ -41,8 +29,31 @@ fi
 # Extract values using yq
 MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
+MODEL_TYPE=$(yq '.model_type // "instruct"' "$MODEL_FILE")
+VRAM_GB=$(yq '.vram_tier' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
+
+if [ -z "$VRAM_GB" ] || [ "$VRAM_GB" = "null" ]; then
+  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g"
+  exit 1
+fi
+
+# Model weight budget per VRAM tier — remainder covers KV cache + CUDA overhead
+case "$VRAM_GB" in
+  cpu) VRAM_BUDGET_MiB=0     ;;  # CPU-only: no GPU budget check
+  1g)  VRAM_BUDGET_MiB=800   ;;  # leaves ~200 MiB for KV cache + overhead
+  6g)  VRAM_BUDGET_MiB=4608  ;;  # leaves ~1.5 GB for KV cache + overhead
+  12g) VRAM_BUDGET_MiB=10240 ;;  # leaves ~2 GB
+  24g) VRAM_BUDGET_MiB=20480 ;;  # leaves ~4 GB
+  *)
+    echo "❌ Error: unsupported tier '$VRAM_GB'. Choose cpu, 1g, 6g, 12g, or 24g."
+    exit 1
+    ;;
+esac
+
+GPU_FLAGS="--gpus all"
+[ "$VRAM_GB" = "cpu" ] && GPU_FLAGS=""
 
 # Validate fields
 if [ -z "$MODEL_NAME" ] || [ "$MODEL_NAME" = "null" ]; then
@@ -74,6 +85,8 @@ echo "=== Testing llama.cpp Model Server ==="
 echo "Model file: $MODEL_FILE"
 echo "Image: $IMAGE_NAME"
 echo "Port: $PORT"
+echo "Model type: $MODEL_TYPE"
+echo "VRAM tier: $VRAM_GB"
 echo "Vision (mmproj): $HAS_MMPROJ"
 echo "Audio (whisper): $HAS_WHISPER"
 echo ""
@@ -105,7 +118,7 @@ echo "Starting container..."
 WHISPER_PORT=8081
 docker run -d \
   --name "$CONTAINER_NAME" \
-  --gpus all \
+  $GPU_FLAGS \
   -p "$PORT:$PORT" \
   -p "$WHISPER_PORT:$WHISPER_PORT" \
   "$IMAGE_NAME"
@@ -149,16 +162,20 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
 fi
 
 echo ""
-echo "=== VRAM Budget Check (${VRAM_GB}GB tier) ==="
-VRAM_LINE=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -oP 'CUDA\d+ model buffer size\s*=\s*\K[0-9]+\.[0-9]+' | head -1)
-if [ -z "$VRAM_LINE" ]; then
-  echo "⚠ VRAM check skipped — 'CUDA model buffer size' not found in logs (CPU-only run?)"
+echo "=== VRAM Budget Check (${VRAM_GB} tier) ==="
+if [ "$VRAM_GB" = "cpu" ]; then
+  echo "  Skipped — CPU-only tier"
 else
-  VRAM_MiB=$(printf "%.0f" "$VRAM_LINE")
-  if [ "$VRAM_MiB" -gt "$VRAM_BUDGET_MiB" ]; then
-    _fail "VRAM check" "model uses ${VRAM_MiB} MiB on GPU — exceeds 6GB budget of ${VRAM_BUDGET_MiB} MiB (no room for KV cache)"
+  VRAM_LINE=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -oP 'CUDA\d+ model buffer size\s*=\s*\K[0-9]+\.[0-9]+' | head -1)
+  if [ -z "$VRAM_LINE" ]; then
+    echo "⚠ VRAM check skipped — 'CUDA model buffer size' not found in logs (CPU-only run?)"
   else
-    echo "✓ VRAM check: model uses ${VRAM_MiB} MiB of ${VRAM_BUDGET_MiB} MiB budget ($(( VRAM_BUDGET_MiB - VRAM_MiB )) MiB remaining for KV cache)"
+    VRAM_MiB=$(printf "%.0f" "$VRAM_LINE")
+    if [ "$VRAM_MiB" -gt "$VRAM_BUDGET_MiB" ]; then
+      _fail "VRAM check" "model uses ${VRAM_MiB} MiB on GPU — exceeds ${VRAM_GB} budget of ${VRAM_BUDGET_MiB} MiB (no room for KV cache)"
+    else
+      echo "✓ VRAM check: model uses ${VRAM_MiB} MiB of ${VRAM_BUDGET_MiB} MiB budget ($(( VRAM_BUDGET_MiB - VRAM_MiB )) MiB remaining for KV cache)"
+    fi
   fi
 fi
 
@@ -204,21 +221,25 @@ _assert_contains() {
   fi
 }
 
-# Test 1: Native completion endpoint
-echo "Test 1: Native /completion endpoint"
-RESPONSE=$(curl -sf --max-time 60 http://localhost:$PORT/completion \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "What is the capital of France? Answer in one word.",
-    "n_predict": 100,
-    "temperature": 0
-  }') || _fail "Test 1" "curl request failed (HTTP error or timeout)"
-CONTENT=$(echo "$RESPONSE" | jq -r '.content // .text // empty' 2>/dev/null)
-if [ -z "$CONTENT" ]; then
-  _fail "Test 1" "empty or unparseable response: $RESPONSE"
+# Test 1: Native completion endpoint (base models only — instruct models require chat format)
+if [ "$MODEL_TYPE" = "base" ]; then
+  echo "Test 1: Native /completion endpoint"
+  RESPONSE=$(curl -sf --max-time 60 http://localhost:$PORT/completion \
+    -H "Content-Type: application/json" \
+    -d '{
+      "prompt": "What is the capital of France? Answer in one word.",
+      "n_predict": 100,
+      "temperature": 0
+    }') || _fail "Test 1" "curl request failed (HTTP error or timeout)"
+  CONTENT=$(echo "$RESPONSE" | jq -r '.content // .text // empty' 2>/dev/null)
+  if [ -z "$CONTENT" ]; then
+    _fail "Test 1" "empty or unparseable response: $RESPONSE"
+  fi
+  echo "Response: $CONTENT"
+  _assert_contains "Test 1" "$CONTENT" "paris"
+else
+  echo "Test 1: Native /completion endpoint — skipped (model_type: $MODEL_TYPE)"
 fi
-echo "Response: $CONTENT"
-_assert_contains "Test 1" "$CONTENT" "paris"
 echo ""
 
 # Test 2: OpenAI-compatible chat completions endpoint
@@ -310,7 +331,7 @@ fi
 
 docker run -d \
   --name "$TEST4_CONTAINER" \
-  --gpus all \
+  $GPU_FLAGS \
   -p "$TEST4_PORT:8080" \
   "$IMAGE_NAME" \
   --ctx-size 512

@@ -1,5 +1,6 @@
 name: qwen3-embedding
 tag: 4b
+vram_tier: 6g
 memory:
   model_size: 2.5GiB
   min: 4GiB

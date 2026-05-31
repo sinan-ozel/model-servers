@@ -1,5 +1,6 @@
 name: embeddinggemma
 tag: 300m
+vram_tier: 1g
 memory:
   model_size: 622MiB
   min: 2GiB

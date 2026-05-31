@@ -1,6 +1,7 @@
 name: gemma3
 tag: 4b-it-qat
 model_type: instruct
+vram_tier: 6g
 memory:
   model_size: 4GiB
   min: 16GiB

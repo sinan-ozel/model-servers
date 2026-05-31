@@ -115,36 +115,12 @@
 			"options": ["exoscale", "aws"]
 		},
         {
-            "id": "llamacppVramTier",
-            "type": "pickString",
-            "description": "Target VRAM tier for the VRAM budget check",
-            "options": ["6", "12", "24"],
-            "default": "6"
-        },
-        {
-            "id": "llamacppRepo",
-            "type": "pickString",
-            "description": "Select Docker Hub repo for llama.cpp push",
-            "options": [
-                "llama.cuda",
-                "llama.cuda.6gb",
-                "llama.cuda.12gb"
-            ],
-            "default": "llama.cuda"
-        },
-        {
-            "id": "llamacppBundleFile",
-            "type": "pickString",
-            "description": "Select bundle config file for llama.cpp",
-            "options": [
-                "bundles/llama.cuda.6gb.yaml"
-            ]
-        },
-        {
             "id": "llamacppModelFile",
             "type": "pickString",
             "description": "Select model metadata file for llama.cpp",
             "options": [
+                "keylm_75m-instruct.yaml",
+
                 "gemma3_270m.yaml",
                 "gemma3_1b.yaml",
                 "gemma3_1b-it-qat.yaml",
@@ -497,8 +473,7 @@
             "command": "bash",
             "args": [
                 "./scripts/test_llamacpp_model_server.sh",
-                "model_metadata/${input:llamacppModelFile}",
-                "${input:llamacppVramTier}"
+                "model_metadata/${input:llamacppModelFile}"
             ],
             "problemMatcher": []
         },
@@ -526,8 +501,7 @@
             "command": "bash",
             "args": [
                 "./scripts/push_llamacpp_model_server_to_dockerhub.sh",
-                "model_metadata/${input:llamacppModelFile}",
-                "${input:llamacppRepo}"
+                "model_metadata/${input:llamacppModelFile}"
             ],
             "options": {
                 "env": {
@@ -543,52 +517,6 @@
                 "build_llamacpp_model_server",
                 "test_llamacpp_model_server",
                 "push_llamacpp_model_server_to_dockerhub"
-            ],
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "build_llamacpp_bundle",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "./scripts/build_llamacpp_bundle.sh",
-                "${input:llamacppBundleFile}"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "test_llamacpp_bundle",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "./scripts/test_llamacpp_bundle.sh",
-                "${input:llamacppBundleFile}",
-                "${input:llamacppVramTier}"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "push_llamacpp_bundle_to_dockerhub",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "./scripts/push_llamacpp_bundle_to_dockerhub.sh",
-                "${input:llamacppBundleFile}"
-            ],
-            "options": {
-                "env": {
-                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
-                }
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "llamacpp_bundle_full_pipeline",
-            "dependsOn": [
-                "build_llamacpp_bundle",
-                "test_llamacpp_bundle",
-                "push_llamacpp_bundle_to_dockerhub"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []

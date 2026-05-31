@@ -1,5 +1,6 @@
 name: gemma3
 tag: 1b-it-qat
+model_type: instruct
 memory:
   model_size: 2GiB
   min: 8GiB

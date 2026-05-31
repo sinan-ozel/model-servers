@@ -1,6 +1,7 @@
 # Qwen3 4b model definition
 name: qwen3
 tag: 4b
+model_type: instruct
 memory:
   model_size: 2.9GiB
   min: 12GiB

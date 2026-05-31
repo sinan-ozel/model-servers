@@ -1,5 +1,6 @@
 name: gemma3
 tag: 1b
+model_type: base
 memory:
   model_size: 2GiB
   min: 8GiB

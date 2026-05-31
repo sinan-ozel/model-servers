@@ -1,6 +1,7 @@
 # Granite 3.2 8B model definition
 name: granite3.2
 tag: 8b
+model_type: instruct
 memory:
   model_size: 4.9GiB
   min: 8GiB

@@ -1,5 +1,6 @@
 name: magistral
 tag: 24b
+model_type: instruct
 memory:
   model_size: 14 GiB
   min: 24 GiB

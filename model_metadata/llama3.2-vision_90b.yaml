@@ -1,6 +1,7 @@
 # Llama3.2‑Vision 90B model definition
 name: llama3.2-vision
 tag: 90b
+model_type: instruct
 memory:
   model_size: 55GiB
   min: 64GiB

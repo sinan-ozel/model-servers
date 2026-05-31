@@ -1,5 +1,6 @@
 name: gemma4
 tag: e4b
+model_type: instruct
 memory:
   model_size: 10GiB
   min: 16GiB

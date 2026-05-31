@@ -1,5 +1,6 @@
 name: gpt-oss
 tag: 20b
+model_type: instruct
 memory:
   model_size:  14GiB
   min: 24GiB

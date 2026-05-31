@@ -1,5 +1,6 @@
 name: gemma3n
 tag: e2b
+model_type: instruct
 memory:
   model_size: 5.6GiB
   min: 10GiB

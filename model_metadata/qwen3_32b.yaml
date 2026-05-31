@@ -1,6 +1,7 @@
 # Qwen3 32b model definition
 name: qwen3
 tag: 32b
+model_type: instruct
 memory:
   model_size: 64GiB
   min: 64GiB

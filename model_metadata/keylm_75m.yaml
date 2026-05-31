@@ -1,0 +1,11 @@
+name: keylm
+tag: 75m
+model_type: base
+memory:
+  model_size: 144MB
+  min: 512MiB
+  recommended: 1GiB
+license: Apache 2.0
+max_context_window: 2k
+# No GGUF available — base model is Safetensors only on HuggingFace.
+# Cannot be used with the llama.cpp pipeline until a GGUF is published.

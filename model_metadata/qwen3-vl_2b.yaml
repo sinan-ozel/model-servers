@@ -1,6 +1,7 @@
 # Qwen3‑VL 2B model definition
 name: qwen3-vl
 tag: 2b
+model_type: instruct
 memory:
   model_size: 1.9GiB
   min: 8GiB

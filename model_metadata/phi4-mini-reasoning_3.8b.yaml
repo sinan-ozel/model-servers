@@ -1,5 +1,6 @@
 name: phi4-mini-reasoning
 tag: 3.8b
+model_type: instruct
 memory:
   model_size: 3.2GiB
   min: 8GiB

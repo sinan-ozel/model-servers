@@ -1,6 +1,7 @@
 # DeepSeek‑OCR 3B model definition
 name: deepseek-ocr
 tag: 3b
+model_type: instruct
 memory:
   model_size: 6.7GiB
   min: 8GiB

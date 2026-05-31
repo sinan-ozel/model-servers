@@ -1,5 +1,6 @@
 name: deepcoder
 tag: 1.5b
+model_type: instruct
 memory:
   model_size: 1.1GiB
   min: 4GiB

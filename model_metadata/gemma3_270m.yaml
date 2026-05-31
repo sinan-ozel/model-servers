@@ -1,5 +1,7 @@
 name: gemma3
 tag: 270m
+model_type: base
+vram_tier: 1g
 memory:
   model_size:  292MiB
   min: 1GiB

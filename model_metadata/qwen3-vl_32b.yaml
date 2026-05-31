@@ -1,6 +1,7 @@
 # Qwen3‑VL 32B model definition
 name: qwen3-vl
 tag: 32b
+model_type: instruct
 memory:
   model_size: 21GiB
   min: 32GiB

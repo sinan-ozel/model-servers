@@ -1,5 +1,6 @@
 name: gemma3
 tag: 12b
+model_type: instruct
 memory:
   model_size: 16GiB
   min: 32GiB

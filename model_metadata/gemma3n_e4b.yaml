@@ -1,5 +1,6 @@
 name: gemma3n
 tag: e4b
+model_type: instruct
 memory:
   model_size: 7.5GiB
   min: 12GiB

@@ -1,6 +1,7 @@
 # Qwen3 1.7b model definition
 name: qwen3
 tag: 1.7b
+model_type: instruct
 memory:
   model_size: 1.4GiB
   min: 4GiB

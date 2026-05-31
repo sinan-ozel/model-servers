@@ -1,5 +1,6 @@
 name: gemma2
 tag: 9b
+model_type: instruct
 memory:
   model_size: 5.4GiB
   min: 12GiB

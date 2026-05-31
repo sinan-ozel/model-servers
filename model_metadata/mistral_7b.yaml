@@ -1,5 +1,6 @@
 name: mistral
 tag: 7b
+model_type: instruct
 memory:
   model_size: 4.4GiB
   min: 16GiB

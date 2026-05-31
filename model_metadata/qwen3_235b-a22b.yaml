@@ -1,6 +1,7 @@
 # Qwen3 235b-a22b model definition
 name: qwen3
 tag: 235b-a22b
+model_type: instruct
 memory:
   model_size: 44GiB
   min: 64GiB

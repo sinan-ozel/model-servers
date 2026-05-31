@@ -1,5 +1,6 @@
 name: mistral-small3.2
 tag: 24b
+model_type: instruct
 memory:
   model_size: 15GiB
   min: 32GiB

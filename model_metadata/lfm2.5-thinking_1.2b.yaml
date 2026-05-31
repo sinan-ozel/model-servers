@@ -1,6 +1,7 @@
 # LFM2.5-Thinking model definition
 name: lfm2.5-thinking
 tag: 1.2b
+model_type: instruct
 memory:
   model_size: 731MB
   min: 2GiB

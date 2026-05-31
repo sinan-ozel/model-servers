@@ -7,3 +7,4 @@ models:
   - model_metadata/embeddinggemma_300m.yaml
   - model_metadata/qwen3-vl_2b.yaml
   - model_metadata/qwen3.5_2b.yaml
+  - model_metadata/keylm_75m-instruct.yaml

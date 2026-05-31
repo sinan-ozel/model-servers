@@ -1,6 +1,7 @@
 # Qwen3 8b model definition
 name: qwen3
 tag: 8b
+model_type: instruct
 memory:
   model_size: 5.2GiB
   min: 8GiB

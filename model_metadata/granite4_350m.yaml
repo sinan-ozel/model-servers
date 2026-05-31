@@ -1,6 +1,7 @@
 # Granite 4.0 350M model definition
 name: granite4
 tag: 350m
+model_type: instruct
 memory:
   model_size: 708MB
   min: 2GiB

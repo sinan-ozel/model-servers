@@ -1,6 +1,7 @@
 # Granite 4.0 3B model definition
 name: granite4
 tag: 3b
+model_type: instruct
 memory:
   model_size: 2.1GB
   min: 4GiB

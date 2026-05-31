@@ -1,6 +1,7 @@
 # Qwen3‑VL 235B model definition
 name: qwen3-vl
 tag: 235b
+model_type: instruct
 memory:
   model_size: 142GiB
   min: 256GiB

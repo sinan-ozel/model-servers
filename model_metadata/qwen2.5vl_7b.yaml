@@ -1,6 +1,7 @@
 # Qwen2.5VL 7B model definition
 name: qwen2.5vl
 tag: 7b
+model_type: instruct
 memory:
   model_size: 6.0GiB
   min: 12GiB

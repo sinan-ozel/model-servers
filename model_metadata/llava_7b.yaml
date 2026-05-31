@@ -1,5 +1,6 @@
 name: llava
 tag: 7b
+model_type: instruct
 memory:
   model_size: 4.1GiB
   min: 8GiB

@@ -1,6 +1,7 @@
 # MiniCPM‑V 8B model definition
 name: minicpm-v
 tag: 8b
+model_type: instruct
 memory:
   model_size: 5.5GiB
   min: 8GiB

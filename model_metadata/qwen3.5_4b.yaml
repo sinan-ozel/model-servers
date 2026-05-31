@@ -1,5 +1,6 @@
 name: qwen3.5
 tag: 4b
+model_type: instruct
 memory:
   model_size: 2.74GiB
   min: 8GiB

@@ -1,6 +1,7 @@
 # Qwen2.5VL 3B model definition
 name: qwen2.5vl
 tag: 3b
+model_type: instruct
 memory:
   model_size: 3.2GiB
   min: 8GiB

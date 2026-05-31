@@ -1,6 +1,7 @@
 # GLM-4.7-Flash model definition
 name: glm-4.7-flash
 tag: q4_K_M
+model_type: instruct
 memory:
   model_size: 19GB
   min: 24GiB

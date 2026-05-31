@@ -1,5 +1,6 @@
 name: deepseek-r1
 tag: 8b
+model_type: instruct
 memory:
   model_size: 4.9GiB
   min: 6GiB

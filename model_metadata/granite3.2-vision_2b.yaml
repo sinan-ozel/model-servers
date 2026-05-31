@@ -1,6 +1,7 @@
 # Granite 3.2 Vision 2B model definition
 name: granite3.2-vision
 tag: 2b
+model_type: instruct
 memory:
   model_size: 2.4GiB
   min: 4GiB

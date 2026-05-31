@@ -1,5 +1,6 @@
 name: mixtral
 tag: 8x22b
+model_type: instruct
 memory:
   model_size: 80GiB
   min: 52GiB

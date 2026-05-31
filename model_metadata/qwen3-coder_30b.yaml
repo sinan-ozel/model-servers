@@ -1,6 +1,7 @@
 # Qwen3 Coder model definition
 name: qwen3-coder
 tag: 30b
+model_type: instruct
 memory:
   model_size: 19GiB
   min: 24GiB

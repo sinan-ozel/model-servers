@@ -1,6 +1,7 @@
 # Qwen2.5VL 72B model definition
 name: qwen2.5vl
 tag: 72b
+model_type: instruct
 memory:
   model_size: 49GiB
   min: 64GiB

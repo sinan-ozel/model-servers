@@ -1,0 +1,13 @@
+name: keylm
+tag: 75m-instruct
+model_type: instruct
+vram_tier: cpu
+memory:
+  model_size: 144MB
+  min: 512MiB
+  recommended: 1GiB
+license: Apache 2.0
+gguf:
+  url: https://huggingface.co/Eclipse-Senpai/KeyLM-75M-Instruct-GGUF/resolve/main/KeyLM-75M-Instruct.F16.gguf
+  filename: KeyLM-75M-Instruct.F16.gguf
+  file_size: 144MB

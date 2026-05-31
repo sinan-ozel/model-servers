@@ -1,6 +1,8 @@
 # Qwen3 0.6b model definition
 name: qwen3
 tag: 0.6b
+model_type: instruct
+vram_tier: 1g
 memory:
   model_size: 1GiB
   min: 4GiB

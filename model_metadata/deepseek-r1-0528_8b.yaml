@@ -1,0 +1,14 @@
+name: deepseek-r1-0528
+tag: 8b
+model_type: instruct
+vram_tier: 12g
+memory:
+  model_size: 4.7GiB
+  min: 8GiB
+  recommended: 12GiB
+license: MIT
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/bartowski/deepseek-ai_DeepSeek-R1-0528-Qwen3-8B-GGUF/resolve/main/deepseek-ai_DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+  filename: deepseek-ai_DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf
+  file_size: 4.7GiB

@@ -495,7 +495,7 @@
         {
             "label": "push_llamacpp_model_server_to_dockerhub",
             "dependsOn": [
-                // "test_llamacpp_model_server"
+                "test_llamacpp_model_server"
             ],
             "type": "shell",
             "command": "bash",

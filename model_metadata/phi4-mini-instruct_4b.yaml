@@ -1,0 +1,14 @@
+name: phi4-mini-instruct
+tag: 4b
+model_type: instruct
+vram_tier: 12g
+memory:
+  model_size: 2.3GiB
+  min: 4GiB
+  recommended: 8GiB
+license: MIT
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/unsloth/Phi-4-mini-instruct-GGUF/resolve/main/Phi-4-mini-instruct-Q4_K_M.gguf
+  filename: Phi-4-mini-instruct-Q4_K_M.gguf
+  file_size: 2.3GiB

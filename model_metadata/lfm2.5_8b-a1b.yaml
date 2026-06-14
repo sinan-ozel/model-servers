@@ -1,0 +1,14 @@
+name: lfm2.5
+tag: 8b-a1b
+model_type: instruct
+vram_tier: 12g
+memory:
+  model_size: 4.8GiB
+  min: 8GiB
+  recommended: 12GiB
+license: LFM Open License v1.0
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/LiquidAI/LFM2.5-8B-A1B-GGUF/resolve/main/LFM2.5-8B-A1B-Q4_K_M.gguf
+  filename: LFM2.5-8B-A1B-Q4_K_M.gguf
+  file_size: 4.8GiB

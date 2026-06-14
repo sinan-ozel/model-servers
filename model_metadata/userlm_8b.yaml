@@ -1,0 +1,14 @@
+name: userlm
+tag: 8b
+model_type: instruct
+vram_tier: 12g
+memory:
+  model_size: 4.6GiB
+  min: 8GiB
+  recommended: 12GiB
+license: MIT
+max_context_window: 2k
+gguf:
+  url: https://huggingface.co/bartowski/microsoft_UserLM-8b-GGUF/resolve/main/microsoft_UserLM-8b-Q4_K_M.gguf
+  filename: microsoft_UserLM-8b-Q4_K_M.gguf
+  file_size: 4.6GiB

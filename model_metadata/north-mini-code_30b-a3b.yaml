@@ -1,0 +1,14 @@
+name: north-mini-code
+tag: 30b-a3b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 17.9GiB
+  min: 24GiB
+  recommended: 32GiB
+license: Apache 2.0
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/unsloth/North-Mini-Code-1.0-GGUF/resolve/main/North-Mini-Code-1.0-UD-Q4_K_M.gguf
+  filename: North-Mini-Code-1.0-UD-Q4_K_M.gguf
+  file_size: 17.9GiB

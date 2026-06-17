@@ -1,0 +1,14 @@
+name: gemma4-obliterated
+tag: 12b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 6.9GiB
+  min: 12GiB
+  recommended: 16GiB
+license: Gemma Terms of Use
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/OBLITERATUS/Gemma-4-12B-OBLITERATED/resolve/main/Gemma-4-12B-OBLITERATED-Q4_K_M.gguf
+  filename: Gemma-4-12B-OBLITERATED-Q4_K_M.gguf
+  file_size: 6.9GiB

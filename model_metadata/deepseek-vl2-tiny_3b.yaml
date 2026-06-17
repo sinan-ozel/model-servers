@@ -1,0 +1,9 @@
+name: deepseek-vl2-tiny
+tag: 3b
+model_type: instruct
+memory:
+  model_size: 3GiB
+  min: 8GiB
+  recommended: 12GiB
+license: DeepSeek License
+max_context_window: 4k

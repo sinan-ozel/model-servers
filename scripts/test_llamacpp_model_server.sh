@@ -31,6 +31,8 @@ MODEL_NAME=$(yq '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
 MODEL_TYPE=$(yq '.model_type // "instruct"' "$MODEL_FILE")
 VRAM_GB=$(yq '.vram_tier' "$MODEL_FILE")
+STARTUP_TIMEOUT=$(yq '.startup_timeout // ""' "$MODEL_FILE")
+INFERENCE_TIMEOUT=$(yq '.inference_timeout // ""' "$MODEL_FILE")
 MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
 
@@ -126,12 +128,16 @@ docker run -d \
 echo "Container started. Waiting for server to be ready..."
 if [ "$HAS_MMPROJ" = true ]; then
   echo "  Note: vision model (mmproj) detected — startup includes a clip/vision warmup"
-  echo "  phase that can take 1-3 minutes. This is normal. Please be patient."
+  echo "  phase that can take 3-6 minutes. This is normal. Please be patient."
   INITIAL_WAIT=10
-  MAX_ATTEMPTS=36   # up to 3 minutes
+  MAX_ATTEMPTS=72   # up to 6 minutes
 else
   INITIAL_WAIT=5
-  MAX_ATTEMPTS=24   # up to 2 minutes
+  MAX_ATTEMPTS=48   # up to 4 minutes
+fi
+if [ -n "$STARTUP_TIMEOUT" ] && [ "$STARTUP_TIMEOUT" != "null" ]; then
+  MAX_ATTEMPTS=$(( (STARTUP_TIMEOUT - INITIAL_WAIT + 4) / 5 ))
+  echo "  startup_timeout override: ${STARTUP_TIMEOUT}s → MAX_ATTEMPTS=${MAX_ATTEMPTS}"
 fi
 sleep $INITIAL_WAIT
 
@@ -166,11 +172,11 @@ echo "=== VRAM Budget Check (${VRAM_GB} tier) ==="
 if [ "$VRAM_GB" = "cpu" ]; then
   echo "  Skipped — CPU-only tier"
 else
-  VRAM_LINE=$(docker logs "$CONTAINER_NAME" 2>&1 | grep -oP 'CUDA\d+ model buffer size\s*=\s*\K[0-9]+\.[0-9]+' | head -1)
-  if [ -z "$VRAM_LINE" ]; then
-    echo "⚠ VRAM check skipped — 'CUDA model buffer size' not found in logs (CPU-only run?)"
+  VRAM_USED_MiB=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+  if [ -z "$VRAM_USED_MiB" ] || ! echo "$VRAM_USED_MiB" | grep -qE '^[0-9]+$'; then
+    echo "⚠ VRAM check skipped — nvidia-smi unavailable or returned no data"
   else
-    VRAM_MiB=$(printf "%.0f" "$VRAM_LINE")
+    VRAM_MiB=$VRAM_USED_MiB
     if [ "$VRAM_MiB" -gt "$VRAM_BUDGET_MiB" ]; then
       _fail "VRAM check" "model uses ${VRAM_MiB} MiB on GPU — exceeds ${VRAM_GB} budget of ${VRAM_BUDGET_MiB} MiB (no room for KV cache)"
     else
@@ -338,13 +344,14 @@ docker run -d \
 
 sleep $INITIAL_WAIT
 ATTEMPT=0
-while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+TEST4_MAX_ATTEMPTS=$MAX_ATTEMPTS
+while [ $ATTEMPT -lt $TEST4_MAX_ATTEMPTS ]; do
   if curl -sf "http://localhost:$TEST4_PORT/health" >/dev/null 2>&1; then break; fi
   ATTEMPT=$((ATTEMPT + 1))
   sleep 5
 done
 
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+if [ $ATTEMPT -eq $TEST4_MAX_ATTEMPTS ]; then
   docker stop "$TEST4_CONTAINER" >/dev/null 2>&1 || true
   docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1 || true
   _fail "Test 4" "server did not become ready"

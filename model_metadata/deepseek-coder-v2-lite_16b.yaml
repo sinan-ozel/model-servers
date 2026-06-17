@@ -1,0 +1,14 @@
+name: deepseek-coder-v2-lite
+tag: 16b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 9.7GiB
+  min: 12GiB
+  recommended: 16GiB
+license: DeepSeek License
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF/resolve/main/DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf
+  filename: DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf
+  file_size: 9.7GiB

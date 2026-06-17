@@ -35,6 +35,7 @@ MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 MMPROJ_URL=$(yq '.gguf.mmproj.url // ""' "$MODEL_FILE")
 WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
 IS_EMBEDDING=$(yq '.embedding // "false"' "$MODEL_FILE")
+LLAMACPP_ARGS=$(yq '.llamacpp_args // ""' "$MODEL_FILE")
 LICENSE=$(yq '.license' "$MODEL_FILE")
 MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
 MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
@@ -137,6 +138,12 @@ if [ "$IS_EMBEDDING" = "true" ]; then
   EMBEDDING_BUILD_ARG="--build-arg EMBEDDING=true"
 fi
 
+LLAMACPP_ARGS_BUILD_ARG=""
+if [ -n "$LLAMACPP_ARGS" ] && [ "$LLAMACPP_ARGS" != "null" ]; then
+  LLAMACPP_ARGS_BUILD_ARG="--build-arg"
+  LLAMACPP_ARGS_BUILD_ARG_VALUE="LLAMACPP_ARGS=${LLAMACPP_ARGS}"
+fi
+
 WHISPER_BUILD_ARG=""
 WHISPER_BUILD_FILENAME=""
 if [ "$HAS_WHISPER" = true ]; then
@@ -176,6 +183,7 @@ docker build \
   $MMPROJ_BUILD_ARG \
   $WHISPER_BUILD_ARG \
   $EMBEDDING_BUILD_ARG \
+  ${LLAMACPP_ARGS_BUILD_ARG:+$LLAMACPP_ARGS_BUILD_ARG "$LLAMACPP_ARGS_BUILD_ARG_VALUE"} \
   --label "org.opencontainers.image.title=llama.cpp Server - ${MODEL_NAME}" \
   --label "org.opencontainers.image.description=Preloaded llama.cpp model server for ${MODEL_NAME}:${MODEL_TAG}" \
   --label "org.opencontainers.image.version=${MODEL_NAME}:${MODEL_TAG}" \

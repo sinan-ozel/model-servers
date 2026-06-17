@@ -1,0 +1,14 @@
+name: phi4
+tag: 15b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 8.3GiB
+  min: 12GiB
+  recommended: 16GiB
+license: MIT
+max_context_window: 16k
+gguf:
+  url: https://huggingface.co/unsloth/phi-4-GGUF/resolve/main/phi-4-Q4_K_M.gguf
+  filename: phi-4-Q4_K_M.gguf
+  file_size: 8.3GiB

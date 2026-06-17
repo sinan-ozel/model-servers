@@ -1,0 +1,14 @@
+name: supergemma4-uncensored
+tag: 26b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 15.7GiB
+  min: 16GiB
+  recommended: 24GiB
+license: Gemma Terms of Use
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/Jiunsong/supergemma4-26b-uncensored-gguf-v2/resolve/main/supergemma4-26b-uncensored-fast-v2-Q4_K_M.gguf
+  filename: supergemma4-26b-uncensored-fast-v2-Q4_K_M.gguf
+  file_size: 15.7GiB

@@ -1,0 +1,14 @@
+name: moonlight
+tag: 16b-a3b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 9.8GiB
+  min: 12GiB
+  recommended: 16GiB
+license: Apache 2.0
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/mmnga/Moonlight-16B-A3B-Instruct-gguf/resolve/main/Moonlight-16B-A3B-Instruct-Q4_K_M.gguf
+  filename: Moonlight-16B-A3B-Instruct-Q4_K_M.gguf
+  file_size: 9.8GiB

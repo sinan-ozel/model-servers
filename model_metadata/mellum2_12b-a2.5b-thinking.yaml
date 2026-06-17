@@ -1,0 +1,14 @@
+name: mellum2
+tag: 12b-a2.5b-thinking
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 7.5GiB
+  min: 12GiB
+  recommended: 16GiB
+license: Apache 2.0
+max_context_window: 131k
+gguf:
+  url: https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M/resolve/main/Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf
+  filename: Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf
+  file_size: 7.5GiB

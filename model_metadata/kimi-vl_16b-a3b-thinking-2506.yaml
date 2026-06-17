@@ -1,0 +1,18 @@
+name: kimi-vl
+tag: 16b-a3b-thinking-2506
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 9.8GiB
+  min: 12GiB
+  recommended: 16GiB
+license: Apache 2.0
+max_context_window: 128k
+gguf:
+  url: https://huggingface.co/mradermacher/Kimi-VL-A3B-Thinking-2506-GGUF/resolve/main/Kimi-VL-A3B-Thinking-2506.Q4_K_M.gguf
+  filename: Kimi-VL-A3B-Thinking-2506.Q4_K_M.gguf
+  file_size: 9.8GiB
+  mmproj:
+    url: https://huggingface.co/mradermacher/Kimi-VL-A3B-Thinking-2506-GGUF/resolve/main/Kimi-VL-A3B-Thinking-2506.mmproj-Q8_0.gguf
+    filename: Kimi-VL-A3B-Thinking-2506.mmproj-Q8_0.gguf
+    file_size: 589MiB

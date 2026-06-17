@@ -6,12 +6,14 @@ ARG GGUF_FILENAME
 ARG MMPROJ_FILENAME=""
 ARG EMBEDDING=""
 ARG EMBEDDING_FILENAMES=""
+ARG LLAMACPP_ARGS=""
 
 ENV MODEL_ALIAS="${MODEL_NAME}:${MODEL_TAG}"
 ENV GGUF_FILENAME="${GGUF_FILENAME}"
 ENV MMPROJ_FILENAME="${MMPROJ_FILENAME}"
 ENV EMBEDDING="${EMBEDDING}"
 ENV EMBEDDING_FILENAMES="${EMBEDDING_FILENAMES}"
+ENV LLAMACPP_ARGS="${LLAMACPP_ARGS}"
 
 COPY *.gguf /models/
 COPY manifest.json /models/
@@ -19,4 +21,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=5s --start-period=600s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
 ENTRYPOINT ["/entrypoint.sh"]

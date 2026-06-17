@@ -1,0 +1,14 @@
+name: frogboss
+tag: 32b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 18.4GiB
+  min: 24GiB
+  recommended: 32GiB
+license: MIT
+max_context_window: 64k
+gguf:
+  url: https://huggingface.co/mradermacher/FrogBoss-32B-2510-GGUF/resolve/main/FrogBoss-32B-2510.Q4_K_M.gguf
+  filename: FrogBoss-32B-2510.Q4_K_M.gguf
+  file_size: 18.4GiB

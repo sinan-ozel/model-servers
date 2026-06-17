@@ -143,7 +143,33 @@
                 "qwen3-vl_4b.yaml",
                 "qwen3-vl_8b.yaml",
                 "qwen3-vl_30b.yaml",
-                "qwen3-vl_32b.yaml"
+                "qwen3-vl_32b.yaml",
+
+                "phi4_15b.yaml",
+                "phi4-mini-instruct_4b.yaml",
+                "phi4-mini-reasoning_3.8b.yaml",
+
+                "frogboss_32b.yaml",
+                "userlm_8b.yaml",
+
+                "mellum2_12b-a2.5b-thinking.yaml",
+
+                "north-mini-code_30b-a3b.yaml",
+
+                "lfm2.5_8b-a1b.yaml",
+
+                "gemma4-obliterated_12b.yaml",
+                "supergemma4-uncensored_26b.yaml",
+
+                "nex-n2-mini_35b-a3b.yaml",
+
+                "moonlight_16b-a3b.yaml",
+                "kimi-vl_16b-a3b-thinking-2506.yaml",
+                "kimi-dev_72b.yaml",
+
+                "deepseek-r1-0528_8b.yaml",
+                "deepseek-v2-lite_16b.yaml",
+                "deepseek-coder-v2-lite_16b.yaml"
             ]
         }
       ],

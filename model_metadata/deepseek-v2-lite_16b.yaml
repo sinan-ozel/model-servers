@@ -1,0 +1,14 @@
+name: deepseek-v2-lite
+tag: 16b
+model_type: instruct
+vram_tier: 24g
+memory:
+  model_size: 9.7GiB
+  min: 12GiB
+  recommended: 16GiB
+license: DeepSeek License
+max_context_window: 32k
+gguf:
+  url: https://huggingface.co/mradermacher/DeepSeek-V2-Lite-Chat-GGUF/resolve/main/DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+  filename: DeepSeek-V2-Lite-Chat.Q4_K_M.gguf
+  file_size: 9.7GiB

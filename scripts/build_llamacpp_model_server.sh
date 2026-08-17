@@ -43,7 +43,7 @@ MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
 MAX_CONTEXT_WINDOW=$(yq '.max_context_window' "$MODEL_FILE")
 
 if [ -z "$VRAM_TIER" ] || [ "$VRAM_TIER" = "null" ]; then
-  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g"
+  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"
   exit 1
 fi
 

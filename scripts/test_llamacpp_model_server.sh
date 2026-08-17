@@ -37,7 +37,7 @@ MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
 WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
 
 if [ -z "$VRAM_GB" ] || [ "$VRAM_GB" = "null" ]; then
-  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g"
+  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"
   exit 1
 fi
 
@@ -49,8 +49,16 @@ case "$VRAM_GB" in
   12g) VRAM_BUDGET_MiB=10240 ;;  # leaves ~2 GB
   24g) VRAM_BUDGET_MiB=20480 ;;  # leaves ~4 GB
   *)
-    echo "❌ Error: unsupported tier '$VRAM_GB'. Choose cpu, 1g, 6g, 12g, or 24g."
-    exit 1
+    if echo "$VRAM_GB" | grep -qE '^[0-9]+g-ram[0-9]+g$'; then
+      # Hybrid tier: MoE experts offloaded to CPU RAM via --n-cpu-moe, so the GPU
+      # only holds attention/shared tensors + mmproj + KV cache. Same ~83% budget
+      # ratio as the plain GPU tiers above (~17% reserved for KV cache/overhead).
+      GPU_GB=$(echo "$VRAM_GB" | sed -E 's/^([0-9]+)g-ram([0-9]+)g$/\1/')
+      VRAM_BUDGET_MiB=$(( GPU_GB * 1024 * 83 / 100 ))
+    else
+      echo "❌ Error: unsupported tier '$VRAM_GB'. Choose cpu, 1g, 6g, 12g, 24g, or <N>g-ram<M>g (e.g. 12g-ram32g)."
+      exit 1
+    fi
     ;;
 esac
 

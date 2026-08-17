@@ -1,0 +1,20 @@
+name: qwen3.6
+tag: 35b-a3b
+model_type: instruct
+# Hybrid tier: 256 experts, 8 routed + 1 shared active (~3B params/token). --n-cpu-moe
+# offloads MoE expert tensors to CPU RAM, keeping attention/shared + KV cache on GPU.
+# Layer count assumed 40 (unconfirmed — same family shape as qwen3.5_35b); adjust
+# --n-cpu-moe if this model's actual layer count differs.
+# min/recommended below are system RAM for the CPU-resident experts.
+vram_tier: 12g-ram32g
+memory:
+  model_size: 22.1GiB
+  min: 28GiB
+  recommended: 40GiB
+license: Apache 2.0
+max_context_window: 256k
+gguf:
+  url: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+  filename: Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+  file_size: 22.1GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 40 -c 32768"

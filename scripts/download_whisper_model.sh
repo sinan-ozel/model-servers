@@ -31,9 +31,9 @@ if [ ! -f "$MODEL_FILE" ]; then
 fi
 
 # Extract whisper fields
-WHISPER_URL=$(yq '.gguf.whisper.url' "$MODEL_FILE")
-WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
-EXPECTED_SIZE_MB=$(yq '.gguf.whisper.file_size' "$MODEL_FILE" | grep -oP '\d+' | head -1)
+WHISPER_URL=$(yq -r '.gguf.whisper.url' "$MODEL_FILE")
+WHISPER_FILENAME=$(yq -r '.gguf.whisper.filename' "$MODEL_FILE")
+EXPECTED_SIZE_MB=$(yq -r '.gguf.whisper.file_size' "$MODEL_FILE" | grep -oP '\d+' | head -1)
 
 # Skip gracefully if no whisper configured for this model
 if [ -z "$WHISPER_URL" ] || [ "$WHISPER_URL" = "null" ] || [ -z "$WHISPER_FILENAME" ] || [ "$WHISPER_FILENAME" = "null" ]; then

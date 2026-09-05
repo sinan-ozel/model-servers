@@ -26,21 +26,21 @@ if [ ! -f "$MODEL_FILE" ]; then
 fi
 
 # Extract values using yq
-MODEL_NAME=$(yq '.name' "$MODEL_FILE")
-MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
-VRAM_TIER=$(yq '.vram_tier' "$MODEL_FILE")
-GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
-GGUF_URL=$(yq '.gguf.url' "$MODEL_FILE")
-MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
-MMPROJ_URL=$(yq '.gguf.mmproj.url // ""' "$MODEL_FILE")
-WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
-IS_EMBEDDING=$(yq '.embedding // "false"' "$MODEL_FILE")
-LLAMACPP_ARGS=$(yq '.llamacpp_args // ""' "$MODEL_FILE")
-LICENSE=$(yq '.license' "$MODEL_FILE")
-MODEL_SIZE=$(yq '.memory.model_size' "$MODEL_FILE")
-MEMORY_MIN=$(yq '.memory.min' "$MODEL_FILE")
-MEMORY_RECOMMENDED=$(yq '.memory.recommended' "$MODEL_FILE")
-MAX_CONTEXT_WINDOW=$(yq '.max_context_window' "$MODEL_FILE")
+MODEL_NAME=$(yq -r '.name' "$MODEL_FILE")
+MODEL_TAG=$(yq -r '.tag' "$MODEL_FILE")
+VRAM_TIER=$(yq -r '.vram_tier' "$MODEL_FILE")
+GGUF_FILENAME=$(yq -r '.gguf.filename' "$MODEL_FILE")
+GGUF_URL=$(yq -r '.gguf.url' "$MODEL_FILE")
+MMPROJ_FILENAME=$(yq -r '.gguf.mmproj.filename' "$MODEL_FILE")
+MMPROJ_URL=$(yq -r '.gguf.mmproj.url // ""' "$MODEL_FILE")
+WHISPER_FILENAME=$(yq -r '.gguf.whisper.filename' "$MODEL_FILE")
+IS_EMBEDDING=$(yq -r '.embedding // "false"' "$MODEL_FILE")
+LLAMACPP_ARGS=$(yq -r '.llamacpp_args // ""' "$MODEL_FILE")
+LICENSE=$(yq -r '.license' "$MODEL_FILE")
+MODEL_SIZE=$(yq -r '.memory.model_size' "$MODEL_FILE")
+MEMORY_MIN=$(yq -r '.memory.min' "$MODEL_FILE")
+MEMORY_RECOMMENDED=$(yq -r '.memory.recommended' "$MODEL_FILE")
+MAX_CONTEXT_WINDOW=$(yq -r '.max_context_window' "$MODEL_FILE")
 
 if [ -z "$VRAM_TIER" ] || [ "$VRAM_TIER" = "null" ]; then
   echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"
@@ -85,6 +85,15 @@ if [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
     exit 1
   fi
   HAS_MMPROJ=true
+
+  echo "Checking text/mmproj embedding size compatibility..."
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if ! python3 "$SCRIPT_DIR/check_gguf_embd_match.py" "$MODEL_PATH" "$MMPROJ_PATH"; then
+    echo "❌ Error: refusing to build — text model and mmproj have mismatched embedding sizes."
+    echo "   This produces a container that loads but returns garbage (or crashes) on image input."
+    exit 1
+  fi
+  echo ""
 fi
 
 HAS_WHISPER=false

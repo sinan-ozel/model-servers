@@ -73,11 +73,11 @@ _download_file() {
 }
 
 # Extract values using yq
-GGUF_URL=$(yq '.gguf.url' "$MODEL_FILE")
-GGUF_FILENAME=$(yq '.gguf.filename' "$MODEL_FILE")
-EXPECTED_SIZE_MB=$(yq '.gguf.file_size' "$MODEL_FILE" | grep -oP '\d+' | head -1)
-MMPROJ_URL=$(yq '.gguf.mmproj.url' "$MODEL_FILE")
-MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
+GGUF_URL=$(yq -r '.gguf.url' "$MODEL_FILE")
+GGUF_FILENAME=$(yq -r '.gguf.filename' "$MODEL_FILE")
+EXPECTED_SIZE_MB=$(yq -r '.gguf.file_size' "$MODEL_FILE" | grep -oP '\d+' | head -1)
+MMPROJ_URL=$(yq -r '.gguf.mmproj.url' "$MODEL_FILE")
+MMPROJ_FILENAME=$(yq -r '.gguf.mmproj.filename' "$MODEL_FILE")
 
 # Validate GGUF fields
 if [ -z "$GGUF_URL" ] || [ "$GGUF_URL" = "null" ] || [ -z "$GGUF_FILENAME" ] || [ "$GGUF_FILENAME" = "null" ]; then

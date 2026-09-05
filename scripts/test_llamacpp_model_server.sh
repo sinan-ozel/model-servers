@@ -27,14 +27,14 @@ if [ ! -f "$MODEL_FILE" ]; then
 fi
 
 # Extract values using yq
-MODEL_NAME=$(yq '.name' "$MODEL_FILE")
-MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
-MODEL_TYPE=$(yq '.model_type // "instruct"' "$MODEL_FILE")
-VRAM_GB=$(yq '.vram_tier' "$MODEL_FILE")
-STARTUP_TIMEOUT=$(yq '.startup_timeout // ""' "$MODEL_FILE")
-INFERENCE_TIMEOUT=$(yq '.inference_timeout // ""' "$MODEL_FILE")
-MMPROJ_FILENAME=$(yq '.gguf.mmproj.filename' "$MODEL_FILE")
-WHISPER_FILENAME=$(yq '.gguf.whisper.filename' "$MODEL_FILE")
+MODEL_NAME=$(yq -r '.name' "$MODEL_FILE")
+MODEL_TAG=$(yq -r '.tag' "$MODEL_FILE")
+MODEL_TYPE=$(yq -r '.model_type // "instruct"' "$MODEL_FILE")
+VRAM_GB=$(yq -r '.vram_tier' "$MODEL_FILE")
+STARTUP_TIMEOUT=$(yq -r '.startup_timeout // ""' "$MODEL_FILE")
+INFERENCE_TIMEOUT=$(yq -r '.inference_timeout // ""' "$MODEL_FILE")
+MMPROJ_FILENAME=$(yq -r '.gguf.mmproj.filename' "$MODEL_FILE")
+WHISPER_FILENAME=$(yq -r '.gguf.whisper.filename' "$MODEL_FILE")
 
 if [ -z "$VRAM_GB" ] || [ "$VRAM_GB" = "null" ]; then
   echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"
@@ -326,8 +326,75 @@ PYEOF
     _assert_contains "Test 3" "$CONTENT" "red"
     echo ""
   fi
+
+  echo "Test 3b: Vision — shape recognition via /v1/chat/completions"
+
+  # Render a solid blue triangle on a white PNG, inline, so this test has no
+  # dependency beyond python3's stdlib (no Pillow). Shape recognition is a
+  # more reliable signal of real spatial/vision understanding for small
+  # models than fine-grained OCR of rendered text (which even a correct
+  # vision pipeline can flub on a quantized 9B-class model).
+  SHAPE_IMG_B64=$(python3 - <<'PYEOF'
+import base64, zlib, struct
+
+W, H = 64, 64
+V1, V2, V3 = (32, 6), (6, 58), (58, 58)
+
+def sign(p1, p2, p3):
+    return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
+def in_triangle(pt):
+    d1, d2, d3 = sign(pt, V1, V2), sign(pt, V2, V3), sign(pt, V3, V1)
+    has_neg = d1 < 0 or d2 < 0 or d3 < 0
+    has_pos = d1 > 0 or d2 > 0 or d3 > 0
+    return not (has_neg and has_pos)
+
+raw = bytearray()
+for y in range(H):
+    raw.append(0)  # filter byte
+    for x in range(W):
+        raw += b'\x00\x00\xff' if in_triangle((x, y)) else b'\xff\xff\xff'
+
+ihdr = struct.pack('>IIBBBBB', W, H, 8, 2, 0, 0, 0)
+def chunk(t, d):
+    c = t + d
+    return struct.pack('>I', len(d)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', ihdr) + chunk(b'IDAT', zlib.compress(bytes(raw))) + chunk(b'IEND', b'')
+print(base64.b64encode(png).decode())
+PYEOF
+)
+
+  if [ -z "$SHAPE_IMG_B64" ]; then
+    echo "⚠ Skipping Test 3b: python3 unavailable for image generation"
+  else
+    RESPONSE=$(curl -sf --max-time 180 http://localhost:$PORT/v1/chat/completions \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
+        \"messages\": [{
+          \"role\": \"user\",
+          \"content\": [
+            {\"type\": \"image_url\", \"image_url\": {\"url\": \"data:image/png;base64,${SHAPE_IMG_B64}\"}},
+            {\"type\": \"text\", \"text\": \"What geometric shape is shown in this image? Reply with exactly one word: circle, square, or triangle.\"}
+          ]
+        }],
+        \"max_tokens\": 2048,
+        \"temperature\": 0
+      }") || _fail "Test 3b" "curl request failed (HTTP error or timeout)"
+    CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+    if [ -z "$CONTENT" ]; then
+      CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.reasoning_content // empty' 2>/dev/null)
+    fi
+    if [ -z "$CONTENT" ]; then
+      _fail "Test 3b" "empty or unparseable response: $RESPONSE"
+    fi
+    echo "Response: $CONTENT"
+    _assert_contains "Test 3b" "$CONTENT" "triangle"
+    echo ""
+  fi
 else
   echo "Test 3: Vision — skipped (no mmproj in $MODEL_FILE)"
+  echo "Test 3b: Vision — skipped (no mmproj in $MODEL_FILE)"
   echo ""
 fi
 
@@ -342,6 +409,12 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${TEST4_CONTAINER}$"; then
   docker stop "$TEST4_CONTAINER" >/dev/null 2>&1 || true
   docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1 || true
 fi
+
+# Stop the main container first — running two full copies of the model
+# concurrently can exceed GPU memory on a tier-matched card (e.g. a 12g-tier
+# model on a 12GB GPU has no headroom for a second instance).
+echo "Stopping main container to free GPU memory for the second instance..."
+docker stop "$CONTAINER_NAME" >/dev/null 2>&1
 
 docker run -d \
   --name "$TEST4_CONTAINER" \
@@ -360,21 +433,38 @@ while [ $ATTEMPT -lt $TEST4_MAX_ATTEMPTS ]; do
 done
 
 if [ $ATTEMPT -eq $TEST4_MAX_ATTEMPTS ]; then
+  echo "❌ Test 4: second container's own logs (tail 30):"
+  docker logs --tail 30 "$TEST4_CONTAINER" 2>&1
   docker stop "$TEST4_CONTAINER" >/dev/null 2>&1 || true
   docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1 || true
   _fail "Test 4" "server did not become ready"
 fi
 
-if docker logs "$TEST4_CONTAINER" 2>&1 | grep -qE 'n_ctx\s*=\s*512\b'; then
+if docker logs "$TEST4_CONTAINER" 2>&1 | grep -qE 'n_ctx(_slot)?\s*=\s*512\b'; then
   echo "✓ Test 4: n_ctx=512 found in startup logs — extra docker run args correctly override entrypoint defaults"
 else
-  FOUND=$(docker logs "$TEST4_CONTAINER" 2>&1 | grep -oE 'n_ctx\s*=\s*[0-9]+' | head -5 | tr '\n' ' ')
+  FOUND=$(docker logs "$TEST4_CONTAINER" 2>&1 | grep -oE 'n_ctx(_slot)?\s*=\s*[0-9]+' | head -5 | tr '\n' ' ')
   docker stop "$TEST4_CONTAINER" >/dev/null 2>&1
   docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1
   _fail "Test 4" "n_ctx=512 not found in server startup logs — extra args may not be passed through. n_ctx lines found: ${FOUND:-none}"
 fi
 docker stop "$TEST4_CONTAINER" >/dev/null 2>&1
 docker rm  "$TEST4_CONTAINER" >/dev/null 2>&1
+
+echo "Restarting main container..."
+docker start "$CONTAINER_NAME" >/dev/null 2>&1
+ATTEMPT=0
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  if curl -sf "http://localhost:$PORT/health" >/dev/null 2>&1; then
+    echo "✓ main container is ready again"
+    break
+  fi
+  ATTEMPT=$((ATTEMPT + 1))
+  sleep 5
+done
+if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+  _fail "Test 4" "main container did not become healthy again after restart"
+fi
 echo ""
 
 # Test 5: Audio transcription (only if model has whisper)

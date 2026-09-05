@@ -31,9 +31,9 @@ if [ ! -f "$MODEL_FILE" ]; then
   exit 1
 fi
 
-MODEL_NAME=$(yq '.name' "$MODEL_FILE")
-MODEL_TAG=$(yq '.tag' "$MODEL_FILE")
-VRAM_TIER=$(yq '.vram_tier' "$MODEL_FILE")
+MODEL_NAME=$(yq -r '.name' "$MODEL_FILE")
+MODEL_TAG=$(yq -r '.tag' "$MODEL_FILE")
+VRAM_TIER=$(yq -r '.vram_tier' "$MODEL_FILE")
 
 if [ -z "$MODEL_NAME" ] || [ "$MODEL_NAME" = "null" ]; then
   echo "❌ Error: Missing 'name' field in $MODEL_FILE"; exit 1

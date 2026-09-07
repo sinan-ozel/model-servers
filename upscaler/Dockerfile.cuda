@@ -23,8 +23,7 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 # ----------------------------------------------------
 # Bundled model weights (see scripts/download_upscaler_models.sh)
 # ----------------------------------------------------
-COPY model-cache/ /app/model-cache/
-RUN chmod -R a=rX /app/model-cache
+COPY --chmod=755 model-cache/ /app/model-cache/
 
 # ----------------------------------------------------
 # App code

@@ -12,6 +12,7 @@ import asyncio
 import base64
 import io
 import json
+import os
 import sys
 
 from mcp import ClientSession, StdioServerParameters
@@ -24,7 +25,12 @@ async def run(image_path: str, scale: int) -> int:
     input_width, input_height = Image.open(io.BytesIO(image_bytes)).size
     image_base64 = base64.b64encode(image_bytes).decode("ascii")
 
-    params = StdioServerParameters(command="python3", args=["-m", "src.mcp.server"])
+    # StdioServerParameters with no `env` does NOT inherit this process's
+    # environment -- see the longer note in txt2img/tests/mcp_client_test.py.
+    # Harmless for this pipeline today (MODEL_CACHE_DIR has a matching
+    # in-code default), but forwarding the real environment is the correct
+    # default regardless.
+    params = StdioServerParameters(command="python3", args=["-m", "src.mcp.server"], env=dict(os.environ))
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()

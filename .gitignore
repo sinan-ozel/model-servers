@@ -8,4 +8,7 @@ text2image/requirements.txt
 **/*.gguf
 .env
 upscaler/jobs
+txt2img/jobs
+txt2img/output
+3+3172
 **/__pycache__/

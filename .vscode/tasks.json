@@ -215,44 +215,6 @@
             "problemMatcher": [],
         },
         {
-            "label": "build_text2image_model_server",
-            "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/build_text2image_model_server.sh",
-                    "${input:modelFolder}"
-                ]
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "test_text2image_model_server_locally",
-            // "dependsOn": "build_text2image_model_server",
-            "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/test_text2image_model_server_locally.sh",
-                    "${input:modelFolder}"
-                ]
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "print_text2image_swagger",
-            "dependsOn": "test_text2image_model_server_locally",
-            "type": "shell",
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "./scripts/print_text2image_swagger.sh",
-                    "${input:modelFolder}"
-                ]
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "build_ollama_single_model_server",
             "type": "shell",
             "linux": {
@@ -648,6 +610,104 @@
                 "build_upscaler_model_server",
                 "test_upscaler_model_server",
                 "push_upscaler_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "download_zimage_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_zimage_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_txt2img_model_server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_txt2img_model_server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_txt2img_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_txt2img_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_txt2img_http",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_txt2img_http.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_txt2img_mcp",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_txt2img_mcp.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_txt2img_safety",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_txt2img_safety.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_txt2img_model_server",
+            "dependsOn": [
+                "test_txt2img_cli",
+                "test_txt2img_http",
+                "test_txt2img_mcp",
+                "test_txt2img_safety"
+            ],
+            "dependsOrder": "sequence",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_txt2img_model_server_to_dockerhub",
+            "dependsOn": [
+                "test_txt2img_model_server"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_txt2img_model_server_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "txt2img_full_pipeline",
+            "dependsOn": [
+                "download_zimage_models",
+                "build_txt2img_model_server",
+                "test_txt2img_model_server",
+                "push_txt2img_model_server_to_dockerhub"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []

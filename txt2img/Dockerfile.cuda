@@ -1,0 +1,62 @@
+FROM nvidia/cuda:12.9.2-base-ubuntu24.04
+
+# ----------------------------------------------------
+# System packages
+# ----------------------------------------------------
+RUN apt-get update --fix-missing && \
+    apt-get install --fix-missing -y --no-install-recommends \
+        curl \
+        python3.12 \
+        python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu 24.04's system Python is PEP 668 "externally managed" -- allow pip
+# to install into it (same as kubyterlab-img, the environment this stack
+# was proven against).
+RUN pip3 config set global.break-system-packages true
+
+# ----------------------------------------------------
+# Requirements
+# ----------------------------------------------------
+COPY requirements.txt /requirements.txt
+
+RUN pip3 install --no-cache-dir -r /requirements.txt
+
+# ----------------------------------------------------
+# Bundled model weights (see scripts/download_zimage_models.sh)
+# ----------------------------------------------------
+COPY --chmod=755 model-cache/ /app/model-cache/
+
+# ----------------------------------------------------
+# App code
+# ----------------------------------------------------
+COPY src/ /app/src/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /app/jobs
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENV MODEL_CACHE_DIR=/app/model-cache
+ENV JOB_OUTPUT_DIR=/app/jobs
+# HF_HOME must point at model-cache so huggingface_hub's normal cache
+# resolution (<HF_HOME>/hub/models--...) finds the bundled Tongyi-MAI
+# snapshot -- from_single_file() in lib/engine.py auto-fetches the
+# transformer's companion config.json through that same resolution path,
+# not through our explicit BASE_MODEL_DIR lookup.
+ENV HF_HOME=/app/model-cache
+# Force huggingface_hub/transformers to read only from the local cache above
+# and never attempt a network call (e.g. from_single_file()'s HEAD request
+# to fetch a base repo's config.json). Without this, a missing/incomplete
+# local file triggers slow DNS-retry loops instead of an immediate, clear
+# local-cache error.
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+EXPOSE 8080
+# start-period is generous: first request loads a 4-bit-quantized text
+# encoder plus a GGUF transformer, much slower than a single .pth file.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=300s --retries=3 \
+  CMD curl -f http://localhost:8080/status || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["serve"]

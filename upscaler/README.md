@@ -36,14 +36,14 @@ expected output is always 256x192.
 ```bash
 docker run --rm --gpus all \
   -v "$(pwd)/upscaler/tests/fixtures:/data" \
-  model-servers/upscaler:realesrgan-cuda \
+  sinanozel/upscaler:realesrgan-cuda \
   upscale --file /data/sample.png --scale 4 --output /data/sample.x4.png
 ```
 
 ## HTTP (async job)
 
 ```bash
-docker run -d --gpus all -p 8080:8080 model-servers/upscaler:realesrgan-cuda
+docker run -d --gpus all -p 8080:8080 sinanozel/upscaler:realesrgan-cuda
 
 # Submit
 curl -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" \

@@ -1,0 +1,313 @@
+openapi: 3.1.0
+info:
+  title: txt2img
+  description: 'Z-Image-Turbo text-to-image server (4-bit quantized text encoder +
+    GGUF transformer). Submit a prompt via POST /v1/generate, then poll GET /v1/generate/{job_id}
+    until the job completes, and fetch the result from GET /v1/generate/{job_id}/result.
+
+
+    Example (matches scripts/test_txt2img_http.sh):
+
+    ```bash
+
+    curl -X POST http://localhost:8080/v1/generate -H "Content-Type: application/json"
+    -d ''{"prompt": "three cute cats playing", "steps": 8}''
+
+    ```
+
+
+    Jobs are queued and run strictly one at a time (one GPU, one job in flight); GET
+    /v1/generate/{job_id} reports queue_position (0 = running).
+
+
+    Every generated image is checked by an NSFW safety filter (see txt2img/src/lib/safety.py)
+    before being stored; a flagged image fails the job with error_code=content_policy_violation,
+    and GET .../result returns 400 with that same code. Set SAFETY_CHECKER=disabled
+    to turn this off.
+
+
+    The same `generate_image` tool is also reachable as an MCP server over Streamable
+    HTTP at /mcp (see txt2img/src/mcp/server.py) -- it refuses instead of queueing
+    if a job is already in flight, and points the caller at this endpoint.'
+  version: 0.1.0
+paths:
+  /status:
+    get:
+      summary: Status
+      operationId: status_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              example:
+                model_loaded: true
+  /v1/generate:
+    post:
+      summary: Submit a prompt and start a generation job
+      description: 'Queues a generation job, returning a job_id to poll. Jobs always
+        run one at a time -- this never rejects for capacity, it just queues behind
+        whatever is already running. Example:
+
+
+        ```bash
+
+        curl -X POST http://localhost:8080/v1/generate -H "Content-Type: application/json"
+        -d ''{"prompt": "three cute cats playing", "steps": 8}''
+
+        ```'
+      operationId: create_generate_job_v1_generate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSubmittedResponse'
+              example:
+                job_id: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+                status: queued
+                queue_position: 0
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/generate/{job_id}:
+    get:
+      summary: Get generation job status/progress
+      operationId: get_generate_job_v1_generate__job_id__get
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+              example:
+                job_id: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+                status: completed
+                progress: 1.0
+        '404':
+          content:
+            application/json:
+              example:
+                detail: Job not found
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/generate/{job_id}/result:
+    get:
+      summary: Download the generated image once the job has completed
+      operationId: get_generate_job_result_v1_generate__job_id__result_get
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+            image/png: {}
+        '400':
+          content:
+            application/json:
+              example:
+                detail: Generated content was refused by the safety checker (label='nsfw',
+                  score=0.987). ...
+                code: content_policy_violation
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              example:
+                detail: Job not found
+          description: Not Found
+        '409':
+          content:
+            application/json:
+              example:
+                detail: Job is not completed yet (status=running)
+          description: Conflict
+        '422':
+          content:
+            application/json:
+              example:
+                detail: 'Job failed: <error message>'
+          description: Unprocessable Entity
+components:
+  schemas:
+    GenerateRequest:
+      properties:
+        prompt:
+          type: string
+          title: Prompt
+          example: three cute cats playing
+        negative_prompt:
+          type: string
+          title: Negative Prompt
+          default: ''
+          example: blurry, low detail
+        steps:
+          type: integer
+          title: Steps
+          description: Number of inference steps.
+          default: 8
+          example: 8
+        guidance_scale:
+          type: number
+          title: Guidance Scale
+          description: CFG scale. Z-Image-Turbo is CFG-free -- leave at 0.0 unless
+            you know what you're doing.
+          default: 0.0
+          example: 0.0
+        width:
+          type: integer
+          title: Width
+          default: 1024
+          example: 1024
+        height:
+          type: integer
+          title: Height
+          default: 1024
+          example: 1024
+        seed:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          title: Seed
+          description: Omit for a random seed.
+          example: 42
+      type: object
+      required:
+        - prompt
+      title: GenerateRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobStatus:
+      type: string
+      enum:
+        - queued
+        - running
+        - completed
+        - failed
+      title: JobStatus
+    JobStatusResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+          example: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          example: completed
+        progress:
+          type: number
+          title: Progress
+          example: 1.0
+        queue_position:
+          anyOf:
+            - type: integer
+            - type: 'null'
+          title: Queue Position
+          description: 0 = running; N = N jobs ahead; null once finished.
+        error:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Error
+        error_code:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Error Code
+          description: Machine-readable reason, e.g. 'content_policy_violation'.
+      type: object
+      required:
+        - job_id
+        - status
+        - progress
+      title: JobStatusResponse
+    JobSubmittedResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+          example: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          example: queued
+        queue_position:
+          type: integer
+          title: Queue Position
+          description: 0 = running next; N = N jobs ahead of it.
+          example: 0
+      type: object
+      required:
+        - job_id
+        - status
+        - queue_position
+      title: JobSubmittedResponse
+    StatusResponse:
+      properties:
+        model_loaded:
+          type: boolean
+          title: Model Loaded
+          example: true
+      type: object
+      required:
+        - model_loaded
+      title: StatusResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

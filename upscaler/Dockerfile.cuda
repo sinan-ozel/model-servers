@@ -1,0 +1,46 @@
+FROM nvidia/cuda:12.5.1-base-ubuntu22.04
+
+# ----------------------------------------------------
+# System packages
+# ----------------------------------------------------
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        python3 \
+        python3-pip \
+        libgl1 \
+        libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# ----------------------------------------------------
+# Requirements
+# ----------------------------------------------------
+COPY requirements.txt /requirements.txt
+
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir -r /requirements.txt
+
+# ----------------------------------------------------
+# Bundled model weights (see scripts/download_upscaler_models.sh)
+# ----------------------------------------------------
+COPY model-cache/ /app/model-cache/
+RUN chmod -R a=rX /app/model-cache
+
+# ----------------------------------------------------
+# App code
+# ----------------------------------------------------
+COPY src/ /app/src/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /app/jobs
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENV MODEL_CACHE_DIR=/app/model-cache
+ENV JOB_OUTPUT_DIR=/app/jobs
+
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/status || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["serve"]

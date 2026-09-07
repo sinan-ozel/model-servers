@@ -7,3 +7,5 @@ text2image/requirements.txt
 .iac
 **/*.gguf
 .env
+upscaler/jobs
+**/__pycache__/

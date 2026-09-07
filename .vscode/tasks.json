@@ -546,6 +546,93 @@
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []
+        },
+        {
+            "label": "download_upscaler_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_upscaler_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_upscaler_model_server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_upscaler_model_server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_upscaler_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_upscaler_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_upscaler_http",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_upscaler_http.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_upscaler_mcp",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_upscaler_mcp.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_upscaler_model_server",
+            "dependsOn": [
+                "test_upscaler_cli",
+                "test_upscaler_http",
+                "test_upscaler_mcp"
+            ],
+            "dependsOrder": "sequence",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_upscaler_model_server_to_dockerhub",
+            "dependsOn": [
+                "test_upscaler_model_server"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_upscaler_model_server_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "upscaler_full_pipeline",
+            "dependsOn": [
+                "download_upscaler_models",
+                "build_upscaler_model_server",
+                "test_upscaler_model_server",
+                "push_upscaler_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
         }
     ]
 }

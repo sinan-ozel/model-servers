@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.1.2+cu121
+torchvision==0.16.2+cu121
+numpy<2
+opencv-python-headless
+basicsr==1.4.2
+facexlib==0.3.0
+realesrgan==0.3.0
+Pillow
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17
+mcp==1.29.1

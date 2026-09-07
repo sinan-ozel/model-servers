@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  title: Upscaler
+  description: 'Real-ESRGAN image upscaling server. Submit an image via POST /v1/upscale,
+    then poll GET /v1/upscale/{job_id} until the job completes, and fetch the result
+    from GET /v1/upscale/{job_id}/result.
+
+
+    Example (matches tests/fixtures/sample.png used in scripts/test_upscaler_http.sh):
+
+    ```bash
+
+    curl -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" http://localhost:8080/v1/upscale
+
+    ```'
+  version: 0.1.0
+paths:
+  /status:
+    get:
+      summary: Status
+      operationId: status_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              example:
+                model_loaded: true
+  /v1/upscale:
+    post:
+      summary: Upload an image and start an upscale job
+      description: 'Uploads an image and starts an async upscale job, returning a
+        job_id to poll. Example:
+
+
+        ```bash
+
+        curl -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" http://localhost:8080/v1/upscale
+
+        ```'
+      operationId: create_upscale_job_v1_upscale_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_create_upscale_job_v1_upscale_post'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSubmittedResponse'
+              example:
+                job_id: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+                status: pending
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                detail: 'Unsupported scale: 3. Supported scales: [2, 4]'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/upscale/{job_id}:
+    get:
+      summary: Get upscale job status/progress
+      operationId: get_upscale_job_v1_upscale__job_id__get
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+              example:
+                job_id: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+                status: completed
+                progress: 1.0
+        '404':
+          content:
+            application/json:
+              example:
+                detail: Job not found
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/upscale/{job_id}/result:
+    get:
+      summary: Download the upscaled image once the job has completed
+      operationId: get_upscale_job_result_v1_upscale__job_id__result_get
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+            image/png: {}
+        '404':
+          content:
+            application/json:
+              example:
+                detail: Job not found
+          description: Not Found
+        '409':
+          content:
+            application/json:
+              example:
+                detail: Job is not completed yet (status=running)
+          description: Conflict
+        '422':
+          content:
+            application/json:
+              example:
+                detail: 'Job failed: <error message>'
+          description: Unprocessable Entity
+components:
+  schemas:
+    Body_create_upscale_job_v1_upscale_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Image to upscale (PNG or JPEG).
+        scale:
+          type: integer
+          title: Scale
+          description: Output scale factor.
+      type: object
+      required:
+        - file
+        - scale
+      title: Body_create_upscale_job_v1_upscale_post
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobStatus:
+      type: string
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+      title: JobStatus
+    JobStatusResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+          example: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          example: completed
+        progress:
+          type: number
+          title: Progress
+          example: 1.0
+        error:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Error
+      type: object
+      required:
+        - job_id
+        - status
+        - progress
+      title: JobStatusResponse
+    JobSubmittedResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+          example: 8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          example: pending
+      type: object
+      required:
+        - job_id
+        - status
+      title: JobSubmittedResponse
+    StatusResponse:
+      properties:
+        model_loaded:
+          type: boolean
+          title: Model Loaded
+          example: true
+      type: object
+      required:
+        - model_loaded
+      title: StatusResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

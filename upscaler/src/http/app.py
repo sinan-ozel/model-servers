@@ -6,7 +6,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from ..lib.engine import SUPPORTED_SCALES, UnsupportedScaleError
-from ..lib.jobs import JobStatus, get_job, submit_job
+from ..lib.jobs import JobStatus, get_job, get_queue_position, submit_job
 from ..mcp.server import mcp as mcp_server
 
 MODEL_READY = False
@@ -31,8 +31,13 @@ app = FastAPI(
         "curl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" "
         "http://localhost:8080/v1/upscale\n"
         "```\n\n"
+        "Jobs are queued and run strictly one at a time (one GPU, one job "
+        "in flight); GET /v1/upscale/{job_id} reports queue_position "
+        "(0 = running).\n\n"
         "The same `upscale_image` tool is also reachable as an MCP server "
-        "over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py)."
+        "over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py) -- it "
+        "refuses instead of queueing if a job is already in flight, and "
+        "points the caller at this endpoint."
     ),
     lifespan=lifespan,
 )
@@ -50,13 +55,17 @@ class StatusResponse(BaseModel):
 
 class JobSubmittedResponse(BaseModel):
     job_id: str = Field(..., example="8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18")
-    status: JobStatus = Field(..., example=JobStatus.PENDING)
+    status: JobStatus = Field(..., example=JobStatus.QUEUED)
+    queue_position: int = Field(..., example=0, description="0 = running next; N = N jobs ahead of it.")
 
 
 class JobStatusResponse(BaseModel):
     job_id: str = Field(..., example="8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18")
     status: JobStatus = Field(..., example=JobStatus.COMPLETED)
     progress: float = Field(..., example=1.0)
+    queue_position: Optional[int] = Field(
+        None, example=None, description="0 = running; N = N jobs ahead; null once finished."
+    )
     error: Optional[str] = Field(None, example=None)
 
 
@@ -79,8 +88,10 @@ async def status():
     status_code=202,
     summary="Upload an image and start an upscale job",
     description=(
-        "Uploads an image and starts an async upscale job, returning a job_id "
-        "to poll. Example:\n\n"
+        "Uploads an image and queues an upscale job, returning a job_id to "
+        "poll. Jobs always run one at a time -- this never rejects for "
+        "capacity, it just queues behind whatever is already running. "
+        "Example:\n\n"
         "```bash\n"
         "curl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" "
         "http://localhost:8080/v1/upscale\n"
@@ -92,7 +103,8 @@ async def status():
                 "application/json": {
                     "example": {
                         "job_id": "8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18",
-                        "status": "pending",
+                        "status": "queued",
+                        "queue_position": 0,
                     }
                 }
             }
@@ -112,7 +124,8 @@ async def create_upscale_job(
 
     image_bytes = await file.read()
     job = submit_job(image_bytes, scale)
-    return {"job_id": job.id, "status": job.status}
+    position = get_queue_position(job.id)
+    return {"job_id": job.id, "status": job.status, "queue_position": position if position is not None else 0}
 
 
 # ---------- Poll job status ----------
@@ -129,6 +142,7 @@ async def create_upscale_job(
                         "job_id": "8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18",
                         "status": "completed",
                         "progress": 1.0,
+                        "queue_position": None,
                         "error": None,
                     }
                 }
@@ -145,6 +159,7 @@ async def get_upscale_job(job_id: str):
         "job_id": job.id,
         "status": job.status,
         "progress": job.progress,
+        "queue_position": get_queue_position(job.id),
         "error": job.error,
     }
 

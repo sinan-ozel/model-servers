@@ -40,48 +40,76 @@ until curl -sf "http://localhost:${PORT}/status" | grep -q '"model_loaded":[ ]*t
 done
 echo "Server ready."
 
-echo "Submitting upscale job (scale=4)..."
-RESPONSE=$(curl -sf -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" "http://localhost:${PORT}/v1/upscale")
-echo "Response: $RESPONSE"
-JOB_ID=$(echo "$RESPONSE" | jq -r '.job_id')
+echo "Submitting two upscale jobs back to back (scale=4), to check queueing..."
+RESPONSE1=$(curl -sf -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" "http://localhost:${PORT}/v1/upscale")
+echo "Response 1: $RESPONSE1"
+JOB1_ID=$(echo "$RESPONSE1" | jq -r '.job_id')
 
-if [ -z "$JOB_ID" ] || [ "$JOB_ID" = "null" ]; then
+RESPONSE2=$(curl -sf -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" "http://localhost:${PORT}/v1/upscale")
+echo "Response 2: $RESPONSE2"
+JOB2_ID=$(echo "$RESPONSE2" | jq -r '.job_id')
+JOB2_QUEUE_POSITION=$(echo "$RESPONSE2" | jq -r '.queue_position')
+
+if [ -z "$JOB1_ID" ] || [ "$JOB1_ID" = "null" ] || [ -z "$JOB2_ID" ] || [ "$JOB2_ID" = "null" ]; then
   echo "❌ No job_id returned"
   exit 1
 fi
 
-echo "Polling job $JOB_ID..."
-MAX_WAIT=180
-WAITED=0
-while true; do
-  STATUS_RESPONSE=$(curl -sf "http://localhost:${PORT}/v1/upscale/${JOB_ID}")
-  STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status')
-  echo "  status=$STATUS progress=$(echo "$STATUS_RESPONSE" | jq -r '.progress')"
-  if [ "$STATUS" = "completed" ]; then
-    break
-  fi
-  if [ "$STATUS" = "failed" ]; then
-    echo "❌ Job failed: $STATUS_RESPONSE"
-    exit 1
-  fi
-  if [ "$WAITED" -ge "$MAX_WAIT" ]; then
-    echo "❌ Job did not complete within ${MAX_WAIT}s"
-    exit 1
-  fi
-  sleep 1
-  WAITED=$((WAITED+1))
-done
-
-OUT_FILE="$(mktemp --suffix=.png)"
-curl -sf "http://localhost:${PORT}/v1/upscale/${JOB_ID}/result" -o "$OUT_FILE"
-
-DIMS=$(file "$OUT_FILE" | grep -o '[0-9]\+ x [0-9]\+')
-rm -f "$OUT_FILE"
-echo "Output dimensions: $DIMS"
-
-if [ "$DIMS" != "256 x 192" ]; then
-  echo "❌ Expected 256 x 192 (4x of the 64x48 fixture), got: $DIMS"
+# Submission is synchronous (registers in the queue before responding), so
+# this is deterministic regardless of how fast the GPU processes job 1.
+if [ "$JOB2_QUEUE_POSITION" -lt 1 ]; then
+  echo "❌ Expected job 2 to be queued behind job 1 (queue_position >= 1), got: $JOB2_QUEUE_POSITION"
   exit 1
 fi
+echo "Job 2 correctly queued behind job 1 (queue_position=$JOB2_QUEUE_POSITION)."
 
-echo "✓ HTTP flow OK"
+wait_for_job() {
+  local job_id="$1"
+  local waited=0
+  local max_wait=180
+  while true; do
+    local status_response
+    status_response=$(curl -sf "http://localhost:${PORT}/v1/upscale/${job_id}")
+    local status
+    status=$(echo "$status_response" | jq -r '.status')
+    echo "  job=$job_id status=$status progress=$(echo "$status_response" | jq -r '.progress') queue_position=$(echo "$status_response" | jq -r '.queue_position')"
+    if [ "$status" = "completed" ]; then
+      return 0
+    fi
+    if [ "$status" = "failed" ]; then
+      echo "❌ Job $job_id failed: $status_response"
+      exit 1
+    fi
+    if [ "$waited" -ge "$max_wait" ]; then
+      echo "❌ Job $job_id did not complete within ${max_wait}s"
+      exit 1
+    fi
+    sleep 1
+    waited=$((waited+1))
+  done
+}
+
+check_result() {
+  local job_id="$1"
+  local out_file
+  out_file="$(mktemp --suffix=.png)"
+  curl -sf "http://localhost:${PORT}/v1/upscale/${job_id}/result" -o "$out_file"
+  local dims
+  dims=$(file "$out_file" | grep -o '[0-9]\+ x [0-9]\+')
+  rm -f "$out_file"
+  echo "Job $job_id output dimensions: $dims"
+  if [ "$dims" != "256 x 192" ]; then
+    echo "❌ Expected 256 x 192 (4x of the 64x48 fixture), got: $dims"
+    exit 1
+  fi
+}
+
+echo "Polling job 1..."
+wait_for_job "$JOB1_ID"
+check_result "$JOB1_ID"
+
+echo "Polling job 2 (should now run and complete in turn)..."
+wait_for_job "$JOB2_ID"
+check_result "$JOB2_ID"
+
+echo "✓ HTTP flow OK (including one-at-a-time job queue)"

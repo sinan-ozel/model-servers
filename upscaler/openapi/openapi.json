@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Upscaler",
-    "description": "Real-ESRGAN image upscaling server. Submit an image via POST /v1/upscale, then poll GET /v1/upscale/{job_id} until the job completes, and fetch the result from GET /v1/upscale/{job_id}/result.\n\nExample (matches tests/fixtures/sample.png used in scripts/test_upscaler_http.sh):\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```\n\nThe same `upscale_image` tool is also reachable as an MCP server over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py).",
+    "description": "Real-ESRGAN image upscaling server. Submit an image via POST /v1/upscale, then poll GET /v1/upscale/{job_id} until the job completes, and fetch the result from GET /v1/upscale/{job_id}/result.\n\nExample (matches tests/fixtures/sample.png used in scripts/test_upscaler_http.sh):\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```\n\nJobs are queued and run strictly one at a time (one GPU, one job in flight); GET /v1/upscale/{job_id} reports queue_position (0 = running).\n\nThe same `upscale_image` tool is also reachable as an MCP server over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py) -- it refuses instead of queueing if a job is already in flight, and points the caller at this endpoint.",
     "version": "0.1.0"
   },
   "paths": {
@@ -30,7 +30,7 @@
     "/v1/upscale": {
       "post": {
         "summary": "Upload an image and start an upscale job",
-        "description": "Uploads an image and starts an async upscale job, returning a job_id to poll. Example:\n\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```",
+        "description": "Uploads an image and queues an upscale job, returning a job_id to poll. Jobs always run one at a time -- this never rejects for capacity, it just queues behind whatever is already running. Example:\n\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```",
         "operationId": "create_upscale_job_v1_upscale_post",
         "requestBody": {
           "content": {
@@ -52,7 +52,8 @@
                 },
                 "example": {
                   "job_id": "8f14e45f-ceea-4e94-b4c3-8ddd9e2b0e18",
-                  "status": "pending"
+                  "status": "queued",
+                  "queue_position": 0
                 }
               }
             }
@@ -232,7 +233,7 @@
       "JobStatus": {
         "type": "string",
         "enum": [
-          "pending",
+          "queued",
           "running",
           "completed",
           "failed"
@@ -254,6 +255,18 @@
             "type": "number",
             "title": "Progress",
             "example": 1.0
+          },
+          "queue_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Position",
+            "description": "0 = running; N = N jobs ahead; null once finished."
           },
           "error": {
             "anyOf": [
@@ -284,13 +297,20 @@
           },
           "status": {
             "$ref": "#/components/schemas/JobStatus",
-            "example": "pending"
+            "example": "queued"
+          },
+          "queue_position": {
+            "type": "integer",
+            "title": "Queue Position",
+            "description": "0 = running next; N = N jobs ahead of it.",
+            "example": 0
           }
         },
         "type": "object",
         "required": [
           "job_id",
-          "status"
+          "status",
+          "queue_position"
         ],
         "title": "JobSubmittedResponse"
       },

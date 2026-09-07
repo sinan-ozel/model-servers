@@ -1,3 +1,4 @@
+[![Docker Pulls Upscaler](https://img.shields.io/docker/pulls/sinanozel/upscaler?label=docker%20pulls%20upscaler)](https://hub.docker.com/r/sinanozel/upscaler)
 # Upscaler
 
 A Real-ESRGAN image upscaling server, packaged as a single Docker image that

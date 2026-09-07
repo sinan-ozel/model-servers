@@ -5,7 +5,7 @@ set -e
 # Runs on GPU by default; set UPSCALER_DEVICE=cpu to force CPU (e.g. if the
 # GPU is busy or unavailable).
 
-IMAGE_NAME="model-servers/upscaler:upscaler-realesrgan"
+IMAGE_NAME="model-servers/upscaler:realesrgan-cuda"
 OUT_DIR="$(mktemp -d)"
 trap 'rm -rf "$OUT_DIR"' EXIT
 

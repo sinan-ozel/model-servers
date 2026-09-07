@@ -21,6 +21,9 @@ mcp = FastMCP(
         f"{sorted(SUPPORTED_SCALES)}. Provide the image as base64-encoded "
         "bytes (PNG or JPEG); the result is returned as base64-encoded PNG."
     ),
+    # Rooted at "/" so mounting this sub-app at /mcp in the HTTP server
+    # (see src/http/app.py) exposes it at exactly /mcp, not /mcp/mcp.
+    streamable_http_path="/",
 )
 
 

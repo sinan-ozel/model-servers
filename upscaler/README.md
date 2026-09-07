@@ -1,18 +1,20 @@
 # Upscaler
 
 A Real-ESRGAN image upscaling server, packaged as a single Docker image that
-can run three ways from the same underlying code (`src/lib/engine.py`):
+can be reached four ways from the same underlying code (`src/lib/engine.py`):
 
 - **CLI** — pass a file path and a scale factor.
 - **HTTP** — upload a file, get a job id back, poll it, then download the result.
-- **MCP tool** — pass a base64-encoded image and a scale factor, get a
-  base64-encoded result back synchronously.
+- **MCP tool over stdio** — pass a base64-encoded image and a scale factor,
+  get a base64-encoded result back synchronously.
+- **MCP tool over Streamable HTTP** — the same tool, reachable at `/mcp` on
+  the HTTP server, for remote MCP clients that don't spawn a subprocess.
 
 Supported scales: `2` and `4` (the two Real-ESRGAN weight variants bundled
 into the image).
 
-All three examples below use `upscaler/tests/fixtures/sample.png` (a 64x48
-test image) at `scale=4`, matching exactly what `scripts/test_upscaler_cli.sh`,
+All examples below use `upscaler/tests/fixtures/sample.png` (a 64x48 test
+image) at `scale=4`, matching exactly what `scripts/test_upscaler_cli.sh`,
 `scripts/test_upscaler_http.sh`, and `scripts/test_upscaler_mcp.sh` run —
 expected output is always 256x192.
 
@@ -28,14 +30,14 @@ expected output is always 256x192.
 ```bash
 docker run --rm --gpus all \
   -v "$(pwd)/upscaler/tests/fixtures:/data" \
-  model-servers/upscaler:upscaler-realesrgan \
+  model-servers/upscaler:realesrgan-cuda \
   upscale --file /data/sample.png --scale 4 --output /data/sample.x4.png
 ```
 
 ## HTTP (async job)
 
 ```bash
-docker run -d --gpus all -p 8080:8080 model-servers/upscaler:upscaler-realesrgan
+docker run -d --gpus all -p 8080:8080 model-servers/upscaler:realesrgan-cuda
 
 # Submit
 curl -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" \
@@ -70,6 +72,20 @@ working client):
 upscale_image(image_base64="<base64 of tests/fixtures/sample.png>", scale=4)
 # -> {"image_base64": "<base64 PNG>", "width": 256, "height": 192}
 ```
+
+## MCP (Streamable HTTP)
+
+The same tool is also reachable over HTTP on the HTTP server, at `/mcp`
+(no separate container/mode needed — it's mounted onto the same FastAPI app
+as the job API):
+
+```bash
+docker run -d --gpus all -p 8080:8080 model-servers/upscaler:realesrgan-cuda
+```
+
+Connect with any Streamable HTTP MCP client at `http://localhost:8080/mcp`
+and call `upscale_image` the same way as over stdio. See
+`upscaler/tests/mcp_http_client_test.py` for a full working client.
 
 ## Tests
 

@@ -3,7 +3,7 @@ set -e
 
 # Dumps the upscaler HTTP server's OpenAPI/Swagger docs to upscaler/openapi/.
 
-IMAGE_NAME="model-servers/upscaler:upscaler-realesrgan"
+IMAGE_NAME="model-servers/upscaler:realesrgan-cuda"
 CONTAINER_NAME="upscaler-openapi-dump"
 PORT=8091
 

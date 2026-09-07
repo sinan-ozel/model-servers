@@ -1,5 +1,6 @@
 [![Docker Pulls llama.cuda.6gb](https://img.shields.io/docker/pulls/sinanozel/llama.cuda.6gb?label=docker%20pulls%20llama.cpp%206GB)](https://hub.docker.com/r/sinanozel/llama.cuda.6gb)
 [![Docker Pulls llama.cuda](https://img.shields.io/docker/pulls/sinanozel/llama.cuda?label=docker%20pulls%20llama)](https://hub.docker.com/r/sinanozel/llama.cuda)
+[![Docker Pulls Upscaler](https://img.shields.io/docker/pulls/sinanozel/upscaler?label=docker%20pulls%20upscaler)](https://hub.docker.com/r/sinanozel/upscaler)
 <!-- [![Docker Pulls Ollama 0.20.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.20.2?label=docker%20pulls%200.20.2)](https://hub.docker.com/r/sinanozel/ollama.0.20.2) -->
 [![Docker Pulls Ollama 0.17.5](https://img.shields.io/docker/pulls/sinanozel/ollama.0.17.5?label=docker%20pulls%200.17.5)](https://hub.docker.com/r/sinanozel/ollama.0.17.5)
 [![Docker Pulls Ollama 0.15.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.15.2?label=docker%20pulls%200.15.2)](https://hub.docker.com/r/sinanozel/ollama.0.15.2)

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Upscaler",
-    "description": "Real-ESRGAN image upscaling server. Submit an image via POST /v1/upscale, then poll GET /v1/upscale/{job_id} until the job completes, and fetch the result from GET /v1/upscale/{job_id}/result.\n\nExample (matches tests/fixtures/sample.png used in scripts/test_upscaler_http.sh):\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```",
+    "description": "Real-ESRGAN image upscaling server. Submit an image via POST /v1/upscale, then poll GET /v1/upscale/{job_id} until the job completes, and fetch the result from GET /v1/upscale/{job_id}/result.\n\nExample (matches tests/fixtures/sample.png used in scripts/test_upscaler_http.sh):\n```bash\ncurl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" http://localhost:8080/v1/upscale\n```\n\nThe same `upscale_image` tool is also reachable as an MCP server over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py).",
     "version": "0.1.0"
   },
   "paths": {

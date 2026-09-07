@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-IMAGE_TAG="upscaler-realesrgan"
+IMAGE_TAG="realesrgan-cuda"
 LOCAL_IMAGE="model-servers/upscaler:${IMAGE_TAG}"
 REMOTE_IMAGE="${DOCKERHUB_NAMESPACE}/upscaler:${IMAGE_TAG}"
 

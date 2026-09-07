@@ -5,7 +5,7 @@ Run inside the upscaler image, which has `mcp` and Pillow installed
 
     docker run --rm --gpus all --entrypoint python3 \\
       -v $(pwd)/upscaler/tests:/tests \\
-      model-servers/upscaler:upscaler-realesrgan \\
+      model-servers/upscaler:realesrgan-cuda \\
       /tests/mcp_client_test.py /tests/fixtures/sample.png 4
 """
 import asyncio

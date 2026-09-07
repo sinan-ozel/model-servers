@@ -4,7 +4,7 @@ set -e
 # Usage: ./build_upscaler_model_server.sh
 # Builds the upscaler image with bundled Real-ESRGAN weights.
 
-IMAGE_TAG="upscaler-realesrgan"
+IMAGE_TAG="realesrgan-cuda"
 MODEL_CACHE_DIR="./upscaler/model-cache"
 
 for filename in RealESRGAN_x2plus.pth RealESRGAN_x4plus.pth; do

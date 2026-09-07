@@ -6,7 +6,7 @@ set -e
 # OpenAPI description. Runs on GPU by default; set UPSCALER_DEVICE=cpu to
 # force CPU (e.g. if the GPU is busy or unavailable).
 
-IMAGE_NAME="model-servers/upscaler:upscaler-realesrgan"
+IMAGE_NAME="model-servers/upscaler:realesrgan-cuda"
 CONTAINER_NAME="upscaler-server-test"
 PORT=8090
 

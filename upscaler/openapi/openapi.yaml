@@ -12,7 +12,11 @@ info:
 
     curl -F "file=@upscaler/tests/fixtures/sample.png" -F "scale=4" http://localhost:8080/v1/upscale
 
-    ```'
+    ```
+
+
+    The same `upscale_image` tool is also reachable as an MCP server over Streamable
+    HTTP at /mcp (see upscaler/src/mcp/server.py).'
   version: 0.1.0
 paths:
   /status:

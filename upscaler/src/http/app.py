@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -6,6 +7,18 @@ from pydantic import BaseModel, Field
 
 from ..lib.engine import SUPPORTED_SCALES, UnsupportedScaleError
 from ..lib.jobs import JobStatus, get_job, submit_job
+from ..mcp.server import mcp as mcp_server
+
+MODEL_READY = False
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    global MODEL_READY
+    MODEL_READY = True
+    async with mcp_server.session_manager.run():
+        yield
+
 
 app = FastAPI(
     title="Upscaler",
@@ -17,11 +30,16 @@ app = FastAPI(
         "```bash\n"
         "curl -F \"file=@upscaler/tests/fixtures/sample.png\" -F \"scale=4\" "
         "http://localhost:8080/v1/upscale\n"
-        "```"
+        "```\n\n"
+        "The same `upscale_image` tool is also reachable as an MCP server "
+        "over Streamable HTTP at /mcp (see upscaler/src/mcp/server.py)."
     ),
+    lifespan=lifespan,
 )
 
-MODEL_READY = False
+# Exposes the upscale_image MCP tool at exactly /mcp (see the
+# streamable_http_path="/" override in src/mcp/server.py).
+app.mount("/mcp", mcp_server.streamable_http_app())
 
 
 # ---------- Response Models ----------
@@ -40,14 +58,6 @@ class JobStatusResponse(BaseModel):
     status: JobStatus = Field(..., example=JobStatus.COMPLETED)
     progress: float = Field(..., example=1.0)
     error: Optional[str] = Field(None, example=None)
-
-
-# ---------- Startup ----------
-
-@app.on_event("startup")
-async def startup_event():
-    global MODEL_READY
-    MODEL_READY = True
 
 
 # ---------- Status ----------

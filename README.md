@@ -1,3 +1,4 @@
+[![Docker Pulls llama.cuda.12gb](https://img.shields.io/docker/pulls/sinanozel/llama.cuda.12gb?label=docker%20pulls%20llama.cpp%2012GB)](https://hub.docker.com/r/sinanozel/llama.cuda.12gb)
 [![Docker Pulls llama.cuda.6gb](https://img.shields.io/docker/pulls/sinanozel/llama.cuda.6gb?label=docker%20pulls%20llama.cpp%206GB)](https://hub.docker.com/r/sinanozel/llama.cuda.6gb)
 [![Docker Pulls llama.cuda](https://img.shields.io/docker/pulls/sinanozel/llama.cuda?label=docker%20pulls%20llama)](https://hub.docker.com/r/sinanozel/llama.cuda)
 [![Docker Pulls Upscaler](https://img.shields.io/docker/pulls/sinanozel/upscaler?label=docker%20pulls%20upscaler)](https://hub.docker.com/r/sinanozel/upscaler)

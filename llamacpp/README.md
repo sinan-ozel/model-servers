@@ -1,3 +1,6 @@
+[![Docker Pulls llama.cuda.12gb](https://img.shields.io/docker/pulls/sinanozel/llama.cuda.12gb?label=docker%20pulls%20llama.cpp%2012GB)](https://hub.docker.com/r/sinanozel/llama.cuda.12gb)
+[![Docker Pulls llama.cuda.6gb](https://img.shields.io/docker/pulls/sinanozel/llama.cuda.6gb?label=docker%20pulls%20llama.cpp%206GB)](https://hub.docker.com/r/sinanozel/llama.cuda.6gb)
+
 # llama.cpp Model Server
 
 This directory contains the Dockerfile and resources for building llama.cpp-based model servers with pre-loaded GGUF models.

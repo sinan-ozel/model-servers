@@ -615,6 +615,93 @@
             "problemMatcher": []
         },
         {
+            "label": "download_face_detector_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_face_detector_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_face_detector_model_server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_face_detector_model_server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_face_detector_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_face_detector_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_face_detector_http",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_face_detector_http.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_face_detector_mcp",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_face_detector_mcp.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_face_detector_model_server",
+            "dependsOn": [
+                "test_face_detector_cli",
+                "test_face_detector_http",
+                "test_face_detector_mcp"
+            ],
+            "dependsOrder": "sequence",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_face_detector_model_server_to_dockerhub",
+            "dependsOn": [
+                "test_face_detector_model_server"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_face_detector_model_server_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "face_detector_full_pipeline",
+            "dependsOn": [
+                "download_face_detector_models",
+                "build_face_detector_model_server",
+                "test_face_detector_model_server",
+                "push_face_detector_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
             "label": "download_zimage_models",
             "type": "shell",
             "command": "bash",

@@ -1,0 +1,235 @@
+openapi: 3.1.0
+info:
+  title: Face Detector
+  description: 'YuNet face detection server. Submit an image via POST /v1/detect and
+    get back, in one synchronous response, every detected face''s bounding box, landmarks,
+    score, and a ready-made cropped thumbnail -- no job queue, this runs in single-digit
+    milliseconds on CPU.
+
+
+    Example (matches tests/fixtures/faces.png used in scripts/test_face_detector_http.sh):
+
+    ```bash
+
+    curl -F "file=@face-detector/tests/fixtures/faces.png" http://localhost:8080/v1/detect
+
+    ```
+
+
+    The same `detect_faces` tool is also reachable as an MCP server over Streamable
+    HTTP at /mcp (see face-detector/src/mcp/server.py).'
+  version: 0.1.0
+paths:
+  /status:
+    get:
+      summary: Status
+      operationId: status_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+              example:
+                model_loaded: true
+  /v1/detect:
+    post:
+      summary: Detect faces and return cropped thumbnails, synchronously
+      description: 'Uploads an image and returns, in one response, every detected
+        face: bbox + landmarks in original-image pixel coordinates, a confidence score,
+        and a thumbnail_size x thumbnail_size PNG thumbnail cropped (with `margin`
+        padding around the bbox) and resized from the original. No job queue -- this
+        always runs inline and returns the full result directly.
+
+
+        ```bash
+
+        curl -F "file=@face-detector/tests/fixtures/faces.png" -F "thumbnail_size=256"
+        -F "margin=0.3" http://localhost:8080/v1/detect
+
+        ```'
+      operationId: create_detection_v1_detect_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_create_detection_v1_detect_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                detail: margin must be between 0.0 and 2.0, got 5.0
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Body_create_detection_v1_detect_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Image to scan for faces (PNG or JPEG).
+        thumbnail_size:
+          type: integer
+          title: Thumbnail Size
+          description: Output thumbnail width/height in pixels.
+          default: 256
+        margin:
+          type: number
+          title: Margin
+          description: Fractional padding around each bbox before cropping (0.0 =
+            exact bbox).
+          default: 0.3
+        score_threshold:
+          type: number
+          title: Score Threshold
+          description: Passed to cv2.FaceDetectorYN.create.
+          default: 0.9
+        nms_threshold:
+          type: number
+          title: Nms Threshold
+          description: Passed to cv2.FaceDetectorYN.create.
+          default: 0.3
+      type: object
+      required:
+        - file
+      title: Body_create_detection_v1_detect_post
+    DetectResponse:
+      properties:
+        width:
+          type: integer
+          title: Width
+          example: 640
+        height:
+          type: integer
+          title: Height
+          example: 480
+        faces:
+          items:
+            $ref: '#/components/schemas/Face'
+          type: array
+          title: Faces
+      type: object
+      required:
+        - width
+        - height
+        - faces
+      title: DetectResponse
+    Face:
+      properties:
+        bbox:
+          items:
+            type: integer
+          type: array
+          title: Bbox
+          example:
+            - 120
+            - 45
+            - 80
+            - 80
+        score:
+          type: number
+          title: Score
+          example: 0.98
+        landmarks:
+          $ref: '#/components/schemas/Landmarks'
+        thumbnail_base64:
+          type: string
+          title: Thumbnail Base64
+      type: object
+      required:
+        - bbox
+        - score
+        - landmarks
+        - thumbnail_base64
+      title: Face
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Landmarks:
+      properties:
+        right_eye:
+          items:
+            type: integer
+          type: array
+          title: Right Eye
+        left_eye:
+          items:
+            type: integer
+          type: array
+          title: Left Eye
+        nose_tip:
+          items:
+            type: integer
+          type: array
+          title: Nose Tip
+        mouth_right:
+          items:
+            type: integer
+          type: array
+          title: Mouth Right
+        mouth_left:
+          items:
+            type: integer
+          type: array
+          title: Mouth Left
+      type: object
+      required:
+        - right_eye
+        - left_eye
+        - nose_tip
+        - mouth_right
+        - mouth_left
+      title: Landmarks
+    StatusResponse:
+      properties:
+        model_loaded:
+          type: boolean
+          title: Model Loaded
+          example: true
+      type: object
+      required:
+        - model_loaded
+      title: StatusResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError

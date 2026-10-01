@@ -2,9 +2,21 @@
 name: qwen3-coder
 tag: 30b
 model_type: instruct
+# Hybrid tier: 128 experts, 8 active (~3B params/token), 48 hidden layers (confirmed
+# via Qwen/Qwen3-Coder-30B-A3B-Instruct config.json). --n-cpu-moe offloads MoE expert
+# tensors to CPU RAM, leaving only attention/shared tensors + KV cache on GPU — comfortably
+# under a 12GB budget even with whisper (~0.5GiB) also resident. GPU residual is a
+# first-cut estimate (unconfirmed on real hardware, same caveat as qwen3.5_35b/qwen3.6_35b-a3b).
+# min/recommended below are system RAM for the CPU-resident experts.
+vram_tier: 12g-ram28g
 memory:
   model_size: 19GiB
-  min: 24GiB
-  recommended: 32GiB
+  min: 28GiB
+  recommended: 40GiB
 license: apache-2.0
 max_context_window: 262144
+gguf:
+  url: https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/main/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
+  filename: Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
+  file_size: 17.3GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 48 -c 32768"

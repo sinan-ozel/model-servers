@@ -30,46 +30,67 @@ if [ ! -f "$MODEL_FILE" ]; then
   exit 1
 fi
 
-# Download a file from a URL, with optional HF_TOKEN auth
+# Local mirror of previously-downloaded GGUFs — checked before hitting the network.
+BACKUP_DIR="/mnt/hdd4tb/Backup/hf/llamacpp"
+
+# Copy a file from the local backup mirror if present there, else download it.
+# Usage: _fetch_file <url> <output_path> <filename>
+_fetch_file() {
+  local url="$1"
+  local output_path="$2"
+  local filename="$3"
+  local backup_path="$BACKUP_DIR/$filename"
+
+  if [ -f "$backup_path" ]; then
+    echo "✓ Found in local backup: $backup_path"
+    echo "  Copying to $output_path ..."
+    cp "$backup_path" "$output_path"
+  else
+    _download_file "$url" "$output_path"
+  fi
+}
+
+# Download a file from a URL, with optional HF_TOKEN auth.
+# HF's xet CDN redirects to a time-limited presigned URL; on a dropped connection,
+# wget's own --tries retries that same presigned URL and gets a permanent 403 once
+# it expires. So we retry at the process level instead — each attempt is a fresh
+# wget invocation against the original $url, which re-resolves a new presigned
+# redirect, while -c resumes the partial file already on disk.
 # Usage: _download_file <url> <output_path>
 _download_file() {
   local url="$1"
   local output_path="$2"
+  local max_attempts=8
+  local attempt=1
 
+  local auth_args=()
   if [ -n "$HF_TOKEN" ]; then
     echo "Using HuggingFace authentication token"
-    if ! wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" -O "$output_path" "$url"; then
-      echo ""
-      echo "❌ Download failed!"
-      if [ -f "$output_path" ]; then
-        echo "   Error response:"
-        head -3 "$output_path"
-      fi
-      rm -f "$output_path"
-      echo ""
-      echo "💡 If this is a gated model, you may need to:"
-      echo "   1. Accept the model's license on HuggingFace"
-      echo "   2. Create a token at https://huggingface.co/settings/tokens"
-      echo "   3. Export it: export HF_TOKEN=your_token_here"
-      exit 1
-    fi
-  else
-    if ! wget --progress=bar:force:noscroll -O "$output_path" "$url"; then
-      echo ""
-      echo "❌ Download failed!"
-      if [ -f "$output_path" ]; then
-        echo "   Error response:"
-        head -3 "$output_path"
-      fi
-      rm -f "$output_path"
-      echo ""
-      echo "💡 If this is a gated model, you may need to:"
-      echo "   1. Accept the model's license on HuggingFace"
-      echo "   2. Create a token at https://huggingface.co/settings/tokens"
-      echo "   3. Export it: export HF_TOKEN=your_token_here"
-      exit 1
-    fi
+    auth_args=(--header="Authorization: Bearer $HF_TOKEN")
   fi
+
+  while [ $attempt -le $max_attempts ]; do
+    if wget -c --tries=1 --timeout=60 --progress=bar:force:noscroll "${auth_args[@]}" -O "$output_path" "$url"; then
+      return 0
+    fi
+    echo "⚠ Download attempt $attempt/$max_attempts failed — retrying with a freshly-resolved URL..."
+    attempt=$((attempt + 1))
+    sleep 5
+  done
+
+  echo ""
+  echo "❌ Download failed after $max_attempts attempts!"
+  if [ -f "$output_path" ]; then
+    echo "   Error response:"
+    head -3 "$output_path"
+  fi
+  rm -f "$output_path"
+  echo ""
+  echo "💡 If this is a gated model, you may need to:"
+  echo "   1. Accept the model's license on HuggingFace"
+  echo "   2. Create a token at https://huggingface.co/settings/tokens"
+  echo "   3. Export it: export HF_TOKEN=your_token_here"
+  exit 1
 }
 
 # Extract values using yq
@@ -106,20 +127,21 @@ if [ -f "$OUTPUT_PATH" ]; then
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Skipping download."
   else
-    echo "Re-downloading model..."
-    _download_file "$GGUF_URL" "$OUTPUT_PATH"
+    echo "Re-fetching model..."
+    _fetch_file "$GGUF_URL" "$OUTPUT_PATH" "$GGUF_FILENAME"
   fi
 else
-  echo "=== Downloading GGUF Model ==="
+  echo "=== Fetching GGUF Model ==="
   echo "Model file: $MODEL_FILE"
   echo "URL: $GGUF_URL"
+  echo "Local backup: $BACKUP_DIR/$GGUF_FILENAME"
   echo "Output: $OUTPUT_PATH"
   if [ -n "$EXPECTED_SIZE_MB" ]; then
     echo "Expected size: ~${EXPECTED_SIZE_MB}MB"
   fi
   echo ""
 
-  _download_file "$GGUF_URL" "$OUTPUT_PATH"
+  _fetch_file "$GGUF_URL" "$OUTPUT_PATH" "$GGUF_FILENAME"
 fi
 
 # Get actual file size in bytes
@@ -161,8 +183,9 @@ if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ] && [ -n "$MMPROJ_FILENAME
   MMPROJ_OUTPUT_PATH="$CACHE_DIR/$MMPROJ_FILENAME"
 
   echo ""
-  echo "=== Downloading mmproj (multimodal projector) ==="
+  echo "=== Fetching mmproj (multimodal projector) ==="
   echo "URL: $MMPROJ_URL"
+  echo "Local backup: $BACKUP_DIR/$MMPROJ_FILENAME"
   echo "Output: $MMPROJ_OUTPUT_PATH"
 
   if [ -f "$MMPROJ_OUTPUT_PATH" ]; then
@@ -173,10 +196,10 @@ if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ] && [ -n "$MMPROJ_FILENAME
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
       echo "Skipping mmproj download."
     else
-      _download_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH"
+      _fetch_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH" "$MMPROJ_FILENAME"
     fi
   else
-    _download_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH"
+    _fetch_file "$MMPROJ_URL" "$MMPROJ_OUTPUT_PATH" "$MMPROJ_FILENAME"
   fi
 
   echo "✓ mmproj saved to: $MMPROJ_OUTPUT_PATH"

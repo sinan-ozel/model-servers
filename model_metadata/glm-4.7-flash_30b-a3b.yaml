@@ -2,9 +2,22 @@
 name: glm-4.7-flash
 tag: q4_K_M
 model_type: instruct
+# Hybrid tier: 64 experts, 4 active (~3B params/token), 47 hidden layers (1 dense +
+# 46 MoE, confirmed via zai-org/GLM-4.7-Flash config.json). --n-cpu-moe offloads MoE
+# expert tensors to CPU RAM, leaving only attention/shared tensors + KV cache on GPU —
+# comfortably under a 12GB budget even with whisper (~0.5GiB) also resident. GPU
+# residual is a first-cut estimate (unconfirmed on real hardware, same caveat as
+# qwen3.5_35b/qwen3.6_35b-a3b).
+# min/recommended below are system RAM for the CPU-resident experts.
+vram_tier: 12g-ram28g
 memory:
   model_size: 19GB
-  min: 24GiB
-  recommended: 32GiB
+  min: 28GiB
+  recommended: 40GiB
 license: MIT License
 max_context_window: 128k
+gguf:
+  url: https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF/resolve/main/GLM-4.7-Flash-Q4_K_M.gguf
+  filename: GLM-4.7-Flash-Q4_K_M.gguf
+  file_size: 17.1GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 47 -c 32768"

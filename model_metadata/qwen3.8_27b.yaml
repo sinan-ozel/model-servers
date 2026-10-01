@@ -3,12 +3,13 @@ tag: 27b
 model_type: instruct
 vram_tier: 24g
 memory:
-  model_size: 17.1GiB
+  model_size: 15.3GiB
   min: 20GiB
   recommended: 24GiB
 license: Apache 2.0
 max_context_window: 256k
 gguf:
-  url: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-Q4_K_M.gguf
-  filename: Qwen3.8-27B-Q4_K_M.gguf
-  file_size: 17.1GiB
+  # Actual repo file is "-UD-Q4_K_M", not "-Q4_K_M" (verified against HF file listing).
+  url: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-UD-Q4_K_M.gguf
+  filename: Qwen3.8-27B-UD-Q4_K_M.gguf
+  file_size: 15.3GiB

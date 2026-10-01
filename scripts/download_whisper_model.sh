@@ -45,35 +45,41 @@ CACHE_DIR="./llamacpp/model-cache"
 mkdir -p "$CACHE_DIR"
 OUTPUT_PATH="$CACHE_DIR/$WHISPER_FILENAME"
 
-# Download a file from a URL, with optional HF_TOKEN auth
+# Download a file from a URL, with optional HF_TOKEN auth.
+# HF's xet CDN redirects to a time-limited presigned URL; on a dropped connection,
+# wget's own --tries retries that same presigned URL and gets a permanent 403 once
+# it expires. So we retry at the process level instead — each attempt is a fresh
+# wget invocation against the original $url, which re-resolves a new presigned
+# redirect, while -c resumes the partial file already on disk.
 _download_file() {
   local url="$1"
   local output_path="$2"
+  local max_attempts=8
+  local attempt=1
 
+  local auth_args=()
   if [ -n "$HF_TOKEN" ]; then
     echo "Using HuggingFace authentication token"
-    if ! wget --progress=bar:force:noscroll --header="Authorization: Bearer $HF_TOKEN" -O "$output_path" "$url"; then
-      echo ""
-      echo "❌ Download failed!"
-      if [ -f "$output_path" ]; then
-        echo "   Error response:"
-        head -3 "$output_path"
-      fi
-      rm -f "$output_path"
-      exit 1
-    fi
-  else
-    if ! wget --progress=bar:force:noscroll -O "$output_path" "$url"; then
-      echo ""
-      echo "❌ Download failed!"
-      if [ -f "$output_path" ]; then
-        echo "   Error response:"
-        head -3 "$output_path"
-      fi
-      rm -f "$output_path"
-      exit 1
-    fi
+    auth_args=(--header="Authorization: Bearer $HF_TOKEN")
   fi
+
+  while [ $attempt -le $max_attempts ]; do
+    if wget -c --tries=1 --timeout=60 --progress=bar:force:noscroll "${auth_args[@]}" -O "$output_path" "$url"; then
+      return 0
+    fi
+    echo "⚠ Download attempt $attempt/$max_attempts failed — retrying with a freshly-resolved URL..."
+    attempt=$((attempt + 1))
+    sleep 5
+  done
+
+  echo ""
+  echo "❌ Download failed after $max_attempts attempts!"
+  if [ -f "$output_path" ]; then
+    echo "   Error response:"
+    head -3 "$output_path"
+  fi
+  rm -f "$output_path"
+  exit 1
 }
 
 # Check if whisper model already exists

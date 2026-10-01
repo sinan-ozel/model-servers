@@ -3,16 +3,20 @@ tag: 31b
 model_type: instruct
 vram_tier: 24g
 memory:
-  model_size: 20GiB
+  model_size: 16.8GiB
   min: 24GiB
   recommended: 48GiB
 license: Gemma Terms of Use
 max_context_window: 256k
 gguf:
-  url: https://huggingface.co/ggml-org/gemma-4-31B-it-GGUF/resolve/main/gemma-4-31B-it-Q4_K_M.gguf
-  filename: gemma-4-31B-it-Q4_K_M.gguf
-  file_size: 18.7GiB
+  # This repo ships no K-quants — only BF16/Q4_0/Q8_0 (verified against HF file
+  # listing). Q4_0 is the closest 4-bit option to the originally intended Q4_K_M;
+  # it's a legacy uniform quant so quality may be a notch below a true K-quant.
+  # mmproj filename is "BF16", not "f16".
+  url: https://huggingface.co/ggml-org/gemma-4-31B-it-GGUF/resolve/main/gemma-4-31B-it-Q4_0.gguf
+  filename: gemma-4-31B-it-Q4_0.gguf
+  file_size: 16.8GiB
   mmproj:
-    url: https://huggingface.co/ggml-org/gemma-4-31B-it-GGUF/resolve/main/mmproj-gemma-4-31B-it-f16.gguf
-    filename: mmproj-gemma-4-31B-it-f16.gguf
-    file_size: 1.2GiB
+    url: https://huggingface.co/ggml-org/gemma-4-31B-it-GGUF/resolve/main/mmproj-gemma-4-31B-it-BF16.gguf
+    filename: mmproj-gemma-4-31B-it-BF16.gguf
+    file_size: 1.12GiB

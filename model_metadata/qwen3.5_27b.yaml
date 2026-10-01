@@ -3,16 +3,18 @@ tag: 27b
 model_type: instruct
 vram_tier: 24g
 memory:
-  model_size: 16GiB
+  model_size: 15.6GiB
   min: 24GiB
   recommended: 32GiB
 license: Apache 2.0
 max_context_window: 256k
 gguf:
-  url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.Q4_K_H.gguf
-  filename: Qwen3.5-27B.Q4_K_H.gguf
-  file_size: 16GiB
+  # Actual repo file is "Q4_E_H" (not "Q4_K_H") and mmproj has no ".BF16" in its
+  # name (verified against HF file listing).
+  url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.Q4_E_H.gguf
+  filename: Qwen3.5-27B.Q4_E_H.gguf
+  file_size: 15.6GiB
   mmproj:
-    url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.mmproj.BF16.gguf
-    filename: Qwen3.5-27B.mmproj.BF16.gguf
-    file_size: 931MiB
+    url: https://huggingface.co/steampunque/Qwen3.5-27B-MP-GGUF/resolve/main/Qwen3.5-27B.mmproj.gguf
+    filename: Qwen3.5-27B.mmproj.gguf
+    file_size: 885MiB

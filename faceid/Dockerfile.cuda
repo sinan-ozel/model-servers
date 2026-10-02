@@ -1,0 +1,55 @@
+FROM nvidia/cuda:12.9.2-base-ubuntu24.04
+
+# ----------------------------------------------------
+# System packages
+# ----------------------------------------------------
+RUN apt-get update --fix-missing && \
+    apt-get install --fix-missing -y --no-install-recommends \
+        curl \
+        python3.12 \
+        python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu 24.04's system Python is PEP 668 "externally managed" -- allow pip
+# to install into it (same as txt2img).
+RUN pip3 config set global.break-system-packages true
+
+# ----------------------------------------------------
+# Requirements
+# ----------------------------------------------------
+COPY requirements.txt /requirements.txt
+
+RUN pip3 install --no-cache-dir -r /requirements.txt
+
+# ----------------------------------------------------
+# Bundled model weights (see scripts/download_photomaker_models.sh)
+# ----------------------------------------------------
+COPY --chmod=755 model-cache/ /app/model-cache/
+
+# ----------------------------------------------------
+# App code
+# ----------------------------------------------------
+COPY src/ /app/src/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && mkdir -p /app/jobs
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENV MODEL_CACHE_DIR=/app/model-cache
+ENV JOB_OUTPUT_DIR=/app/jobs
+# HF_HOME must point at model-cache so huggingface_hub's normal cache
+# resolution (<HF_HOME>/hub/models--...) finds the bundled SDXL base
+# snapshot and Falconsai safety-checker snapshot.
+ENV HF_HOME=/app/model-cache
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+EXPOSE 8080
+# Generous start-period: first request loads dual SDXL text encoders, a
+# GGUF-quantized UNet, PhotoMaker's CLIP ID encoder, and fuses a LoRA --
+# heavier cold start than txt2img's Z-Image-Turbo.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=420s --retries=3 \
+  CMD curl -f http://localhost:8080/status || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["serve"]

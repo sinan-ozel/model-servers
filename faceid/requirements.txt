@@ -1,0 +1,20 @@
+torch==2.10.0
+torchvision==0.25.0
+numpy==2.5.2
+diffusers==0.38.0
+accelerate==1.10.1
+safetensors==0.8.0rc0
+transformers==4.57.1
+bitsandbytes==0.50.2
+peft==0.18.0
+einops==0.8.1
+Pillow
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17
+mcp==1.29.1
+# insightface, onnxruntime, opencv-python, gdown are intentionally NOT
+# listed here even though they appear in PhotoMaker's own upstream
+# requirements.txt -- this pipeline vendors only PhotoMaker V1's code path
+# (src/lib/vendor/photomaker/), which never imports insightface. See
+# src/lib/vendor/photomaker/NOTICE.md.

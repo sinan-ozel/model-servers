@@ -702,6 +702,104 @@
             "problemMatcher": []
         },
         {
+            "label": "download_photomaker_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_photomaker_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_faceid_model_server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_faceid_model_server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_faceid_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_faceid_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_faceid_http",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_faceid_http.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_faceid_mcp",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_faceid_mcp.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_faceid_safety",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_faceid_safety.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_faceid_model_server",
+            "dependsOn": [
+                "test_faceid_cli",
+                "test_faceid_http",
+                "test_faceid_mcp",
+                "test_faceid_safety"
+            ],
+            "dependsOrder": "sequence",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_faceid_model_server_to_dockerhub",
+            "dependsOn": [
+                "test_faceid_model_server"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_faceid_model_server_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "faceid_full_pipeline",
+            "dependsOn": [
+                "download_photomaker_models",
+                "build_faceid_model_server",
+                "test_faceid_model_server",
+                "push_faceid_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
             "label": "download_zimage_models",
             "type": "shell",
             "command": "bash",

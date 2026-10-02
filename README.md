@@ -3,6 +3,7 @@
 [![Docker Pulls llama.cuda](https://img.shields.io/docker/pulls/sinanozel/llama.cuda?label=docker%20pulls%20llama)](https://hub.docker.com/r/sinanozel/llama.cuda)
 [![Docker Pulls Upscaler](https://img.shields.io/docker/pulls/sinanozel/upscaler?label=docker%20pulls%20upscaler)](https://hub.docker.com/r/sinanozel/upscaler)
 [![Docker Pulls Face Detector](https://img.shields.io/docker/pulls/sinanozel/face-detector?label=docker%20pulls%20face-detector)](https://hub.docker.com/r/sinanozel/face-detector)
+[![Docker Pulls faceid](https://img.shields.io/docker/pulls/sinanozel/faceid?label=docker%20pulls%20faceid)](https://hub.docker.com/r/sinanozel/faceid)
 <!-- [![Docker Pulls Ollama 0.20.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.20.2?label=docker%20pulls%200.20.2)](https://hub.docker.com/r/sinanozel/ollama.0.20.2) -->
 [![Docker Pulls Ollama 0.17.5](https://img.shields.io/docker/pulls/sinanozel/ollama.0.17.5?label=docker%20pulls%200.17.5)](https://hub.docker.com/r/sinanozel/ollama.0.17.5)
 [![Docker Pulls Ollama 0.15.2](https://img.shields.io/docker/pulls/sinanozel/ollama.0.15.2?label=docker%20pulls%200.15.2)](https://hub.docker.com/r/sinanozel/ollama.0.15.2)

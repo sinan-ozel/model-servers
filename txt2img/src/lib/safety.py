@@ -68,9 +68,18 @@ def _get_classifier():
     global _classifier
     with _classifier_lock:
         if _classifier is None:
+            # Quiets two purely cosmetic logs that otherwise print on every
+            # cold start: "Using a slow image processor as `use_fast` is
+            # unset..." and "Device set to use cpu" -- neither indicates a
+            # problem (this classifier is deliberately CPU-only, and the
+            # slow processor is the correct, unchanged choice), just noisy
+            # at the default verbosity.
+            from transformers.utils import logging as hf_logging
+            hf_logging.set_verbosity_error()
+
             from transformers import pipeline as hf_pipeline
 
-            _classifier = hf_pipeline("image-classification", model=MODEL_ID, device="cpu")
+            _classifier = hf_pipeline("image-classification", model=MODEL_ID, device="cpu", use_fast=False)
         return _classifier
 
 

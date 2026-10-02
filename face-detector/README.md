@@ -47,7 +47,29 @@ docker run --rm \
   -v "$(pwd)/face-detector/tests/fixtures:/data" \
   sinanozel/face-detector:yunet-cpu \
   detect --file /data/faces.png --output-dir /data/out --score-threshold 0.5
-# -> /data/out/face_0.png, /data/out/detections.json
+# -> /data/out/faces_face_0.png, /data/out/detections.json
+```
+
+Thumbnails are named `<input-filename-stem>_face_N.png` (not `face_N.png`)
+so re-running against the same `--output-dir`, or processing several
+photos in one invocation, never overwrites a previous photo's thumbnails.
+
+`--file` is repeatable and accepts a quoted glob pattern to process every
+matching photo in one invocation:
+
+```bash
+docker run --rm \
+  -v "$(pwd)/face-detector/tests/fixtures:/data" \
+  sinanozel/face-detector:yunet-cpu \
+  detect --file '/data/*.png' --output-dir /data/out --score-threshold 0.5
+```
+
+`detections.json` groups faces per source file:
+
+```json
+{"files": [{"source": "faces.png", "width": 768, "height": 768,
+            "faces": [{"bbox": [...], "score": 0.89, "landmarks": {...},
+                       "thumbnail": "faces_face_0.png"}]}]}
 ```
 
 ## HTTP (synchronous)

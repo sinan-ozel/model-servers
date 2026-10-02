@@ -1,11 +1,11 @@
 name: cerberus
 tag: 4b
 model_type: instruct
-vram_tier: 6g
+vram_tier: 12g
 memory:
   model_size: 2.52GiB
-  min: 6GiB
-  recommended: 8GiB
+  min: 8GiB
+  recommended: 12GiB
 license: Apache 2.0
 max_context_window: 4k
 gguf:

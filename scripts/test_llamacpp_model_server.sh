@@ -30,6 +30,7 @@ fi
 MODEL_NAME=$(yq -r '.name' "$MODEL_FILE")
 MODEL_TAG=$(yq -r '.tag' "$MODEL_FILE")
 MODEL_TYPE=$(yq -r '.model_type // "instruct"' "$MODEL_FILE")
+IS_EMBEDDING=$(yq -r '.embedding // "false"' "$MODEL_FILE")
 VRAM_GB=$(yq -r '.vram_tier' "$MODEL_FILE")
 STARTUP_TIMEOUT=$(yq -r '.startup_timeout // ""' "$MODEL_FILE")
 INFERENCE_TIMEOUT=$(yq -r '.inference_timeout // ""' "$MODEL_FILE")
@@ -99,6 +100,7 @@ echo "Model type: $MODEL_TYPE"
 echo "VRAM tier: $VRAM_GB"
 echo "Vision (mmproj): $HAS_MMPROJ"
 echo "Audio (whisper): $HAS_WHISPER"
+echo "Embedding model: $IS_EMBEDDING"
 echo ""
 
 echo "=== Test 0: Image Label — Model Identifier ==="
@@ -176,6 +178,18 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
 fi
 
 echo ""
+
+# Helper: stop container and exit with failure
+_fail() {
+  local label="$1"
+  local message="$2"
+  echo "❌ $label: $message"
+  docker logs --tail 30 "$CONTAINER_NAME"
+  docker stop "$CONTAINER_NAME" >/dev/null 2>&1
+  docker rm "$CONTAINER_NAME" >/dev/null 2>&1
+  exit 1
+}
+
 echo "=== VRAM Budget Check (${VRAM_GB} tier) ==="
 if [ "$VRAM_GB" = "cpu" ]; then
   echo "  Skipped — CPU-only tier"
@@ -196,17 +210,6 @@ fi
 echo ""
 echo "=== Testing Model Inference ==="
 echo ""
-
-# Helper: stop container and exit with failure
-_fail() {
-  local label="$1"
-  local message="$2"
-  echo "❌ $label: $message"
-  docker logs --tail 30 "$CONTAINER_NAME"
-  docker stop "$CONTAINER_NAME" >/dev/null 2>&1
-  docker rm "$CONTAINER_NAME" >/dev/null 2>&1
-  exit 1
-}
 
 # Test 1 (pre): /v1/models returns the expected model identifier
 echo "Test 1 (pre): /v1/models lists '${MODEL_NAME}:${MODEL_TAG}'"
@@ -236,7 +239,9 @@ _assert_contains() {
 }
 
 # Test 1: Native completion endpoint (base models only — instruct models require chat format)
-if [ "$MODEL_TYPE" = "base" ]; then
+if [ "$IS_EMBEDDING" = "true" ]; then
+  echo "Test 1: Native /completion endpoint — skipped (embedding model)"
+elif [ "$MODEL_TYPE" = "base" ]; then
   echo "Test 1: Native /completion endpoint"
   RESPONSE=$(curl -sf --max-time 60 http://localhost:$PORT/completion \
     -H "Content-Type: application/json" \
@@ -256,29 +261,48 @@ else
 fi
 echo ""
 
-# Test 2: OpenAI-compatible chat completions endpoint
-echo "Test 2: OpenAI-compatible /v1/chat/completions endpoint"
-RESPONSE=$(curl -sf --max-time 120 http://localhost:$PORT/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
-    \"messages\": [{\"role\": \"user\", \"content\": \"What is the capital of France? Answer in one word.\"}],
-    \"max_tokens\": 2048,
-    \"temperature\": 0
-  }") || _fail "Test 2" "curl request failed (HTTP error or timeout)"
-# Reasoning models (e.g. Qwen3, DeepSeek-R1) put the final answer in content
-# and chain-of-thought in reasoning_content. Fall back to reasoning_content only
-# when content is absent, as it may still contain the answer for some models.
-CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
-if [ -z "$CONTENT" ]; then
-  CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.reasoning_content // empty' 2>/dev/null)
+if [ "$IS_EMBEDDING" = "true" ]; then
+  # Test 2: OpenAI-compatible embeddings endpoint (embedding models only —
+  # these are not trained for chat/completion, so asserting on generated
+  # text would be meaningless or outright unsupported by the server).
+  echo "Test 2: OpenAI-compatible /v1/embeddings endpoint"
+  RESPONSE=$(curl -sf --max-time 60 http://localhost:$PORT/v1/embeddings \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
+      \"input\": \"The capital of France is Paris.\"
+    }") || _fail "Test 2" "curl request failed (HTTP error or timeout)"
+  EMBEDDING_LEN=$(echo "$RESPONSE" | jq -r '.data[0].embedding | length' 2>/dev/null)
+  if [ -z "$EMBEDDING_LEN" ] || [ "$EMBEDDING_LEN" = "null" ] || [ "$EMBEDDING_LEN" -eq 0 ] 2>/dev/null; then
+    _fail "Test 2" "empty or unparseable embedding vector: $RESPONSE"
+  fi
+  echo "✓ Test 2: received embedding vector of length $EMBEDDING_LEN"
+  echo ""
+else
+  # Test 2: OpenAI-compatible chat completions endpoint
+  echo "Test 2: OpenAI-compatible /v1/chat/completions endpoint"
+  RESPONSE=$(curl -sf --max-time 120 http://localhost:$PORT/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"model\": \"${MODEL_NAME}:${MODEL_TAG}\",
+      \"messages\": [{\"role\": \"user\", \"content\": \"What is the capital of France? Answer in one word.\"}],
+      \"max_tokens\": 2048,
+      \"temperature\": 0
+    }") || _fail "Test 2" "curl request failed (HTTP error or timeout)"
+  # Reasoning models (e.g. Qwen3, DeepSeek-R1) put the final answer in content
+  # and chain-of-thought in reasoning_content. Fall back to reasoning_content only
+  # when content is absent, as it may still contain the answer for some models.
+  CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+  if [ -z "$CONTENT" ]; then
+    CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.reasoning_content // empty' 2>/dev/null)
+  fi
+  if [ -z "$CONTENT" ]; then
+    _fail "Test 2" "empty or unparseable response: $RESPONSE"
+  fi
+  echo "Response: $CONTENT"
+  _assert_contains "Test 2" "$CONTENT" "paris"
+  echo ""
 fi
-if [ -z "$CONTENT" ]; then
-  _fail "Test 2" "empty or unparseable response: $RESPONSE"
-fi
-echo "Response: $CONTENT"
-_assert_contains "Test 2" "$CONTENT" "paris"
-echo ""
 
 # Test 3: Vision / image test (only if model has mmproj)
 if [ "$HAS_MMPROJ" = true ]; then

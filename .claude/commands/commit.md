@@ -1,5 +1,6 @@
 ---
 allowed-tools: Bash(git diff *), Bash(git commit *), Bash(!git add *), Edit(!*), Write(!*)
+Model: haiku
 ---
 
 Run `git diff --staged`

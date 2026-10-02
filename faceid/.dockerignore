@@ -1,0 +1,4 @@
+tests/
+jobs/
+**/__pycache__/
+**/*.pyc

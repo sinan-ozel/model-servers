@@ -1,9 +1,14 @@
 name: deepcoder
 tag: 1.5b
 model_type: instruct
+vram_tier: 6g
 memory:
-  model_size: 1.1GiB
+  model_size: 1.04GiB
   min: 4GiB
   recommended: 8GiB
 license: MIT License
 max_context_window: 128k
+gguf:
+  url: https://huggingface.co/bartowski/agentica-org_DeepCoder-1.5B-Preview-GGUF/resolve/main/agentica-org_DeepCoder-1.5B-Preview-Q4_K_M.gguf
+  filename: agentica-org_DeepCoder-1.5B-Preview-Q4_K_M.gguf
+  file_size: 1.04GiB

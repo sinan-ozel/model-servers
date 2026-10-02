@@ -121,11 +121,20 @@
             "options": [
                 "keylm_75m-instruct.yaml",
 
+                "all-minilm_33m.yaml",
+                "embeddinggemma_300m.yaml",
+
                 "gemma3_270m.yaml",
                 "gemma3_1b.yaml",
                 "gemma3_1b-it-qat.yaml",
 
+                "deepcoder_1.5b.yaml",
+
                 "cerberus_4b.yaml",
+
+                "granite4_350m.yaml",
+                "granite4_1b.yaml",
+                "granite4_3b.yaml",
 
                 "gemma4_e2b.yaml",
                 "gemma4_e4b.yaml",
@@ -169,7 +178,8 @@
 
                 "deepseek-r1-0528_8b.yaml",
                 "deepseek-v2-lite_16b.yaml",
-                "deepseek-coder-v2-lite_16b.yaml"
+                "deepseek-coder-v2-lite_16b.yaml",
+                "deepseek-ocr_3b.yaml"
             ]
         }
       ],

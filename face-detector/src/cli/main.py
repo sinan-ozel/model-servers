@@ -27,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory to write face_N.png thumbnails and detections.json into.",
     )
     parser.add_argument("--thumbnail-size", type=int, default=256, help="Output thumbnail width/height in pixels.")
-    parser.add_argument("--margin", type=float, default=0.3, help="Fractional bbox padding before cropping (0.0 = exact bbox).")
+    parser.add_argument("--margin", type=float, default=0.3, help="Fractional bbox padding before the crop is squared up (0.0 = no extra padding).")
     parser.add_argument("--score-threshold", type=float, default=0.9)
     parser.add_argument("--nms-threshold", type=float, default=0.3)
     return parser

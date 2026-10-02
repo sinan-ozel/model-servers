@@ -78,15 +78,29 @@ def get_detector(score_threshold: float, nms_threshold: float, width: int, heigh
         return detector
 
 
-def _clamp_box(x: float, y: float, w: float, h: float, img_w: int, img_h: int) -> tuple[int, int, int, int]:
-    """Clamp a possibly-out-of-bounds float box to integer pixel bounds
-    [0, img_w] x [0, img_h]. Applied to the padded crop box, never to the
-    raw bbox reported in the response."""
-    x0 = max(0, int(round(x)))
-    y0 = max(0, int(round(y)))
-    x1 = min(img_w, int(round(x + w)))
-    y1 = min(img_h, int(round(y + h)))
-    return x0, y0, max(0, x1 - x0), max(0, y1 - y0)
+def _crop_square(image: Image.Image, cx: float, cy: float, side: float) -> Image.Image | None:
+    """Crop a `side`x`side` square centered on (cx, cy), black-padding any
+    part that falls outside the image bounds. Cropping a square (rather than
+    the raw, generally non-square, bbox) before resizing to a square
+    thumbnail avoids stretching the face's aspect ratio. Returns None if the
+    square falls entirely outside the image."""
+    side_i = max(1, int(round(side)))
+    half = side_i / 2
+    left = int(round(cx - half))
+    top = int(round(cy - half))
+
+    img_w, img_h = image.size
+    src_left = max(0, left)
+    src_top = max(0, top)
+    src_right = min(img_w, left + side_i)
+    src_bottom = min(img_h, top + side_i)
+    if src_right <= src_left or src_bottom <= src_top:
+        return None
+
+    canvas = Image.new("RGB", (side_i, side_i), (0, 0, 0))
+    region = image.crop((src_left, src_top, src_right, src_bottom))
+    canvas.paste(region, (src_left - left, src_top - top))
+    return canvas
 
 
 def detect_faces(
@@ -99,8 +113,11 @@ def detect_faces(
     """Detect faces in an encoded image (PNG/JPEG bytes) and return, per
     face, its raw bbox/landmarks (original-image pixel coordinates) plus a
     cropped-and-resized thumbnail. `margin` pads the bbox by that fraction
-    on each side before cropping (0.0 = exact bbox, no padding); it only
-    affects the crop, not the reported bbox/landmarks."""
+    on each side (0.0 = no extra padding); the padded box is then squared up
+    -- the shorter side is expanded to match the longer one, centered on the
+    face -- before resizing to thumbnail_size x thumbnail_size, so the face's
+    aspect ratio is never stretched. Margin/squaring only affect the crop,
+    not the reported bbox/landmarks."""
     _validate_params(thumbnail_size, margin, score_threshold, nms_threshold)
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -124,15 +141,15 @@ def detect_faces(
             for name, (px, py) in zip(_LANDMARK_NAMES, landmark_coords)
         }
 
-        pad_x = w * margin
-        pad_y = h * margin
-        crop_x, crop_y, crop_w, crop_h = _clamp_box(
-            x - pad_x, y - pad_y, w + 2 * pad_x, h + 2 * pad_y, width, height
-        )
-        if crop_w <= 0 or crop_h <= 0:
+        padded_w = w * (1 + 2 * margin)
+        padded_h = h * (1 + 2 * margin)
+        side = max(padded_w, padded_h)
+        cx, cy = x + w / 2, y + h / 2
+
+        crop = _crop_square(image, cx, cy, side)
+        if crop is None:
             continue
 
-        crop = image.crop((crop_x, crop_y, crop_x + crop_w, crop_y + crop_h))
         thumbnail = crop.resize((thumbnail_size, thumbnail_size), Image.LANCZOS)
         buf = io.BytesIO()
         thumbnail.save(buf, format="PNG")

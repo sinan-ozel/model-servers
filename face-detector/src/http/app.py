@@ -107,7 +107,7 @@ async def status():
 async def create_detection(
     file: UploadFile = File(..., description="Image to scan for faces (PNG or JPEG)."),
     thumbnail_size: int = Form(256, description="Output thumbnail width/height in pixels.", example=256),
-    margin: float = Form(0.3, description="Fractional padding around each bbox before cropping (0.0 = exact bbox).", example=0.3),
+    margin: float = Form(0.3, description="Fractional padding around each bbox before the crop is squared up to avoid stretching (0.0 = no extra padding).", example=0.3),
     score_threshold: float = Form(0.9, description="Passed to cv2.FaceDetectorYN.create.", example=0.9),
     nms_threshold: float = Form(0.3, description="Passed to cv2.FaceDetectorYN.create.", example=0.3),
 ):

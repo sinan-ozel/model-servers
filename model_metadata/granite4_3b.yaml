@@ -2,9 +2,14 @@
 name: granite4
 tag: 3b
 model_type: instruct
+vram_tier: 6g
 memory:
-  model_size: 2.1GB
+  model_size: 1.96GiB
   min: 4GiB
   recommended: 8GiB
 license: Apache License Version 2.0
 max_context_window: 128k
+gguf:
+  url: https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/granite-4.0-micro-Q4_K_M.gguf
+  filename: granite-4.0-micro-Q4_K_M.gguf
+  file_size: 1.96GiB

@@ -1,0 +1,4 @@
+# Installed on top of the inherited model-servers/txt2img:zimage-cuda image
+# (see Dockerfile.cuda) -- the one thing txt2img doesn't already have that
+# LoRA loading needs.
+peft==0.18.0

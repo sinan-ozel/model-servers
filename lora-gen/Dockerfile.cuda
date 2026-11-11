@@ -1,0 +1,23 @@
+# Built FROM the already-built txt2img image rather than from the CUDA base
+# image: this reuses its model-cache layers (GGUF transformer, 4-bit text
+# encoder, VAE, safety checker) on disk instead of re-downloading or
+# re-copying them, so the marginal cost of this image is just `peft` plus a
+# couple of source files. Means scripts/build_txt2img_model_server.sh must
+# have been run first.
+FROM model-servers/txt2img:zimage-cuda
+
+# ----------------------------------------------------
+# The one additional requirement LoRA loading needs
+# ----------------------------------------------------
+COPY requirements.txt /lora-gen-requirements.txt
+RUN pip3 install --no-cache-dir -r /lora-gen-requirements.txt
+
+# ----------------------------------------------------
+# App code -- only overwrites lib/engine.py and cli/main.py; everything
+# else (safety.py, http/, mcp/, entrypoint.sh, model-cache/) is inherited
+# from txt2img unchanged. CLI-only for now: default CMD is "generate", but
+# the inherited entrypoint.sh still understands serve/mcp if needed later.
+# ----------------------------------------------------
+COPY src/ /app/src/
+
+CMD ["generate"]

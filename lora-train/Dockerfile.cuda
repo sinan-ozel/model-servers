@@ -1,0 +1,44 @@
+FROM nvidia/cuda:12.9.2-base-ubuntu24.04
+
+# ----------------------------------------------------
+# System packages
+# ----------------------------------------------------
+RUN apt-get update --fix-missing && \
+    apt-get install --fix-missing -y --no-install-recommends \
+        python3.12 \
+        python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu 24.04's system Python is PEP 668 "externally managed" -- allow pip
+# to install into it (same as faceid and txt2img).
+RUN pip3 config set global.break-system-packages true
+
+# ----------------------------------------------------
+# Requirements
+# ----------------------------------------------------
+COPY requirements.txt /requirements.txt
+
+RUN pip3 install --no-cache-dir -r /requirements.txt
+
+# ----------------------------------------------------
+# Bundled model weights (see scripts/download_lora_train_models.sh)
+# ----------------------------------------------------
+COPY model-cache/ /app/model-cache/
+
+# ----------------------------------------------------
+# App code
+# ----------------------------------------------------
+COPY src/ /app/src/
+
+WORKDIR /app
+ENV MODEL_CACHE_DIR=/app/model-cache
+# HF_HOME must point at model-cache so the Z-Image snapshot resolves at
+# <HF_HOME>/hub/models--Tongyi-MAI--Z-Image-Turbo.
+ENV HF_HOME=/app/model-cache
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+
+# One-shot batch job: mount a dataset folder at /data and pass its path.
+# Example: docker run --rm --gpus all --user "$(id -u):$(id -g)" -v "$PWD/my_person:/data" \
+#            model-servers/lora-train:zimage-cuda /data --trigger-word img
+ENTRYPOINT ["python3", "/app/src/train.py"]

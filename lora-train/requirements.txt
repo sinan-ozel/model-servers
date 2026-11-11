@@ -1,0 +1,10 @@
+torch==2.10.0
+numpy==2.5.2
+diffusers==0.38.0
+accelerate==1.10.1
+safetensors==0.8.0rc0
+transformers==4.57.1
+peft==0.18.0
+Pillow
+PyYAML
+bitsandbytes==0.50.2

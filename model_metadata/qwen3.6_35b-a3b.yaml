@@ -1,20 +1,33 @@
 name: qwen3.6
 tag: 35b-a3b
 model_type: instruct
-# Hybrid tier: 256 experts, 8 routed + 1 shared active (~3B params/token). --n-cpu-moe
-# offloads MoE expert tensors to CPU RAM, keeping attention/shared + KV cache on GPU.
-# Layer count assumed 40 (unconfirmed — same family shape as qwen3.5_35b); adjust
-# --n-cpu-moe if this model's actual layer count differs.
-# min/recommended below are system RAM for the CPU-resident experts.
-vram_tier: 12g-ram32g
+# Hybrid tier, sized for a 524,288-token context on a 24GB card.
+# Native context is 262,144; the model card says it is extensible to ~1M with YaRN,
+# and recommends factor 2 for 524,288. YaRN is only worth enabling when the long
+# window is needed, so drop the three rope/yarn flags if you go back to <=262,144.
+#
+# Sizes read from the GGUF tensor table (UD-Q4_K_M, 20.6GiB total, 40 layers):
+#   MoE expert tensors   18.2GiB  -> CPU RAM (--n-cpu-moe 40, all 40 layers)
+#   everything else       2.4GiB  -> GPU
+# KV cache: only 10 of 40 layers are full attention (full_attention_interval 4),
+# 2 KV heads x 256 dims, f16 -> ~20KiB per token:
+#     262,144 tokens ->  5.0GiB
+#     524,288 tokens -> 10.0GiB   (this file: ~14GiB on GPU in total, fits 24GB)
+#   1,048,576 tokens -> 20.0GiB   (~24GiB on GPU in total: needs a 32GB card;
+#                                  use vram_tier 32g-ram32g, -c 1048576, --rope-scale 4)
+# With every weight on the GPU instead, 20.6GiB + KV only reaches ~262k on 32GB
+# and ~100k on 24GB, which is why the experts stay in RAM here.
+# KV figures are calculated, not measured on hardware.
+vram_tier: 24g-ram32g
 memory:
-  model_size: 22.1GiB
+  model_size: 20.6GiB
   min: 28GiB
-  recommended: 40GiB
+  recommended: 32GiB
 license: Apache 2.0
-max_context_window: 256k
+# 262,144 native, extensible to ~1M with YaRN
+max_context_window: 1M
 gguf:
   url: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
   filename: Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
-  file_size: 22.1GiB
-llamacpp_args: "-ngl 999 --n-cpu-moe 40 -c 32768"
+  file_size: 20.6GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 40 -c 524288 --rope-scaling yarn --rope-scale 2 --yarn-orig-ctx 262144"

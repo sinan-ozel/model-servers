@@ -9,6 +9,7 @@ set -e
 #   6g             → llama.cuda.6gb
 #   12g            → llama.cuda.12gb
 #   24g            → llama.cuda.24gb
+#   32g            → llama.cuda.32gb
 #   <N>g-ram<M>g   → llama.cuda.<N>gb-ram<M>gb (MoE experts offloaded to CPU RAM
 #                    via --n-cpu-moe; GPU holds attention/shared tensors + KV cache,
 #                    CPU RAM holds the bulk of expert weights). E.g. 12g-ram32g.
@@ -42,7 +43,7 @@ if [ -z "$MODEL_TAG" ] || [ "$MODEL_TAG" = "null" ]; then
   echo "❌ Error: Missing 'tag' field in $MODEL_FILE"; exit 1
 fi
 if [ -z "$VRAM_TIER" ] || [ "$VRAM_TIER" = "null" ]; then
-  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"; exit 1
+  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|32g|<N>g-ram<M>g"; exit 1
 fi
 
 case "$VRAM_TIER" in
@@ -51,13 +52,14 @@ case "$VRAM_TIER" in
   6g)  REPO="llama.cuda.6gb"  ;;
   12g) REPO="llama.cuda.12gb" ;;
   24g) REPO="llama.cuda.24gb" ;;
+  32g) REPO="llama.cuda.32gb" ;;
   *)
     if echo "$VRAM_TIER" | grep -qE '^[0-9]+g-ram[0-9]+g$'; then
       GPU_GB=$(echo "$VRAM_TIER" | sed -E 's/^([0-9]+)g-ram([0-9]+)g$/\1/')
       RAM_GB=$(echo "$VRAM_TIER" | sed -E 's/^([0-9]+)g-ram([0-9]+)g$/\2/')
       REPO="llama.cuda.${GPU_GB}gb-ram${RAM_GB}gb"
     else
-      echo "❌ Error: unknown vram_tier '$VRAM_TIER'. Choose cpu, 1g, 6g, 12g, 24g, or <N>g-ram<M>g (e.g. 12g-ram32g)."
+      echo "❌ Error: unknown vram_tier '$VRAM_TIER'. Choose cpu, 1g, 6g, 12g, 24g, 32g, or <N>g-ram<M>g (e.g. 12g-ram32g)."
       exit 1
     fi
     ;;

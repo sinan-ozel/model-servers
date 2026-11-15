@@ -1,0 +1,52 @@
+name: qwen3.8-flash-next
+tag: 125b-a6b
+model_type: instruct
+# Hybrid tier for a 32GB card, running a 524,288-token context.
+# 125B-parameter MoE (6B active per token) plus a 51B n-gram embedding table.
+# Native context is 262,144; the model card says it is extensible to 1,000,000 with
+# YaRN, and recommends factor 2 for 524,288. Drop the three rope/yarn flags if you
+# go back to <=262,144.
+#
+# Sizes read from the GGUF tensor table (UD-Q4_K_XL, 103.7GiB across 4 shards):
+#   MoE expert tensors        69.6GiB  -> CPU RAM (--n-cpu-moe 48, all 48 layers)
+#   n-gram embedding table    26.8GiB  -> CPU RAM (assumed: llama.cpp keeps input
+#                                         embeddings on CPU; NOT verified for this
+#                                         arch. If it lands on the GPU, no 24/32GB
+#                                         card can hold this model.)
+#   everything else           ~4.5GiB  -> GPU
+# KV cache: only 12 of 48 layers are full attention (full_attention_interval 4),
+# 2 KV heads x 256 dims, f16 -> ~24KiB per token:
+#     262,144 tokens ->  6.0GiB
+#     524,288 tokens -> 12.0GiB   (this file: ~18-20GiB on GPU in total, ~12GiB spare on 32GB)
+#   1,000,000 tokens -> 22.9GiB   (~29-32GiB on GPU in total: does not fit 32GB
+#                                  comfortably without a quantized KV cache)
+# KV figures are calculated, not measured on hardware. There is no smaller option:
+# the smallest published quant (UD-IQ1_S) is still 61.8GiB.
+vram_tier: 32g-ram128g
+memory:
+  model_size: 103.7GiB
+  min: 112GiB
+  recommended: 128GiB
+license: qwen-community-1.0
+# 262,144 native, extensible to 1,000,000 with YaRN
+max_context_window: 1M
+# Loading ~100GiB from disk takes far longer than the default 4-minute test wait.
+startup_timeout: 1800
+gguf:
+  # Every quant of this model is split because of the 50GB per-file limit on
+  # Hugging Face. llama.cpp is pointed at shard 1 and finds the rest by name, so
+  # the shard filenames must not be changed.
+  url: https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/main/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf
+  filename: Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf
+  file_size: 10MiB
+  extra_shards:
+    - url: https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/main/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf
+      filename: Qwen3.8-Flash-Next-UD-Q4_K_XL-00002-of-00004.gguf
+      file_size: 46.3GiB
+    - url: https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/main/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf
+      filename: Qwen3.8-Flash-Next-UD-Q4_K_XL-00003-of-00004.gguf
+      file_size: 30.6GiB
+    - url: https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF/resolve/main/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf
+      filename: Qwen3.8-Flash-Next-UD-Q4_K_XL-00004-of-00004.gguf
+      file_size: 26.8GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 48 -c 524288 --rope-scaling yarn --rope-scale 2 --yarn-orig-ctx 262144"

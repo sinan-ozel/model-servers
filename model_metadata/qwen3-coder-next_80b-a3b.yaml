@@ -1,15 +1,20 @@
 name: qwen3-coder-next
 tag: 80b-a3b
 model_type: instruct
-# Hybrid tier: quant doesn't fit in VRAM alone (48.5GiB weights, only 3B params
-# active per token). --n-cpu-moe offloads all 48 MoE expert layers to CPU RAM,
-# keeping attention/shared tensors + KV cache on GPU — that residual is small
-# relative to the 48.5GiB total, so a 12GB card is the working assumption here
-# (unconfirmed on real hardware; if actual non-expert weight + KV cache overflows
-# 12GB, bump to a larger GPU tier, e.g. 24g-ram64g).
-vram_tier: 12g-ram64g
+# Hybrid tier, sized for the full native context (262,144 tokens). This model has
+# no official extension past 262,144 (the model card lists "262,144 natively" only),
+# so it cannot serve a 500k-1M window.
+#
+# Sizes read from the GGUF tensor table (Q4_K_M, 45.2GiB total):
+#   MoE expert tensors   43.6GiB  -> CPU RAM (--n-cpu-moe 48, all 48 layers)
+#   everything else       1.6GiB  -> GPU
+# KV cache: only 12 of 48 layers are full attention (full_attention_interval 4),
+# 2 KV heads x 256 dims, f16 -> ~24KiB per token -> ~6.0GiB at 262,144 tokens.
+# GPU total is therefore ~9GiB including compute buffers: too tight for a 12GB
+# card, comfortable on 24GB. The KV figure is calculated, not measured on hardware.
+vram_tier: 24g-ram64g
 memory:
-  model_size: 48.5GiB
+  model_size: 45.2GiB
   min: 56GiB
   recommended: 64GiB
 license: Apache 2.0
@@ -17,5 +22,5 @@ max_context_window: 256k
 gguf:
   url: https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF/resolve/main/Qwen3-Coder-Next-Q4_K_M.gguf
   filename: Qwen3-Coder-Next-Q4_K_M.gguf
-  file_size: 48.5GiB
-llamacpp_args: "-ngl 999 --n-cpu-moe 48 -c 32768"
+  file_size: 45.2GiB
+llamacpp_args: "-ngl 999 --n-cpu-moe 48 -c 262144"

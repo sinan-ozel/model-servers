@@ -43,7 +43,7 @@ MEMORY_RECOMMENDED=$(yq -r '.memory.recommended' "$MODEL_FILE")
 MAX_CONTEXT_WINDOW=$(yq -r '.max_context_window' "$MODEL_FILE")
 
 if [ -z "$VRAM_TIER" ] || [ "$VRAM_TIER" = "null" ]; then
-  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|<N>g-ram<M>g"
+  echo "❌ Error: 'vram_tier' not set in $MODEL_FILE — add vram_tier: cpu|1g|6g|12g|24g|32g|<N>g-ram<M>g"
   exit 1
 fi
 
@@ -73,6 +73,16 @@ if [ ! -f "$MODEL_PATH" ]; then
   echo "Please run download_gguf_model.sh first."
   exit 1
 fi
+
+# Remaining shards of a split GGUF (gguf.extra_shards), if any
+mapfile -t EXTRA_SHARDS < <(yq -r '(.gguf.extra_shards // [])[] | .filename' "$MODEL_FILE")
+for SHARD in "${EXTRA_SHARDS[@]}"; do
+  if [ ! -f "$CACHE_DIR/$SHARD" ]; then
+    echo "❌ Error: GGUF shard not found at $CACHE_DIR/$SHARD"
+    echo "Please run download_gguf_model.sh first."
+    exit 1
+  fi
+done
 
 # Determine if this is a multimodal build
 HAS_MMPROJ=false
@@ -127,6 +137,9 @@ echo ""
 # Copy model to build context (preserving real filenames)
 echo "Preparing build context..."
 cp "$MODEL_PATH" "./llamacpp/$GGUF_FILENAME"
+for SHARD in "${EXTRA_SHARDS[@]}"; do
+  cp "$CACHE_DIR/$SHARD" "./llamacpp/$SHARD"
+done
 
 if [ "$VRAM_TIER" = "cpu" ]; then
   DOCKERFILE="llamacpp/Dockerfile.cpu"
@@ -172,6 +185,7 @@ echo "[${MANIFEST_ENTRY}]" > ./llamacpp/manifest.json
 # Clean up temp files on exit (success or failure)
 _cleanup() {
   rm -f "./llamacpp/$GGUF_FILENAME"
+  for SHARD in "${EXTRA_SHARDS[@]}"; do rm -f "./llamacpp/$SHARD"; done
   rm -f "./llamacpp/manifest.json"
   [ "$HAS_MMPROJ" = true ] && rm -f "./llamacpp/$MMPROJ_FILENAME" || true
   [ -n "$WHISPER_BUILD_FILENAME" ] && rm -f "./llamacpp/$WHISPER_BUILD_FILENAME" || true

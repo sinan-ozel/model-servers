@@ -178,6 +178,21 @@ if [ -n "$EXPECTED_SIZE_MB" ] && [ "$EXPECTED_SIZE_MB" -gt 0 ]; then
   fi
 fi
 
+# Fetch the remaining shards of a split GGUF (gguf.extra_shards), if any.
+# llama.cpp is pointed at the first shard and finds the others by filename.
+while IFS=$'\t' read -r SHARD_URL SHARD_FILENAME; do
+  [ -z "$SHARD_FILENAME" ] && continue
+  SHARD_OUTPUT_PATH="$CACHE_DIR/$SHARD_FILENAME"
+  echo ""
+  if [ -f "$SHARD_OUTPUT_PATH" ]; then
+    echo "✓ Shard already exists at: $SHARD_OUTPUT_PATH ($(du -h "$SHARD_OUTPUT_PATH" | cut -f1))"
+  else
+    echo "=== Fetching GGUF shard: $SHARD_FILENAME ==="
+    _fetch_file "$SHARD_URL" "$SHARD_OUTPUT_PATH" "$SHARD_FILENAME"
+    echo "✓ Shard saved to: $SHARD_OUTPUT_PATH ($(du -h "$SHARD_OUTPUT_PATH" | cut -f1))"
+  fi
+done < <(yq -r '(.gguf.extra_shards // [])[] | "\(.url)\t\(.filename)"' "$MODEL_FILE")
+
 # Download mmproj file if present in metadata
 if [ -n "$MMPROJ_URL" ] && [ "$MMPROJ_URL" != "null" ] && [ -n "$MMPROJ_FILENAME" ] && [ "$MMPROJ_FILENAME" != "null" ]; then
   MMPROJ_OUTPUT_PATH="$CACHE_DIR/$MMPROJ_FILENAME"

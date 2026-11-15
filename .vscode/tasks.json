@@ -148,6 +148,10 @@
                 "qwen3.5_27b.yaml",
                 "qwen3.5_35b.yaml",
 
+                "qwen3.6_35b-a3b.yaml",
+                "qwen3-coder-next_80b-a3b.yaml",
+                "qwen3.8-flash-next_125b-a6b.yaml",
+
                 "qwen3-vl_2b.yaml",
                 "qwen3-vl_4b.yaml",
                 "qwen3-vl_8b.yaml",

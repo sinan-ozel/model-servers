@@ -1,14 +1,20 @@
 name: qwen3.6
 tag: 27b
 model_type: instruct
-vram_tier: 24g
+# 32GB tier: dense model (no MoE experts to offload), so all ~15.7GiB of weights sit on
+# the GPU. KV cache: 16 of 64 layers are full attention, 4 KV heads x 256 dims, f16
+# -> ~64KiB per token, i.e. 8GiB at 131,072 tokens (~25-26GiB on GPU in total).
+# ~196k is the most a 32GB card can hold and is tight; 500k+ does not fit.
+# KV figures are calculated, not measured on hardware.
+vram_tier: 32g
 memory:
-  model_size: 16.8GiB
-  min: 20GiB
-  recommended: 24GiB
+  model_size: 15.7GiB
+  min: 24GiB
+  recommended: 32GiB
 license: Apache 2.0
 max_context_window: 256k
 gguf:
   url: https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/resolve/main/Qwen3.6-27B-Q4_K_M.gguf
   filename: Qwen3.6-27B-Q4_K_M.gguf
-  file_size: 16.8GiB
+  file_size: 15.7GiB
+llamacpp_args: "-ngl 999 -c 131072"

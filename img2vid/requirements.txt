@@ -1,0 +1,14 @@
+torch==2.10.0
+torchvision==0.25.0
+numpy==2.5.2
+diffusers==0.38.0
+accelerate==1.10.1
+safetensors==0.8.0rc0
+transformers==4.57.1
+bitsandbytes==0.50.2
+Pillow
+# Wan's prompt cleaning imports ftfy; imageio + imageio-ffmpeg (which bundles
+# an ffmpeg binary) read input videos and write the output mp4.
+ftfy==6.3.1
+imageio==2.38.1
+imageio-ffmpeg==0.8.1

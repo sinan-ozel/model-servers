@@ -1,0 +1,49 @@
+FROM nvidia/cuda:12.9.2-base-ubuntu24.04
+
+# ----------------------------------------------------
+# System packages
+# ----------------------------------------------------
+RUN apt-get update --fix-missing && \
+    apt-get install --fix-missing -y --no-install-recommends \
+        python3.12 \
+        python3-pip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ubuntu 24.04's system Python is PEP 668 "externally managed" -- allow pip
+# to install into it (same as txt2img).
+RUN pip3 config set global.break-system-packages true
+
+# ----------------------------------------------------
+# Requirements
+# ----------------------------------------------------
+COPY requirements.txt /requirements.txt
+
+RUN pip3 install --no-cache-dir -r /requirements.txt
+
+# ----------------------------------------------------
+# Bundled model weights (see scripts/download_wan_models.sh)
+# ----------------------------------------------------
+COPY --chmod=755 model-cache/ /app/model-cache/
+
+# ----------------------------------------------------
+# App code
+# ----------------------------------------------------
+COPY src/ /app/src/
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+ENV MODEL_CACHE_DIR=/app/model-cache
+# HF_HOME must point at model-cache so the safety checker resolves by repo id
+# from the bundled <HF_HOME>/hub/models--Falconsai--nsfw_image_detection.
+ENV HF_HOME=/app/model-cache
+# Read only from the bundled cache and never attempt a network call.
+ENV HF_HUB_OFFLINE=1
+ENV TRANSFORMERS_OFFLINE=1
+# Lets PyTorch grow its GPU segments instead of fragmenting; the frame decode
+# at the end of a run is the tightest point on a 12GB card.
+ENV PYTORCH_ALLOC_CONF=expandable_segments:True
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["generate"]

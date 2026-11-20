@@ -910,6 +910,184 @@
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []
+        },
+        {
+            "label": "download_wan_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_wan_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_img2vid_model_server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_img2vid_model_server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_img2vid_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_img2vid_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_img2vid_safety",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_img2vid_safety.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "test_img2vid_model_server",
+            "dependsOn": [
+                "test_img2vid_cli",
+                "test_img2vid_safety"
+            ],
+            "dependsOrder": "sequence",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_img2vid_model_server_to_dockerhub",
+            "dependsOn": [
+                "test_img2vid_model_server"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_img2vid_model_server_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "img2vid_full_pipeline",
+            "dependsOn": [
+                "download_wan_models",
+                "build_img2vid_model_server",
+                "test_img2vid_model_server",
+                "push_img2vid_model_server_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "download_lora_train_models",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/download_lora_train_models.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "build_lora_train",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_lora_train.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_lora_train",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_lora_train.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_lora_train_to_dockerhub",
+            "dependsOn": [
+                "test_lora_train"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_lora_train_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "lora_train_full_pipeline",
+            "dependsOn": [
+                "download_lora_train_models",
+                "build_lora_train",
+                "test_lora_train",
+                "push_lora_train_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "build_lora_gen",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/build_lora_gen.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "test_lora_gen_cli",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/test_lora_gen_cli.sh"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "push_lora_gen_to_dockerhub",
+            "dependsOn": [
+                "test_lora_gen_cli"
+            ],
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "./scripts/push_lora_gen_to_dockerhub.sh"
+            ],
+            "options": {
+                "env": {
+                    "DOCKERHUB_NAMESPACE": "${config:docker.hub.namespace}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "lora_gen_full_pipeline",
+            "dependsOn": [
+                "build_lora_gen",
+                "test_lora_gen_cli",
+                "push_lora_gen_to_dockerhub"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
         }
     ]
 }
